@@ -1,12 +1,10 @@
-import 'dart:math';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, ApplicationSwitcherDescription;
 import 'package:mci_booking_app/Resources/Strings.dart';
-import 'package:vibration/vibration.dart';
 import 'package:universal_html/html.dart' as html;
+import 'package:vibration/vibration.dart';
 
 import '../Screens/ErrorScreen.dart';
 
@@ -14,13 +12,9 @@ class Utils {
   static void setWebTitle(String titleName) {
     if (!kIsWeb) return;
     SystemChrome.setApplicationSwitcherDescription(
-      ApplicationSwitcherDescription(
-        label: titleName,
-        primaryColor: 0xffaaaaaa,
-      ),
+      ApplicationSwitcherDescription(label: titleName, primaryColor: 0xffaaaaaa),
     );
   }
-
 
   static String getLastUrlParameter(String url) {
     return url.split('/').last;
@@ -206,13 +200,11 @@ class Utils {
     return result;
   }
 
-
   static void redirectToURL(String url) async {}
 
   static void switchToURL(String url) async {
     html.window.history.pushState(null, '', url);
   }
-
 
   static Duration roundUpInitialPeriod(double minimumInitialPeriods) {
     // Guard against non‑positive values
@@ -225,7 +217,6 @@ class Utils {
 
     return Duration(minutes: minutes);
   }
-
 }
 
 extension ColorExtension on Color {

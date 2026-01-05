@@ -10,7 +10,7 @@ void main() {
   runApp(const MyApp());
 }
 
-final session = ChangeNotifierProvider((ref) => Session());
+final sessionProvider = ChangeNotifierProvider((ref) => Session());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -28,5 +28,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
