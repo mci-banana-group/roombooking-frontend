@@ -12,7 +12,11 @@ class Session extends ChangeNotifier {
   Future<bool> performCachedLogin() async {
     // ToDo: login
     await Future.delayed(Duration(seconds: 2));
-    return true;
+
+    // For going to login screen -> false
+    // For going to Home Screen -> true
+
+    return false;
   }
 
   void setCurrentUser(User? user) {

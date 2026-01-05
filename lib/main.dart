@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mci_booking_app/Screens/SplashScreen.dart';
+import 'package:mci_booking_app/Screens/LoginScreen.dart';
 
 import 'Resources/AppColors.dart';
 import 'Session.dart';
@@ -19,11 +20,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Phoenix(
-      child: MaterialApp(
-        title: 'Room Booking',
-        theme: AppColors.lightTheme,
-        darkTheme: AppColors.darkTheme,
-        home: SplashScreen(),
+      child: ProviderScope(
+        child: MaterialApp(
+          title: 'Room Booking',
+          theme: AppColors.lightTheme,
+          darkTheme: AppColors.darkTheme,
+          home: const SplashScreen(),
+          routes: {
+            '/login': (context) => const LoginScreen(),
+          },
+        ),
       ),
     );
   }

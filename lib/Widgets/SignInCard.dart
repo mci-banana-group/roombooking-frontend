@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mci_booking_app/Resources/AppColors.dart';
 import 'package:mci_booking_app/Resources/Dimen.dart';
 
+import '../Screens/HomeScreen.dart';
+
 class SignInCard extends StatefulWidget {
   const SignInCard({super.key});
 
@@ -20,9 +22,7 @@ class _SignInCardState extends State<SignInCard> {
       constraints: BoxConstraints(maxWidth: 500),
       child: Card(
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: Dimen.cardBorderRadius,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: Dimen.cardBorderRadius),
         child: Padding(
           padding: Dimen.cardInnerPadding,
           child: Column(
@@ -35,18 +35,11 @@ class _SignInCardState extends State<SignInCard> {
               Container(
                 width: 100,
                 height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: primaryColor,
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: primaryColor),
                 child: const Center(
                   child: Text(
                     'MCI',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -54,19 +47,14 @@ class _SignInCardState extends State<SignInCard> {
               const SizedBox(height: 32),
               const Text(
                 'MCI Meeting Rooms',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
-
               ),
               const SizedBox(height: 8),
               const Text(
                 'Sign in with your university credentials',
                 style: TextStyle(color: Colors.grey),
                 textAlign: TextAlign.center,
-
               ),
 
               const SizedBox(height: 24),
@@ -75,9 +63,7 @@ class _SignInCardState extends State<SignInCard> {
                 decoration: InputDecoration(
                   labelText: 'Username',
                   prefixIcon: Icon(Icons.person, color: primaryColor),
-                  border: OutlineInputBorder(
-                    borderRadius: Dimen.inputElementRadius,
-                  ),
+                  border: OutlineInputBorder(borderRadius: Dimen.inputElementRadius),
                   hintText: 'Enter your username',
                 ),
               ),
@@ -89,19 +75,14 @@ class _SignInCardState extends State<SignInCard> {
                   labelText: 'Password',
                   prefixIcon: Icon(Icons.lock, color: primaryColor),
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                      color: primaryColor,
-                    ),
+                    icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off, color: primaryColor),
                     onPressed: () {
                       setState(() {
                         _passwordVisible = !_passwordVisible;
                       });
                     },
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: Dimen.inputElementRadius,
-                  ),
+                  border: OutlineInputBorder(borderRadius: Dimen.inputElementRadius),
                   hintText: 'Enter your password',
                 ),
               ),
@@ -111,22 +92,20 @@ class _SignInCardState extends State<SignInCard> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {},
-                  child: Text(
-                    'Forgot password?',
-                    style: TextStyle(color: primaryColor),
-                  ),
+                  child: Text('Forgot password?', style: TextStyle(color: primaryColor)),
                 ),
               ),
               const SizedBox(height: 16),
 
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  // for testing without proper login only
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const HomeScreen()));
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: Dimen.inputElementRadius,
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: Dimen.inputElementRadius),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: Padding(
@@ -136,24 +115,18 @@ class _SignInCardState extends State<SignInCard> {
               ),
               const SizedBox(height: 32),
 
-              const Text('Having issues?', textAlign: TextAlign.center,),
+              const Text('Having issues?', textAlign: TextAlign.center),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   TextButton(
                     onPressed: () {},
-                    child: Text(
-                      'Contact Support',
-                      style: TextStyle(color: primaryColor),
-                    ),
+                    child: Text('Contact Support', style: TextStyle(color: primaryColor)),
                   ),
                   const Text('•', style: TextStyle(color: primaryColor)),
                   TextButton(
                     onPressed: () {},
-                    child: Text(
-                      'Privacy Policy',
-                      style: TextStyle(color: primaryColor),
-                    ),
+                    child: Text('Privacy Policy', style: TextStyle(color: primaryColor)),
                   ),
                 ],
               ),
