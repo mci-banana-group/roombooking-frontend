@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mci_booking_app/Resources/AppColors.dart';
 
 class BookingStats extends StatelessWidget {
   final int totalBookings;
@@ -16,7 +15,6 @@ class BookingStats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 768;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: EdgeInsets.all(isMobile ? 12 : 16),
@@ -27,8 +25,7 @@ class BookingStats extends StatelessWidget {
               title: 'Total Bookings',
               value: totalBookings.toString(),
               icon: Icons.calendar_month,
-              iconColor: AppColors.primaryAccent,
-              isDarkMode: isDarkMode,
+              iconColor: Theme.of(context).colorScheme.primary,
             ),
           ),
           SizedBox(width: isMobile ? 8 : 12),
@@ -37,8 +34,7 @@ class BookingStats extends StatelessWidget {
               title: 'Upcoming',
               value: upcomingBookings.toString(),
               icon: Icons.check_circle,
-              iconColor: AppColors.primaryAccent,
-              isDarkMode: isDarkMode,
+              iconColor: Theme.of(context).colorScheme.primary,
             ),
           ),
           SizedBox(width: isMobile ? 8 : 12),
@@ -47,8 +43,10 @@ class BookingStats extends StatelessWidget {
               title: 'Past Bookings',
               value: pastBookings.toString(),
               icon: Icons.history,
-              iconColor: AppColors.mutedText,
-              isDarkMode: isDarkMode,
+              iconColor: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withOpacity(0.6),
             ),
           ),
         ],
@@ -62,14 +60,12 @@ class _StatCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color iconColor;
-  final bool isDarkMode;
 
   const _StatCard({
     required this.title,
     required this.value,
     required this.icon,
     required this.iconColor,
-    required this.isDarkMode,
   });
 
   @override
@@ -77,8 +73,15 @@ class _StatCard extends StatelessWidget {
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Card(
-      color: isDarkMode ? Theme.of(context).cardColor : AppColors.cardWhite,
-      elevation: 1,
+      color: Theme.of(context).colorScheme.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
       child: Padding(
         padding: EdgeInsets.all(isMobile ? 12 : 16),
         child: Column(
@@ -91,7 +94,10 @@ class _StatCard extends StatelessWidget {
                   child: Text(
                     title,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.mutedText,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
                       fontSize: isMobile ? 10 : 12,
                     ),
                   ),
@@ -107,6 +113,7 @@ class _StatCard extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
                 fontSize: isMobile ? 24 : 28,
               ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/booking.dart';
 import '../models/Enums/booking_status.dart';
-import '../../Resources/AppColors.dart';
 import '../widgets/mybookings/BookingCard.dart';
 import '../widgets/mybookings/BookingStats.dart';
 
@@ -100,8 +99,6 @@ class _BookingsPageState extends State<BookingsPage> {
     return roomNames[roomId] ?? 'Unknown Room';
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final filteredBookings = _getFilteredBookings();
@@ -111,79 +108,120 @@ class _BookingsPageState extends State<BookingsPage> {
     final pastBookings =
         _mockBookings.where((b) => b.startTime.isBefore(DateTime.now())).length;
 
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'My Bookings',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Theme.of(context).textTheme.headlineMedium?.color,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Manage your meeting room reservations',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.mutedText,
-                      ),
-                    ),
-                  ],
+      body: CustomScrollView(
+        slivers: [
+          // Header Section
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 24),
+                Text(
+                  'My Bookings',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              // Statistics cards
-              BookingStats(
-                totalBookings: totalBookings,
-                upcomingBookings: upcomingBookings,
-                pastBookings: pastBookings,
-              ),
-              const SizedBox(height: 8),
-              // Tab filter
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: _buildTabBar(context, isDarkMode),
-              ),
-              // Bookings list
-              Expanded(
-                child: filteredBookings.isEmpty
-                    ? _buildEmptyState(context)
-                    : ListView.builder(
-                  itemCount: filteredBookings.length,
-                  itemBuilder: (context, index) {
-                    final booking = filteredBookings[index];
-                    return BookingCard(
-                      booking: booking,
-                      roomName: _getRoomName(booking.roomId),
-                    );
-                  },
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'Manage your meeting room reservations',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
-        ),
+
+          // Statistics cards with max width
+          SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: BookingStats(
+                    totalBookings: totalBookings,
+                    upcomingBookings: upcomingBookings,
+                    pastBookings: pastBookings,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+          // Tab filter with max width
+          SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildTabBar(context),
+                ),
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+          // Bookings list with max width
+          SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.6,
+                    child: filteredBookings.isEmpty
+                        ? _buildEmptyState(context)
+                        : ListView.builder(
+                      itemCount: filteredBookings.length,
+                      itemBuilder: (context, index) {
+                        final booking = filteredBookings[index];
+                        return BookingCard(
+                          booking: booking,
+                          roomName: _getRoomName(booking.roomId),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
       ),
     );
   }
 
-  Widget _buildTabBar(BuildContext context, bool isDarkMode) {
+  Widget _buildTabBar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode
-            ? Theme.of(context).cardColor
-            : AppColors.cardWhite,
-        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        ),
       ),
       child: Row(
         children: [
@@ -194,7 +232,6 @@ class _BookingsPageState extends State<BookingsPage> {
               tab: BookingFilterTab.upcoming,
               isFirst: true,
               isLast: false,
-              isDarkMode: isDarkMode,
             ),
           ),
           Expanded(
@@ -204,7 +241,6 @@ class _BookingsPageState extends State<BookingsPage> {
               tab: BookingFilterTab.past,
               isFirst: false,
               isLast: false,
-              isDarkMode: isDarkMode,
             ),
           ),
           Expanded(
@@ -214,7 +250,6 @@ class _BookingsPageState extends State<BookingsPage> {
               tab: BookingFilterTab.all,
               isFirst: false,
               isLast: true,
-              isDarkMode: isDarkMode,
             ),
           ),
         ],
@@ -222,12 +257,13 @@ class _BookingsPageState extends State<BookingsPage> {
     );
   }
 
-  Widget _buildTab(BuildContext context,
-      {required String label,
+  Widget _buildTab(
+      BuildContext context, {
+        required String label,
         required BookingFilterTab tab,
         required bool isFirst,
         required bool isLast,
-        required bool isDarkMode}) {
+      }) {
     final isSelected = _selectedTab == tab;
 
     return Material(
@@ -239,27 +275,39 @@ class _BookingsPageState extends State<BookingsPage> {
           });
         },
         borderRadius: BorderRadius.horizontal(
-          left: isFirst ? const Radius.circular(8) : Radius.zero,
-          right: isLast ? const Radius.circular(8) : Radius.zero,
+          left: isFirst ? const Radius.circular(12) : Radius.zero,
+          right: isLast ? const Radius.circular(12) : Radius.zero,
         ),
         child: Container(
           decoration: BoxDecoration(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                : Colors.transparent,
             border: isSelected
                 ? Border(
               bottom: BorderSide(
-                color: AppColors.primaryAccent,
+                color: Theme.of(context).colorScheme.primary,
                 width: 3,
               ),
             )
                 : null,
+            borderRadius: BorderRadius.horizontal(
+              left: isFirst ? const Radius.circular(12) : Radius.zero,
+              right: isLast ? const Radius.circular(12) : Radius.zero,
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
             child: Text(
               label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color:
-                isSelected ? AppColors.primaryAccent : AppColors.mutedText,
+              style: TextStyle(
+                fontSize: 14,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withOpacity(0.6),
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               ),
               textAlign: TextAlign.center,
@@ -289,13 +337,20 @@ class _BookingsPageState extends State<BookingsPage> {
           Icon(
             Icons.calendar_today,
             size: 64,
-            color: AppColors.mutedText.withOpacity(0.5),
+            color: Theme.of(context)
+                .colorScheme
+                .onSurface
+                .withOpacity(0.3),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Text(
             message,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.mutedText,
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withOpacity(0.6),
             ),
           ),
         ],

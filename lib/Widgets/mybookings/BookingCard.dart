@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/booking.dart';
-import '../../Resources/AppColors.dart';
 import '../../models/Enums/booking_status.dart';
 
 class BookingCard extends StatelessWidget {
@@ -16,14 +15,20 @@ class BookingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 768;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
-      color: isDarkMode ? Theme.of(context).cardColor : AppColors.cardWhite,
-      elevation: 2,
+      color: Theme.of(context).colorScheme.surface,
+      elevation: 0,
       margin: EdgeInsets.symmetric(
-        horizontal: isMobile ? 12 : 16,
+        horizontal: 0,
         vertical: isMobile ? 6 : 8,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Padding(
         padding: EdgeInsets.all(isMobile ? 12 : 16),
@@ -43,6 +48,7 @@ class BookingCard extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           fontSize: isMobile ? 14 : 16,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -60,13 +66,17 @@ class BookingCard extends StatelessWidget {
                 Icon(
                   Icons.calendar_today,
                   size: isMobile ? 14 : 16,
-                  color: AppColors.mutedText,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withOpacity(0.6),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   _formatDate(booking.startTime),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontSize: isMobile ? 12 : 14,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -78,13 +88,17 @@ class BookingCard extends StatelessWidget {
                 Icon(
                   Icons.access_time,
                   size: isMobile ? 14 : 16,
-                  color: AppColors.mutedText,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withOpacity(0.6),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '${_formatTime(booking.startTime)} - ${_formatTime(booking.endTime)}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontSize: isMobile ? 12 : 14,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -96,14 +110,20 @@ class BookingCard extends StatelessWidget {
                 Icon(
                   Icons.info_outline,
                   size: isMobile ? 14 : 16,
-                  color: AppColors.mutedText,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withOpacity(0.6),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Ref: #${booking.id.substring(0, 8).toUpperCase()}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.mutedText,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
                       fontSize: isMobile ? 11 : 13,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -121,7 +141,7 @@ class BookingCard extends StatelessWidget {
                   icon: Icon(Icons.edit, size: isMobile ? 16 : 18),
                   label: const Text('Edit'),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primaryAccent,
+                    foregroundColor: Theme.of(context).colorScheme.primary,
                     padding: EdgeInsets.symmetric(
                       horizontal: isMobile ? 8 : 12,
                       vertical: isMobile ? 4 : 8,
@@ -134,7 +154,7 @@ class BookingCard extends StatelessWidget {
                   icon: Icon(Icons.close, size: isMobile ? 16 : 18),
                   label: const Text('Cancel'),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppColors.statusRed,
+                    foregroundColor: Colors.red,
                     padding: EdgeInsets.symmetric(
                       horizontal: isMobile ? 8 : 12,
                       vertical: isMobile ? 4 : 8,
@@ -157,26 +177,31 @@ class BookingCard extends StatelessWidget {
 
     switch (booking.status) {
       case BookingStatus.pending:
-        backgroundColor = AppColors.statusYellow.withOpacity(0.2);
-        textColor = AppColors.statusYellow;
+        backgroundColor = Colors.orange.withOpacity(0.15);
+        textColor = Colors.orange;
         icon = Icons.schedule;
         label = 'Pending';
         break;
       case BookingStatus.confirmed:
-        backgroundColor = AppColors.primaryAccent.withOpacity(0.2);
-        textColor = AppColors.primaryAccent;
+        backgroundColor =
+            Theme.of(context).colorScheme.primary.withOpacity(0.15);
+        textColor = Theme.of(context).colorScheme.primary;
         icon = Icons.check_circle;
         label = 'Confirmed';
         break;
       case BookingStatus.cancelled:
-        backgroundColor = AppColors.statusRed.withOpacity(0.2);
-        textColor = AppColors.statusRed;
+        backgroundColor = Colors.red.withOpacity(0.15);
+        textColor = Colors.red;
         icon = Icons.cancel;
         label = 'Cancelled';
         break;
       case BookingStatus.expired:
-        backgroundColor = AppColors.mutedText.withOpacity(0.2);
-        textColor = AppColors.mutedText;
+        backgroundColor = Theme.of(context)
+            .colorScheme
+            .onSurface
+            .withOpacity(0.15);
+        textColor =
+            Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
         icon = Icons.schedule;
         label = 'Expired';
         break;
@@ -189,7 +214,7 @@ class BookingCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
