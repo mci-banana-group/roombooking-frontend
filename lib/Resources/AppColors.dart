@@ -7,7 +7,7 @@ class AppColors {
   static const Color primaryDark = Color(0xFF2D3436);
 
   /// Primary Accent - mint/teal green for highlights and interactive elements
-  static const Color primaryAccent = Color(0xFFE6F6F3);
+  static const Color primaryAccent = Color(0xFF7DD3C0);
 
   /// Background - light gray for overall background
   static const Color backgroundLight = Color(0xFFF0F4F8);
