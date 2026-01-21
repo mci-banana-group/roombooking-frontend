@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   /// Primary Dark - dark charcoal for headers/text
-  static const Color primaryDark = Color(0xFF2D3436);
+  static const Color primaryDark = Color(0xFF2D3436); // 0xFF004a83 -> mci blue
 
   /// Primary Accent - mint/teal green for highlights and interactive elements
-  static const Color primaryAccent = Color(0xFF7DD3C0);
+  static const Color primaryAccent = Color(0xFF7DD3C0); // 0xFFF4991A -> mci orange
 
   /// Background - light gray for overall background
   static const Color backgroundLight = Color(0xFFF0F4F8);

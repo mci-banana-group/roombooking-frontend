@@ -4,6 +4,7 @@ import '../common/TimeDropdown.dart';
 import '../common/DurationChip.dart';
 import '../common/EquipmentCheckbox.dart';
 import '../../Screens/BookingAvailabilityPage.dart';
+import 'package:flutter/material.dart';
 
 class BookingDetailsCard extends StatefulWidget {
   @override
@@ -16,6 +17,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
   String _selectedEndTime = '10:00';
   int _attendees = 4;
   DateTime _selectedDate = DateTime(2026, 1, 9);
+  String _selectedDuration = '1 hour';
 
   late final TextEditingController _attendeesController;
 
@@ -235,6 +237,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           onChanged: (value) {
                             setState(() {
                               _selectedStartTime = value;
+                              _selectedDuration = '';
                             });
                           },
                           isDark: isDark,
@@ -259,6 +262,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           onChanged: (value) {
                             setState(() {
                               _selectedEndTime = value;
+                              _selectedDuration = '';
                             });
                           },
                           isDark: isDark,
@@ -287,7 +291,33 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                 spacing: 8,
                 runSpacing: 8,
                 children: ['30 min', '1 hour', '1.5 hours', '2 hours']
-                    .map((duration) => DurationChip(duration, primaryColor))
+                    .map((duration) {
+                      if (_selectedDuration.isEmpty) {
+                        return DurationChip(
+                          duration,
+                          primaryColor,
+                          isSelected: false,
+                          onTap: () {
+                            setState(() {
+                              _selectedDuration = duration;
+                              _calculateEndTime(duration);
+                            });
+                          },
+                        );
+                      } else {
+                        return DurationChip(
+                          duration,
+                          primaryColor,
+                          isSelected: _selectedDuration == duration,
+                          onTap: () {
+                            setState(() {
+                              _selectedDuration = duration;
+                              _calculateEndTime(duration);
+                            });
+                          },
+                        );
+                      }
+                    })
                     .toList(),
               ),
               const SizedBox(height: 16),
@@ -316,7 +346,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           ),
                         ),
                         Text(
-                          '1h 0min',
+                          _formatDuration(_selectedDuration),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -334,7 +364,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                       ),
                     ),
                     Text(
-                      '09:00 - 10:00',
+                      '$_selectedStartTime - $_selectedEndTime',
                       style: TextStyle(
                         fontSize: 12,
                         color: textColor,
@@ -435,5 +465,47 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
         ),
       ),
     );
+  }
+
+  void _calculateEndTime(String duration) {
+    final startTime = _parseTime(_selectedStartTime);
+    final durationMinutes = _parseDuration(duration);
+    final endTime = startTime.add(Duration(minutes: durationMinutes));
+    _selectedEndTime = _formatTime(endTime);
+  }
+
+  int _parseDuration(String duration) {
+    if (duration.contains('min')) {
+      return int.parse(duration.split(' ')[0]);
+    } else if (duration.contains('hour')) {
+      final hours = double.parse(duration.split(' ')[0]);
+      return (hours * 60).round();
+    }
+    return 60;
+  }
+
+  DateTime _parseTime(String time) {
+    final parts = time.split(':');
+    return DateTime(0, 0, 0, int.parse(parts[0]), int.parse(parts[1]));
+  }
+
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _formatDuration(String duration) {
+    if (duration.contains('min')) {
+      return '${duration.split(' ')[0]}min';
+    } else if (duration.contains('hour')) {
+      final hours = double.parse(duration.split(' ')[0]);
+      if (hours == 1) {
+        return '1h 0min';
+      } else if (hours == 1.5) {
+        return '1h 30min';
+      } else {
+        return '${hours.toInt()}h 0min';
+      }
+    }
+    return '1h 0min';
   }
 }
