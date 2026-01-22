@@ -19,11 +19,7 @@ class TimeDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final times = <String>[];
-    for (int i = 0; i < 24; i++) {
-      times.add('${i.toString().padLeft(2, '0')}:00');
-      times.add('${i.toString().padLeft(2, '0')}:30');
-    }
+    final times = List.generate(24, (i) => '${i.toString().padLeft(2, '0')}:00');
 
     return DropdownButtonFormField<String>(
       value: selectedTime,

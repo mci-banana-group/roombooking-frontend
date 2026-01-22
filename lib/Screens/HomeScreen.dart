@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:mci_booking_app/Session.dart';
+
 import 'package:mci_booking_app/Screens/HomePage.dart';
+
 import 'package:mci_booking_app/Screens/BookingsPage.dart';
+
 import 'package:mci_booking_app/Screens/ProfilePage.dart';
+
 import 'package:mci_booking_app/main.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -16,7 +22,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _pages = <Widget>[
+  static const List<Widget> _pages = [
     HomePage(),
     BookingsPage(),
     ProfilePage(),
@@ -46,7 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
