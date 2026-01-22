@@ -589,12 +589,17 @@ class _CalendarViewState extends State<CalendarView> {
     });
   }
 
-  void _updateDraftBookingEdge(Offset globalPosition, RenderBox renderBox, bool isStart) {
-    if (_draftBooking == null) return;
+  void _updateDraftBookingEdge(
+      Offset globalPosition,
+      RenderBox roomBox,
+      bool isStart,
+      ) {
+    final local = roomBox.globalToLocal(globalPosition);
 
-    final localPosition = renderBox.globalToLocal(globalPosition);
-    final adjustedDy = localPosition.dy + (isStart ? -6.0 : 6.0);
-    final newPixelOffset = adjustedDy.clamp(0.0, (endHour - startHour) * hourHeight);
+    final newPixelOffset = local.dy.clamp(
+      0.0,
+      (endHour - startHour) * hourHeight,
+    );
 
     setState(() {
       if (isStart) {
@@ -606,11 +611,15 @@ class _CalendarViewState extends State<CalendarView> {
       }
 
       if (_draftBooking!.endTime.isBefore(_draftBooking!.startTime)) {
-        _draftBooking!.endTime = _draftBooking!.startTime.add(const Duration(minutes: 30));
-        _draftBooking!.endPixelOffset = _draftBooking!.startPixelOffset + (hourHeight / 2);
+        _draftBooking!.endTime =
+            _draftBooking!.startTime.add(const Duration(minutes: 30));
+        _draftBooking!.endPixelOffset =
+            _draftBooking!.startPixelOffset + hourHeight / 2;
       }
     });
   }
+
+
 
   void _confirmDraftBooking() {
     if (_draftBooking != null) {
@@ -661,7 +670,7 @@ class _CalendarViewState extends State<CalendarView> {
                         Expanded(
                           child: Row(
                             children: widget.visibleRooms
-                                .map((room) => _buildRoomColumn(room, renderBox))
+                                .map((room) => _buildRoomColumn(room))
                                 .toList(),
                           ),
                         ),
@@ -774,63 +783,82 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  Widget _buildRoomColumn(RoomInfo room, RenderBox? renderBox) {
-    final bookingsForRoom = _getBookingsForRoom(room.id);
-
+  Widget _buildRoomColumn(RoomInfo room) {
     return Expanded(
-      child: GestureDetector(
-        onTapDown: (details) => _startDraftBooking(room, details.localPosition),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-              ),
-            ),
-          ),
-          child: Stack(
-            children: [
-              Column(
-                children: List.generate(
-                  endHour - startHour,
-                      (index) => Container(
-                    height: hourHeight,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-                        ),
-                      ),
-                      color: room.color.withOpacity(0.02),
-                    ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final roomBox = context.findRenderObject() as RenderBox?;
+          final bookingsForRoom = _getBookingsForRoom(room.id);
+
+          return GestureDetector(
+            onTapDown: (details) =>
+                _startDraftBooking(room, details.localPosition),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withOpacity(0.2),
                   ),
                 ),
               ),
-              ...bookingsForRoom.map((booking) {
-                final startPixel = _getPixelForTime(booking.startTime);
-                final endPixel = _getPixelForTime(booking.endTime);
-                final height = endPixel - startPixel;
+              child: Stack(
+                children: [
+                  // Hour grid
+                  Column(
+                    children: List.generate(
+                      endHour - startHour,
+                          (index) => Container(
+                        height: hourHeight,
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withOpacity(0.1),
+                            ),
+                          ),
+                          color: room.color.withOpacity(0.02),
+                        ),
+                      ),
+                    ),
+                  ),
 
-                return Positioned(
-                  top: startPixel,
-                  left: 2,
-                  right: 2,
-                  child: _buildBookingBlock(booking, room, height),
-                );
-              }).toList(),
-              if (_draftBooking != null && _draftBooking!.roomId == room.id)
-                Positioned(
-                  top: _draftBooking!.startPixelOffset,
-                  left: 2,
-                  right: 2,
-                  child: _buildDraftBookingBlock(room, renderBox),
-                ),
-            ],
-          ),
-        ),
+                  // Existing bookings
+                  ...bookingsForRoom.map((booking) {
+                    final startPixel = _getPixelForTime(booking.startTime);
+                    final endPixel = _getPixelForTime(booking.endTime);
+                    final height = endPixel - startPixel;
+
+                    return Positioned(
+                      top: startPixel,
+                      left: 2,
+                      right: 2,
+                      child: _buildBookingBlock(booking, room, height),
+                    );
+                  }),
+
+                  // Draft booking
+                  if (_draftBooking != null &&
+                      _draftBooking!.roomId == room.id)
+                    Positioned(
+                      top: _draftBooking!.startPixelOffset,
+                      left: 2,
+                      right: 2,
+                      child: _buildDraftBookingBlock(room, roomBox),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
+
 
   Widget _buildBookingBlock(Booking booking, RoomInfo room, double height) {
     return Container(
@@ -909,29 +937,31 @@ class _CalendarViewState extends State<CalendarView> {
 
   Widget _buildDragHandle(bool isTop, RenderBox? renderBox) {
     return Positioned(
-      top: isTop ? -6 : null,
-      bottom: isTop ? null : -6,
+      top: isTop ? 0 : null,
+      bottom: isTop ? null : 0,
       left: 0,
       right: 0,
-      child: GestureDetector(
-        onPanUpdate: (details) {
-          if (renderBox != null) {
-            _updateDraftBookingEdge(details.globalPosition, renderBox, isTop);
-          }
-        },
-        child: MouseRegion(
-          cursor: SystemMouseCursors.resizeRow,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.resizeRow,
+        child: GestureDetector(
+          onPanUpdate: (details) {
+            if (renderBox != null) {
+              _updateDraftBookingEdge(
+                details.globalPosition,
+                renderBox,
+                isTop,
+              );
+            }
+          },
           child: Container(
             height: 12,
             decoration: BoxDecoration(
               color: _draftBooking!.roomInfo.color,
-              borderRadius: BorderRadius.vertical(
-                top: isTop ? const Radius.circular(4) : Radius.zero,
-                bottom: isTop ? Radius.zero : const Radius.circular(4),
-              ),
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
         ),
+
       ),
     );
   }
