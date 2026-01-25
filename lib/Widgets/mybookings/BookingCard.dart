@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../models/booking.dart';
-import '../../models/Enums/booking_status.dart';
+import '../../Models/booking.dart';
+import '../../Models/Enums/booking_status.dart';
 
 class BookingCard extends StatelessWidget {
   final Booking booking;
@@ -99,7 +99,7 @@ class BookingCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Ref: #${booking.id.substring(0, 8).toUpperCase()}',
+                    'Ref: #${booking.id.length > 8 ? booking.id.substring(0, 8).toUpperCase() : booking.id.toUpperCase()}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       fontSize: isMobile ? 11 : 13,
