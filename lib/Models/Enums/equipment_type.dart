@@ -6,6 +6,24 @@ enum EquipmentType {
   hdmiCable,
   other;
 
+  /// API value for the equipment (what the backend expects)
+  String get apiValue {
+    switch (this) {
+      case EquipmentType.beamer:
+        return 'BEAMER';
+      case EquipmentType.whiteboard:
+        return 'WHITEBOARD';
+      case EquipmentType.display:
+        return 'DISPLAY';
+      case EquipmentType.videoConference:
+        return 'VIDEO_CONFERENCE';
+      case EquipmentType.hdmiCable:
+        return 'HDMI_CABLE';
+      case EquipmentType.other:
+        return 'OTHER';
+    }
+  }
+
   /// Display name for the equipment
   String get displayName {
     switch (this) {

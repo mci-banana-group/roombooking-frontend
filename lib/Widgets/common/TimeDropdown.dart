@@ -7,6 +7,7 @@ class TimeDropdown extends StatelessWidget {
   final Color primaryColor;
   final Color mutedColor;
   final Color textColor;
+  final String? minTime; // 👈 NEW
 
   const TimeDropdown({
     required this.selectedTime,
@@ -15,26 +16,39 @@ class TimeDropdown extends StatelessWidget {
     required this.primaryColor,
     required this.mutedColor,
     required this.textColor,
+    this.minTime,
   });
+
+  int _toMinutes(String time) {
+    final parts = time.split(':');
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final times = <String>[];
+    final allTimes = <String>[];
 
     // 06:00 → 23:30
     for (int h = 6; h < 24; h++) {
       for (int m in [0, 30]) {
-        times.add(
+        allTimes.add(
           '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}',
         );
       }
     }
 
-    // Add 24:00 manually (end-of-day)
-    times.add('24:00');
+    // Add 24:00 manually
+    allTimes.add('24:00');
+
+    // ⛔ Filter invalid end times
+    final times = minTime == null
+        ? allTimes
+        : allTimes
+        .where((t) => _toMinutes(t) > _toMinutes(minTime!))
+        .toList();
 
     return DropdownButtonFormField<String>(
-      value: times.contains(selectedTime) ? selectedTime : null,
+      value: times.contains(selectedTime) ? selectedTime : times.first,
       decoration: InputDecoration(
         filled: true,
         fillColor: isDark ? const Color(0xFF333535) : Colors.white,

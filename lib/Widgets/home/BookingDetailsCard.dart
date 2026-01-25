@@ -76,6 +76,17 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
     }
   }
 
+  int _timeToMinutes(String time) {
+    final parts = time.split(':');
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+  }
+
+  String _minutesToTime(int minutes) {
+    final h = (minutes ~/ 60).toString().padLeft(2, '0');
+    final m = (minutes % 60).toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
   Future<void> _loadEquipmentForBuilding(int buildingId) async {
     try {
       setState(() {
@@ -383,8 +394,18 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                             setState(() {
                               _selectedStartTime = value;
                               _selectedDuration = '';
+
+                              final startMinutes = _timeToMinutes(_selectedStartTime);
+                              final endMinutes = _timeToMinutes(_selectedEndTime);
+
+                              // If end <= start → auto-fix end (+30 min)
+                              if (endMinutes <= startMinutes) {
+                                final newEnd = startMinutes + 30;
+                                _selectedEndTime = _minutesToTime(newEnd);
+                              }
                             });
                           },
+
                           isDark: isDark,
                           primaryColor: primaryColor,
                           mutedColor: mutedColor,
@@ -404,6 +425,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                         const SizedBox(height: 8),
                         TimeDropdown(
                           selectedTime: _selectedEndTime,
+                          minTime: _selectedStartTime, // 👈 magic line
                           onChanged: (value) {
                             setState(() {
                               _selectedEndTime = value;
@@ -415,6 +437,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           mutedColor: mutedColor,
                           textColor: textColor,
                         ),
+
                       ],
                     ),
                   ),
@@ -535,10 +558,13 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                 child: ElevatedButton(
                   onPressed: _selectedBuildingId != null
                       ? () {
+
                     List<String> selectedEquipment = _equipment.entries
                         .where((entry) => entry.value)
-                        .map((entry) => entry.key.displayName)
+                        .map((entry) => entry.key.apiValue)     // ✅ CORRECT: Sends "BEAMER"
                         .toList();
+
+                    print('DEBUG: Selected equipment = $selectedEquipment');
 
                     Navigator.push(
                       context,
@@ -548,11 +574,15 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           startTime: _selectedStartTime,
                           endTime: _selectedEndTime,
                           capacity: _attendees,
-                          equipment: selectedEquipment,
+                          equipment: selectedEquipment,         // ✅ Now correct format!
                           isFromQuickCalendar: false,
+                          buildingId: _selectedBuildingId,
+                          buildingName: _selectedBuildingName,
                         ),
                       ),
                     );
+
+
                   }
                       : null,
                   style: ElevatedButton.styleFrom(
@@ -634,21 +664,21 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
   }
 
   void _calculateEndTime(String duration) {
-    final startTime = _parseTime(_selectedStartTime);
+    final startMinutes = _timeToMinutes(_selectedStartTime);
     final durationMinutes = _parseDuration(duration);
-    var endTime = startTime.add(Duration(minutes: durationMinutes));
 
-    if (endTime.hour >= 24) {
-      endTime = DateTime(0, 0, 0, endTime.hour - 24, endTime.minute);
-    }
+    final endMinutes = startMinutes + durationMinutes;
 
-    final formattedTime = _formatTime(endTime);
+    // ❌ Do not allow past 24:00
+    if (endMinutes > 24 * 60) return;
 
     setState(() {
-      _selectedEndTime = formattedTime;
+      _selectedEndTime = _minutesToTime(endMinutes);
       _selectedDuration = duration;
     });
   }
+
+
 
   int _parseDuration(String duration) {
     if (duration.contains('min')) {

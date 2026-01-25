@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../Models/booking.dart';
 import '../Models/room.dart';
+import '../Models/Enums/booking_status.dart';
 import '../Widgets/mybookings/BookingCard.dart';
 import '../Widgets/mybookings/BookingStats.dart';
 import '../Services/auth_service.dart';
 import '../Services/room_service.dart';
+import '../Services/booking_service.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -16,6 +18,7 @@ class BookingsPage extends StatefulWidget {
 class _BookingsPageState extends State<BookingsPage> {
   final AuthService _authService = AuthService();
   final RoomService _roomService = RoomService();
+  final BookingService _bookingService = BookingService();
 
   List<Booking> _bookings = [];
   Map<String, Room> _roomsCache = {};
@@ -28,6 +31,129 @@ class _BookingsPageState extends State<BookingsPage> {
   void initState() {
     super.initState();
     _loadBookings();
+  }
+
+  // ✅ Check-in function
+  Future<void> _showCheckInDialog(Booking booking) async {
+    final controller = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Check in to booking'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Enter check-in code'),
+          obscureText: false,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Check In'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      final code = controller.text.trim();
+      if (code.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enter a code'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Show loading dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      try {
+        print('✅ Checking in with code: $code');
+
+        // ✅ Use BookingService.checkInBooking instead of AuthService.checkIn
+        final bookingIdInt = int.tryParse(booking.id) ?? 0;
+        final success = await _bookingService.checkInBooking(
+          bookingId: bookingIdInt,
+          code: code,
+        );
+
+        if (mounted) Navigator.pop(context); // Close loading dialog
+
+        if (success) {
+          print('✅ Check-in successful');
+          await _loadBookings();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Checked in successfully'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          print('❌ Check-in failed');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Invalid code or check-in failed'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) Navigator.pop(context); // Close loading dialog
+        print('❌ Check-in error: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    }
+
+    controller.dispose();
+  }
+
+  // ✅ Check if booking is within 15 minutes before start time
+  bool _isCheckInAvailable(Booking booking) {
+    final now = DateTime.now();
+    final fifteenMinutesBefore = booking.startTime.subtract(const Duration(minutes: 15));
+    final fifteenMinutesAfter = booking.startTime.add(const Duration(minutes: 15));
+
+    return now.isAfter(fifteenMinutesBefore) && now.isBefore(fifteenMinutesAfter);
+  }
+
+  // ✅ Check if booking is in the past (based on status)
+  bool _isBookingPast(Booking booking) {
+    // A booking is past if its status is CANCELLED, CHECKED_IN, or NO_SHOW
+    return booking.status == BookingStatus.cancelled ||
+        booking.status == BookingStatus.checkedIn ||
+        booking.status == BookingStatus.expired;
   }
 
   Future<void> _loadBookings() async {
@@ -70,14 +196,96 @@ class _BookingsPageState extends State<BookingsPage> {
     }
   }
 
-  List<Booking> _getFilteredBookings() {
-    final now = DateTime.now();
+  Future<void> _confirmDelete(Booking booking) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel booking?'),
+        content: const Text('Are you sure you want to cancel this booking?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('No')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes, cancel'),
+          ),
+        ],
+      ),
+    );
 
+    if (result == true) {
+      // Show loading dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      try {
+        final success = await _bookingService.cancelBooking(booking.id);
+
+        if (mounted) Navigator.pop(context); // Close loading dialog
+
+        if (success) {
+          _loadBookings();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Booking cancelled successfully'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to cancel booking'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) Navigator.pop(context); // Close loading dialog
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  List<Booking> _getFilteredBookings() {
     switch (_selectedTab) {
       case BookingFilterTab.upcoming:
-        return _bookings.where((booking) => booking.startTime.isAfter(now)).toList();
+      // Upcoming = RESERVED status and start time in the future
+        return _bookings
+            .where((booking) =>
+        booking.status == BookingStatus.confirmed &&
+            booking.startTime.isAfter(DateTime.now()))
+            .toList();
+
       case BookingFilterTab.past:
-        return _bookings.where((booking) => booking.startTime.isBefore(now)).toList();
+      // Past = CANCELLED, CHECKED_IN, or NO_SHOW status
+        return _bookings
+            .where((booking) =>
+        booking.status == BookingStatus.cancelled ||
+            booking.status == BookingStatus.checkedIn ||
+            booking.status == BookingStatus.expired)
+            .toList();
+
       case BookingFilterTab.all:
         return _bookings;
     }
@@ -87,13 +295,28 @@ class _BookingsPageState extends State<BookingsPage> {
     return _roomsCache[roomId]?.name ?? 'Room $roomId';
   }
 
+  String _getBuildingName(String roomId) {
+    // ✅ FIXED: Return empty or placeholder since building field doesn't exist
+    // Update this if your Room model has a building field
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredBookings = _getFilteredBookings();
     final now = DateTime.now();
+
+    // Calculate stats based on status
     final totalBookings = _bookings.length;
-    final upcomingBookings = _bookings.where((b) => b.startTime.isAfter(now)).length;
-    final pastBookings = _bookings.where((b) => b.startTime.isBefore(now)).length;
+    final upcomingBookings = _bookings
+        .where((b) => b.status == BookingStatus.confirmed && b.startTime.isAfter(now))
+        .length;
+    final pastBookings = _bookings
+        .where((b) =>
+    b.status == BookingStatus.cancelled ||
+        b.status == BookingStatus.checkedIn ||
+        b.status == BookingStatus.expired)
+        .length;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -108,122 +331,131 @@ class _BookingsPageState extends State<BookingsPage> {
           ? const Center(child: CircularProgressIndicator())
           : _loadError != null
           ? Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 48),
-                    const SizedBox(height: 16),
-                    const Text('Failed to load bookings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    Text(
-                      _loadError!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: _loadBookings,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
-                    ),
-                  ],
-                ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48),
+              const SizedBox(height: 16),
+              const Text('Failed to load bookings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Text(
+                _loadError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
               ),
-            )
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _loadBookings,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      )
           : CustomScrollView(
-              slivers: [
-                // Header Section
-                SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 24),
-                      Text(
-                        'My Bookings',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'Manage your meeting room reservations',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+        slivers: [
+          // Header Section
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 24),
+                Text(
+                  'My Bookings',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'Manage your meeting room reservations',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-
-                // Statistics cards with max width
-                SliverToBoxAdapter(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: BookingStats(
-                          totalBookings: totalBookings,
-                          upcomingBookings: upcomingBookings,
-                          pastBookings: pastBookings,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-                // Tab filter with max width
-                SliverToBoxAdapter(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
-                      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _buildTabBar(context)),
-                    ),
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-                // Bookings list with max width
-                if (filteredBookings.isEmpty)
-                  SliverFillRemaining(child: _buildEmptyState(context))
-                else
-                  SliverToBoxAdapter(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1200),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: filteredBookings.length,
-                            itemBuilder: (context, index) {
-                              final booking = filteredBookings[index];
-                              return BookingCard(booking: booking, roomName: _getRoomName(booking.roomId));
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                const SizedBox(height: 24),
               ],
             ),
+          ),
+
+          // Statistics cards with max width
+          SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: BookingStats(
+                    totalBookings: totalBookings,
+                    upcomingBookings: upcomingBookings,
+                    pastBookings: pastBookings,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+          // Tab filter with max width
+          SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _buildTabBar(context)),
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+          // Bookings list with max width
+          if (filteredBookings.isEmpty)
+            SliverFillRemaining(child: _buildEmptyState(context))
+          else
+            SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredBookings.length,
+                      itemBuilder: (context, index) {
+                        final booking = filteredBookings[index];
+                        final isCheckInAvailable = _isCheckInAvailable(booking);
+                        final isPast = _isBookingPast(booking);
+
+                        return BookingCard(
+                          booking: booking,
+                          roomName: _getRoomName(booking.roomId),
+                          buildingName: _getBuildingName(booking.roomId),
+                          onCheckIn: isCheckInAvailable && !isPast ? () => _showCheckInDialog(booking) : null,
+                          onDelete: !isPast ? () => _confirmDelete(booking) : null,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
     );
   }
 
@@ -263,12 +495,12 @@ class _BookingsPageState extends State<BookingsPage> {
   }
 
   Widget _buildTab(
-    BuildContext context, {
-    required String label,
-    required BookingFilterTab tab,
-    required bool isFirst,
-    required bool isLast,
-  }) {
+      BuildContext context, {
+        required String label,
+        required BookingFilterTab tab,
+        required bool isFirst,
+        required bool isLast,
+      }) {
     final isSelected = _selectedTab == tab;
 
     return Material(

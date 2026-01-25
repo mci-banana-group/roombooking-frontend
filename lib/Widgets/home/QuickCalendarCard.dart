@@ -185,14 +185,17 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
               MaterialPageRoute(
                 builder: (context) => BookingAvailabilityPage(
                   date: selectedDate,
-                  startTime: '09:00',              // ✅ Default start time
-                  endTime: '17:00',                // ✅ Default end time
-                  capacity: 1,                     // ✅ Default capacity (1 person)
-                  equipment: const [],             // ✅ Empty equipment list
-                  isFromQuickCalendar: true,       // ✅ Flag for quick calendar navigation
+                  startTime: '06:00',                     // ✅ Full day
+                  endTime: '23:59',                       // ✅ Full day
+                  capacity: 1,
+                  equipment: const [],
+                  isFromQuickCalendar: true,              // ✅ Flag ignores time filter
+                  buildingId: null,                       // ✅ Show all buildings
+                  buildingName: null,
                 ),
               ),
             );
+
           },
           child: Container(
             decoration: BoxDecoration(
