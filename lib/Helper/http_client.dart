@@ -6,7 +6,7 @@ class HttpClient {
   static const String corsProxy = 'https://cors-anywhere.herokuapp.com/';
   
   // Flag to enable/disable CORS proxy (set to false for production)
-  static const bool useCorsProxy = true;
+  static const bool useCorsProxy = false;
   
   static String _getUrl(String url) {
     // Only use CORS proxy for web builds and when enabled
@@ -69,7 +69,7 @@ class HttpClient {
       body: body,
     );
   }
-  
+
   static Future<http.Response> delete(
     Uri uri, {
     Map<String, String>? headers,
