@@ -53,10 +53,7 @@ class AuthService {
       firstName: prefs.getString(_userFirstNameKey) ?? '',
       lastName: prefs.getString(_userLastNameKey) ?? '',
       email: prefs.getString(_userEmailKey) ?? '',
-      role: UserRoleResponse(
-        name: prefs.getString(_userRoleKey) ?? 'STUDENT',
-        ordinal: 0,
-      ),
+      role: UserRoleResponse(name: prefs.getString(_userRoleKey) ?? 'STUDENT', ordinal: 0),
       isAdmin: prefs.getBool(_userIsAdminKey) ?? false,
     );
   }
@@ -66,16 +63,13 @@ class AuthService {
     try {
       final url = '${API.base_url}${API.loginUser}';
       print('Login URL: $url');
-      
+
       final requestBody = jsonEncode(LoginRequest(email: email, password: password).toJson());
       print('Request body: $requestBody');
-      
+
       final response = await HttpClient.post(
         Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: requestBody,
       );
 
@@ -123,10 +117,7 @@ class AuthService {
     try {
       final response = await HttpClient.post(
         Uri.parse('${API.base_url}${API.checkInBooking}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_token',
-        },
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
         body: jsonEncode(CheckInRequest(bookingId: bookingId, code: code).toJson()),
       );
 
@@ -142,9 +133,7 @@ class AuthService {
     try {
       final response = await HttpClient.get(
         Uri.parse('${API.base_url}${API.getBookings}'),
-        headers: {
-          'Authorization': 'Bearer $_token',
-        },
+        headers: {'Authorization': 'Bearer $_token'},
       );
 
       if (response.statusCode == 200) {
@@ -163,12 +152,10 @@ class AuthService {
     try {
       final response = await HttpClient.post(
         Uri.parse('${API.base_url}${API.createBooking}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_token',
-        },
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
         body: jsonEncode(bookingData),
       );
+      print(response.body);
 
       return response.statusCode == 201;
     } catch (e) {
@@ -182,10 +169,7 @@ class AuthService {
     try {
       final response = await HttpClient.put(
         Uri.parse('${API.base_url}${API.updateBooking}/$bookingId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_token',
-        },
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
         body: jsonEncode(bookingData),
       );
 
@@ -201,9 +185,7 @@ class AuthService {
     try {
       final response = await HttpClient.delete(
         Uri.parse('${API.base_url}${API.deleteBooking}/$bookingId'),
-        headers: {
-          'Authorization': 'Bearer $_token',
-        },
+        headers: {'Authorization': 'Bearer $_token'},
       );
 
       return response.statusCode == 204;
@@ -218,9 +200,7 @@ class AuthService {
     try {
       final response = await HttpClient.get(
         Uri.parse('${API.base_url}${API.getBuildings}'),
-        headers: {
-          'Authorization': 'Bearer $_token',
-        },
+        headers: {'Authorization': 'Bearer $_token'},
       );
 
       if (response.statusCode == 200) {
@@ -235,12 +215,7 @@ class AuthService {
   }
 
   // Get all rooms with optional filters
-  Future<List<dynamic>> getRooms({
-        int? capacity,
-        String? equipment,
-        int? buildingId,
-        String? date,
-      }) async {
+  Future<List<dynamic>> getRooms({int? capacity, String? equipment, int? buildingId, String? date}) async {
     try {
       var uri = Uri.parse('${API.base_url}${API.getRooms}?');
       if (capacity != null) {
@@ -256,12 +231,7 @@ class AuthService {
         uri = uri.replace(queryParameters: {'date': date});
       }
 
-      final response = await HttpClient.get(
-        uri,
-        headers: {
-          'Authorization': 'Bearer $_token',
-        },
-      );
+      final response = await HttpClient.get(uri, headers: {'Authorization': 'Bearer $_token'});
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -279,9 +249,7 @@ class AuthService {
     try {
       final response = await HttpClient.get(
         Uri.parse('${API.base_url}${API.getRoomEquipment}?buildingId=$buildingId'),
-        headers: {
-          'Authorization': 'Bearer $_token',
-        },
+        headers: {'Authorization': 'Bearer $_token'},
       );
 
       if (response.statusCode == 200) {

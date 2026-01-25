@@ -6,11 +6,7 @@ class BookingCard extends StatelessWidget {
   final Booking booking;
   final String roomName;
 
-  const BookingCard({
-    super.key,
-    required this.booking,
-    required this.roomName,
-  });
+  const BookingCard({super.key, required this.booking, required this.roomName});
 
   @override
   Widget build(BuildContext context) {
@@ -19,16 +15,10 @@ class BookingCard extends StatelessWidget {
     return Card(
       color: Theme.of(context).colorScheme.surface,
       elevation: 0,
-      margin: EdgeInsets.symmetric(
-        horizontal: 0,
-        vertical: isMobile ? 6 : 8,
-      ),
+      margin: EdgeInsets.symmetric(horizontal: 0, vertical: isMobile ? 6 : 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-          width: 1,
-        ),
+        side: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.2), width: 1),
       ),
       child: Padding(
         padding: EdgeInsets.all(isMobile ? 12 : 16),
@@ -66,10 +56,7 @@ class BookingCard extends StatelessWidget {
                 Icon(
                   Icons.calendar_today,
                   size: isMobile ? 14 : 16,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -88,10 +75,7 @@ class BookingCard extends StatelessWidget {
                 Icon(
                   Icons.access_time,
                   size: isMobile ? 14 : 16,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -110,20 +94,14 @@ class BookingCard extends StatelessWidget {
                 Icon(
                   Icons.info_outline,
                   size: isMobile ? 14 : 16,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.6),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Ref: #${booking.id.substring(0, 8).toUpperCase()}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.6),
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       fontSize: isMobile ? 11 : 13,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -142,10 +120,7 @@ class BookingCard extends StatelessWidget {
                   label: const Text('Edit'),
                   style: TextButton.styleFrom(
                     foregroundColor: Theme.of(context).colorScheme.primary,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isMobile ? 8 : 12,
-                      vertical: isMobile ? 4 : 8,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12, vertical: isMobile ? 4 : 8),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -155,10 +130,7 @@ class BookingCard extends StatelessWidget {
                   label: const Text('Cancel'),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.red,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isMobile ? 8 : 12,
-                      vertical: isMobile ? 4 : 8,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12, vertical: isMobile ? 4 : 8),
                   ),
                 ),
               ],
@@ -183,11 +155,10 @@ class BookingCard extends StatelessWidget {
         label = 'Pending';
         break;
       case BookingStatus.confirmed:
-        backgroundColor =
-            Theme.of(context).colorScheme.primary.withOpacity(0.15);
+        backgroundColor = Theme.of(context).colorScheme.primary.withOpacity(0.15);
         textColor = Theme.of(context).colorScheme.primary;
         icon = Icons.check_circle;
-        label = 'Confirmed';
+        label = 'Reserved';
         break;
       case BookingStatus.cancelled:
         backgroundColor = Colors.red.withOpacity(0.15);
@@ -195,27 +166,23 @@ class BookingCard extends StatelessWidget {
         icon = Icons.cancel;
         label = 'Cancelled';
         break;
+      case BookingStatus.checkedIn:
+        backgroundColor = Colors.green.withOpacity(0.15);
+        textColor = Colors.green;
+        icon = Icons.verified;
+        label = 'Checked in';
+        break;
       case BookingStatus.expired:
-        backgroundColor = Theme.of(context)
-            .colorScheme
-            .onSurface
-            .withOpacity(0.15);
-        textColor =
-            Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
+        backgroundColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.15);
+        textColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.6);
         icon = Icons.schedule;
-        label = 'Expired';
+        label = 'No show';
         break;
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 6 : 8,
-        vertical: isMobile ? 2 : 4,
-      ),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 6 : 8, vertical: isMobile ? 2 : 4),
+      decoration: BoxDecoration(color: backgroundColor, borderRadius: BorderRadius.circular(6)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

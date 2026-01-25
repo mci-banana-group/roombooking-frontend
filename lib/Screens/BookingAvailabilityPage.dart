@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../Models/room.dart' as api;
+import '../Services/auth_service.dart';
+import '../Services/room_service.dart';
+
 // ============================================================================
 // MODELS
 // ============================================================================
@@ -35,12 +39,7 @@ class Booking {
   final DateTime startTime;
   final DateTime endTime;
 
-  Booking({
-    required this.roomId,
-    required this.title,
-    required this.startTime,
-    required this.endTime,
-  });
+  Booking({required this.roomId, required this.title, required this.startTime, required this.endTime});
 }
 
 class DraftBooking {
@@ -161,23 +160,108 @@ class MockData {
 
   static List<Booking> getMockBookingsForDate(DateTime date) {
     return [
-      Booking(roomId: 1, title: 'Morning Standup', startTime: date.add(const Duration(hours: 9)), endTime: date.add(const Duration(hours: 10))),
-      Booking(roomId: 1, title: 'UX research', startTime: date.add(const Duration(hours: 14)), endTime: date.add(const Duration(hours: 16))),
-      Booking(roomId: 2, title: 'Board Meeting', startTime: date.add(const Duration(hours: 10)), endTime: date.add(const Duration(hours: 12))),
-      Booking(roomId: 2, title: 'Sprint planning', startTime: date.add(const Duration(hours: 14)), endTime: date.add(const Duration(hours: 16))),
-      Booking(roomId: 2, title: 'Review Session', startTime: date.add(const Duration(hours: 16)), endTime: date.add(const Duration(hours: 18))),
-      Booking(roomId: 3, title: 'Brainstorm', startTime: date.add(const Duration(hours: 13)), endTime: date.add(const Duration(hours: 14))),
-      Booking(roomId: 3, title: 'Workshop', startTime: date.add(const Duration(hours: 15)), endTime: date.add(const Duration(hours: 17))),
-      Booking(roomId: 4, title: 'Focus Time', startTime: date.add(const Duration(hours: 10)), endTime: date.add(const Duration(hours: 11))),
-      Booking(roomId: 4, title: '1:1 Meeting', startTime: date.add(const Duration(hours: 15)), endTime: date.add(const Duration(hours: 16))),
-      Booking(roomId: 5, title: 'Training Session', startTime: date.add(const Duration(hours: 9)), endTime: date.add(const Duration(hours: 12))),
-      Booking(roomId: 5, title: 'Workshop', startTime: date.add(const Duration(hours: 14)), endTime: date.add(const Duration(hours: 17))),
-      Booking(roomId: 6, title: 'Executive Meeting', startTime: date.add(const Duration(hours: 11)), endTime: date.add(const Duration(hours: 12))),
-      Booking(roomId: 6, title: 'Strategy Session', startTime: date.add(const Duration(hours: 15)), endTime: date.add(const Duration(hours: 16))),
-      Booking(roomId: 7, title: 'Demo Session', startTime: date.add(const Duration(hours: 10)), endTime: date.add(const Duration(hours: 11))),
-      Booking(roomId: 7, title: 'Technical Review', startTime: date.add(const Duration(hours: 13)), endTime: date.add(const Duration(hours: 15))),
-      Booking(roomId: 8, title: 'Design Workshop', startTime: date.add(const Duration(hours: 11)), endTime: date.add(const Duration(hours: 13))),
-      Booking(roomId: 8, title: 'Creative Session', startTime: date.add(const Duration(hours: 15)), endTime: date.add(const Duration(hours: 17))),
+      Booking(
+        roomId: 1,
+        title: 'Morning Standup',
+        startTime: date.add(const Duration(hours: 9)),
+        endTime: date.add(const Duration(hours: 10)),
+      ),
+      Booking(
+        roomId: 1,
+        title: 'UX research',
+        startTime: date.add(const Duration(hours: 14)),
+        endTime: date.add(const Duration(hours: 16)),
+      ),
+      Booking(
+        roomId: 2,
+        title: 'Board Meeting',
+        startTime: date.add(const Duration(hours: 10)),
+        endTime: date.add(const Duration(hours: 12)),
+      ),
+      Booking(
+        roomId: 2,
+        title: 'Sprint planning',
+        startTime: date.add(const Duration(hours: 14)),
+        endTime: date.add(const Duration(hours: 16)),
+      ),
+      Booking(
+        roomId: 2,
+        title: 'Review Session',
+        startTime: date.add(const Duration(hours: 16)),
+        endTime: date.add(const Duration(hours: 18)),
+      ),
+      Booking(
+        roomId: 3,
+        title: 'Brainstorm',
+        startTime: date.add(const Duration(hours: 13)),
+        endTime: date.add(const Duration(hours: 14)),
+      ),
+      Booking(
+        roomId: 3,
+        title: 'Workshop',
+        startTime: date.add(const Duration(hours: 15)),
+        endTime: date.add(const Duration(hours: 17)),
+      ),
+      Booking(
+        roomId: 4,
+        title: 'Focus Time',
+        startTime: date.add(const Duration(hours: 10)),
+        endTime: date.add(const Duration(hours: 11)),
+      ),
+      Booking(
+        roomId: 4,
+        title: '1:1 Meeting',
+        startTime: date.add(const Duration(hours: 15)),
+        endTime: date.add(const Duration(hours: 16)),
+      ),
+      Booking(
+        roomId: 5,
+        title: 'Training Session',
+        startTime: date.add(const Duration(hours: 9)),
+        endTime: date.add(const Duration(hours: 12)),
+      ),
+      Booking(
+        roomId: 5,
+        title: 'Workshop',
+        startTime: date.add(const Duration(hours: 14)),
+        endTime: date.add(const Duration(hours: 17)),
+      ),
+      Booking(
+        roomId: 6,
+        title: 'Executive Meeting',
+        startTime: date.add(const Duration(hours: 11)),
+        endTime: date.add(const Duration(hours: 12)),
+      ),
+      Booking(
+        roomId: 6,
+        title: 'Strategy Session',
+        startTime: date.add(const Duration(hours: 15)),
+        endTime: date.add(const Duration(hours: 16)),
+      ),
+      Booking(
+        roomId: 7,
+        title: 'Demo Session',
+        startTime: date.add(const Duration(hours: 10)),
+        endTime: date.add(const Duration(hours: 11)),
+      ),
+      Booking(
+        roomId: 7,
+        title: 'Technical Review',
+        startTime: date.add(const Duration(hours: 13)),
+        endTime: date.add(const Duration(hours: 15)),
+      ),
+      Booking(
+        roomId: 8,
+        title: 'Design Workshop',
+        startTime: date.add(const Duration(hours: 11)),
+        endTime: date.add(const Duration(hours: 13)),
+      ),
+      Booking(
+        roomId: 8,
+        title: 'Creative Session',
+        startTime: date.add(const Duration(hours: 15)),
+        endTime: date.add(const Duration(hours: 17)),
+      ),
     ];
   }
 }
@@ -188,8 +272,8 @@ class MockData {
 
 class BookingAvailabilityPage extends StatefulWidget {
   final DateTime? date;
-  final String? startTime;    // "HH:mm"
-  final String? endTime;      // "HH:mm"
+  final String? startTime; // "HH:mm"
+  final String? endTime; // "HH:mm"
   final String? building;
   final int? attendees;
   final List<String>? equipment;
@@ -211,6 +295,9 @@ class BookingAvailabilityPage extends StatefulWidget {
 }
 
 class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
+  final RoomService _roomService = RoomService();
+  final AuthService _authService = AuthService();
+
   late DateTime _selectedDate;
   late DateTime _suggestedStartTime;
   late DateTime _suggestedEndTime;
@@ -218,12 +305,18 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   late List<Booking> _bookings;
   int _visibleRoomStart = 0;
 
+  bool _isLoading = false;
+  String? _loadError;
+
+  List<Map<String, dynamic>>? _buildingsCache;
+
   @override
   void initState() {
     super.initState();
     _initializeBookingData();
-    _rooms = MockData.getMockRooms();
-    _bookings = MockData.getMockBookingsForDate(_selectedDate);
+    _rooms = <RoomInfo>[];
+    _bookings = <Booking>[];
+    _loadAvailability();
   }
 
   void _initializeBookingData() {
@@ -253,6 +346,172 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
     }
   }
 
+  int _roomIdAsInt(String rawId) {
+    final parsed = int.tryParse(rawId);
+    if (parsed != null) return parsed;
+
+    // Stable-ish hash (do NOT use Object.hashCode which is not stable across runs).
+    int hash = 0;
+    for (final unit in rawId.codeUnits) {
+      hash = (hash * 31 + unit) & 0x7fffffff;
+    }
+    // Avoid zero which can be a sentinel in some code.
+    return hash == 0 ? 1 : hash;
+  }
+
+  Color _colorForRoom(int id) {
+    const palette = <Color>[
+      Color(0xFF6366F1),
+      Color(0xFF8B5CF6),
+      Color(0xFFEC4899),
+      Color(0xFF06B6D4),
+      Color(0xFF10B981),
+      Color(0xFFF59E0B),
+      Color(0xFF3B82F6),
+      Color(0xFFEF4444),
+    ];
+    return palette[id.abs() % palette.length];
+  }
+
+  IconData _iconForRoom(api.Room room) {
+    // Keep it simple/consistent until backend provides room type metadata.
+    if (room.capacity >= 15) return Icons.school;
+    if (room.capacity >= 10) return Icons.meeting_room;
+    return Icons.person;
+  }
+
+  String _avatarForRoom(api.Room room) {
+    // The original UI expects a short avatar string.
+    // Use the first letter as a stable placeholder.
+    final trimmed = room.name.trim();
+    if (trimmed.isEmpty) return '🏢';
+    return trimmed.characters.first.toUpperCase();
+  }
+
+  String _equipmentLabel(String raw) {
+    final normalized = raw.trim();
+    if (normalized.isEmpty) return 'Other';
+
+    // Map enum-ish values to user friendly labels.
+    switch (normalized.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '')) {
+      case 'beamer':
+      case 'projector':
+        return 'Projector';
+      case 'whiteboard':
+        return 'Whiteboard';
+      case 'display':
+      case 'screen':
+        return 'Display';
+      case 'videoconference':
+        return 'Video Conference';
+      default:
+        // Capitalize first letter.
+        return normalized[0].toUpperCase() + normalized.substring(1);
+    }
+  }
+
+  RoomInfo _roomInfoFromApiRoom(api.Room room) {
+    final idInt = _roomIdAsInt(room.id);
+    return RoomInfo(
+      id: idInt,
+      name: room.name,
+      capacity: room.capacity,
+      color: _colorForRoom(idInt),
+      icon: _iconForRoom(room),
+      avatar: _avatarForRoom(room),
+      building: room.location.isNotEmpty ? room.location : (widget.building ?? 'Unknown'),
+      floor: room.floor == 0 ? '—' : '${room.floor}. Floor',
+      equipment: room.equipment.map((e) => _equipmentLabel(e.type.name)).toList(),
+    );
+  }
+
+  Future<int?> _resolveBuildingId(String? building) async {
+    if (building == null || building.trim().isEmpty) return null;
+
+    // If UI passes an ID as string already.
+    final parsed = int.tryParse(building);
+    if (parsed != null) return parsed;
+
+    _buildingsCache ??= await _roomService.getBuildings();
+    final normalized = building.trim().toLowerCase();
+
+    for (final b in _buildingsCache!) {
+      final name = (b['name'] ?? b['buildingName'] ?? '').toString().trim().toLowerCase();
+      if (name == normalized) {
+        return int.tryParse((b['id'] ?? '').toString());
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> _loadAvailability() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+      final startStr = widget.startTime ?? DateFormat('HH:mm').format(_suggestedStartTime);
+      final endStr = widget.endTime ?? DateFormat('HH:mm').format(_suggestedEndTime);
+      final capacity = widget.attendees ?? 1;
+      final buildingId = await _resolveBuildingId(widget.building);
+
+      final availableRooms = await _roomService.getAvailableRoomsWithBookings(
+        date: dateStr,
+        startTime: startStr,
+        endTime: endStr,
+        capacity: capacity,
+        buildingId: buildingId,
+        equipment: widget.equipment,
+      );
+
+      // Map API rooms to UI rooms.
+      final rooms = availableRooms.map((ar) => _roomInfoFromApiRoom(ar.room)).toList();
+
+      // Map API bookings to UI booking blocks.
+      final bookings = <Booking>[];
+      for (final ar in availableRooms) {
+        final roomIdInt = _roomIdAsInt(ar.room.id);
+        for (final b in ar.bookings) {
+          bookings.add(
+            Booking(
+              roomId: roomIdInt,
+              title: b.status.toString().isNotEmpty ? b.status.toString() : 'Booked',
+              startTime: b.startTime,
+              endTime: b.endTime,
+            ),
+          );
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _rooms = rooms;
+        _bookings = bookings;
+        _visibleRoomStart = 0;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = e.toString();
+        _rooms = <RoomInfo>[];
+        _bookings = <Booking>[];
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _toApiUtcIso(DateTime dt) {
+    // Backend expects ISO-8601 UTC strings, e.g. `2026-01-14T12:34:56Z`.
+    // Dart includes milliseconds by default (`...56.000Z`) which is still valid ISO-8601.
+    return dt.toUtc().toIso8601String();
+  }
+
   int _getColumnsCount() {
     final width = MediaQuery.of(context).size.width;
     if (width < 600) return 3;
@@ -262,10 +521,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
 
   List<RoomInfo> get _visibleRooms {
     final columnsCount = _getColumnsCount();
-    return _rooms.sublist(
-      _visibleRoomStart,
-      (_visibleRoomStart + columnsCount).clamp(0, _rooms.length),
-    );
+    return _rooms.sublist(_visibleRoomStart, (_visibleRoomStart + columnsCount).clamp(0, _rooms.length));
   }
 
   bool _canGoPreviousDay() {
@@ -279,16 +535,16 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
     if (_canGoPreviousDay()) {
       setState(() {
         _selectedDate = _selectedDate.subtract(const Duration(days: 1));
-        _bookings = MockData.getMockBookingsForDate(_selectedDate);
       });
+      _loadAvailability();
     }
   }
 
   void _goToNextDay() {
     setState(() {
       _selectedDate = _selectedDate.add(const Duration(days: 1));
-      _bookings = MockData.getMockBookingsForDate(_selectedDate);
     });
+    _loadAvailability();
   }
 
   void _previousRooms() {
@@ -312,24 +568,30 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
         selectedDate: _selectedDate,
         startTime: startTime,
         endTime: endTime,
-        onConfirm: (title) {
-          setState(() {
-            _bookings.add(
-              Booking(
-                roomId: room.id,
-                title: title,
-                startTime: startTime,
-                endTime: endTime,
-              ),
-            );
+        onConfirm: (title) async {
+          final apiRoomId = room.id;
+
+          final success = await _authService.createBooking({
+            'start': _toApiUtcIso(startTime),
+            'end': _toApiUtcIso(endTime),
+            'description': title,
+            'roomId': apiRoomId,
           });
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('✓ $title booked in ${room.name}'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+
+          if (!context.mounted) return;
+
+          if (success) {
+            Navigator.pop(context);
+            await _loadAvailability();
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('✓ $title booked in ${room.name}'), duration: const Duration(seconds: 2)),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Booking failed. Please try again.'), duration: Duration(seconds: 2)),
+            );
+          }
         },
       ),
     );
@@ -341,6 +603,13 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       appBar: AppBar(
         title: const Text('Room Scheduler'),
         elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: 'Refresh',
+            onPressed: _isLoading ? null : _loadAvailability,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -351,9 +620,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                 children: [
                   Text(
                     'Room Scheduler',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -374,9 +641,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                      ),
+                      border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -387,15 +652,9 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                         ),
                         Text(
                           DateFormat('EEEE, d. MMMM yyyy').format(_selectedDate),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                         ),
-                        IconButton(
-                          onPressed: _goToNextDay,
-                          icon: const Icon(Icons.arrow_forward),
-                        ),
+                        IconButton(onPressed: _goToNextDay, icon: const Icon(Icons.arrow_forward)),
                       ],
                     ),
                   ),
@@ -403,9 +662,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
               ),
             ),
 
-            if (widget.building != null ||
-                widget.startTime != null ||
-                widget.attendees != null)
+            if (widget.building != null || widget.startTime != null || widget.attendees != null)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Container(
@@ -416,10 +673,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                      Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -432,15 +686,9 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             if (widget.building != null)
-                              Text(
-                                'Building: ${widget.building}',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
+                              Text('Building: ${widget.building}', style: Theme.of(context).textTheme.bodySmall),
                             if (widget.attendees != null)
-                              Text(
-                                'For ${widget.attendees} attendees',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
+                              Text('For ${widget.attendees} attendees', style: Theme.of(context).textTheme.bodySmall),
                           ],
                         ),
                       ),
@@ -459,41 +707,83 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       children: [
-                        if (_rooms.length > _getColumnsCount())
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  onPressed: _visibleRoomStart > 0 ? _previousRooms : null,
-                                  icon: const Icon(Icons.arrow_back),
-                                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                                  padding: EdgeInsets.zero,
+                        if (_isLoading)
+                          const Expanded(child: Center(child: CircularProgressIndicator()))
+                        else if (_loadError != null)
+                          Expanded(
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 520),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.wifi_off, size: 32),
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                      'Could not load availability.',
+                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      _loadError!,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    ElevatedButton.icon(
+                                      onPressed: _loadAvailability,
+                                      icon: const Icon(Icons.refresh),
+                                      label: const Text('Retry'),
+                                    ),
+                                  ],
                                 ),
-                                Expanded(
-                                  child: Text(
-                                    'Room ${_visibleRoomStart + 1} - ${(_visibleRoomStart + _getColumnsCount()).clamp(0, _rooms.length)} of ${_rooms.length}',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          )
+                        else if (_rooms.isEmpty)
+                          const Expanded(child: Center(child: Text('No rooms available for the selected criteria.')))
+                        else ...[
+                          if (_rooms.length > _getColumnsCount())
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: _visibleRoomStart > 0 ? _previousRooms : null,
+                                    icon: const Icon(Icons.arrow_back),
+                                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                                    padding: EdgeInsets.zero,
                                   ),
-                                ),
-                                IconButton(
-                                  onPressed: _visibleRoomStart < _rooms.length - _getColumnsCount() ? _nextRooms : null,
-                                  icon: const Icon(Icons.arrow_forward),
-                                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                                  padding: EdgeInsets.zero,
-                                ),
-                              ],
+                                  Expanded(
+                                    child: Text(
+                                      'Room ${_visibleRoomStart + 1} - ${(_visibleRoomStart + _getColumnsCount()).clamp(0, _rooms.length)} of ${_rooms.length}',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: _visibleRoomStart < _rooms.length - _getColumnsCount()
+                                        ? _nextRooms
+                                        : null,
+                                    icon: const Icon(Icons.arrow_forward),
+                                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Expanded(
+                            child: CalendarView(
+                              selectedDate: _selectedDate,
+                              visibleRooms: _visibleRooms,
+                              bookings: _bookings,
+                              onBookingSelected: _showBookingConfirmation,
                             ),
                           ),
-                        Expanded(
-                          child: CalendarView(
-                            selectedDate: _selectedDate,
-                            visibleRooms: _visibleRooms,
-                            bookings: _bookings,
-                            onBookingSelected: _showBookingConfirmation,
-                          ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -564,13 +854,7 @@ class _CalendarViewState extends State<CalendarView> {
     final hours = (startHour + snappedMinutes ~/ 60).clamp(startHour, endHour - 1);
     final minutes = (snappedMinutes % 60).clamp(0, 59);
 
-    return DateTime(
-      widget.selectedDate.year,
-      widget.selectedDate.month,
-      widget.selectedDate.day,
-      hours,
-      minutes,
-    );
+    return DateTime(widget.selectedDate.year, widget.selectedDate.month, widget.selectedDate.day, hours, minutes);
   }
 
   void _startDraftBooking(RoomInfo room, Offset localPosition) {
@@ -589,17 +873,10 @@ class _CalendarViewState extends State<CalendarView> {
     });
   }
 
-  void _updateDraftBookingEdge(
-      Offset globalPosition,
-      RenderBox roomBox,
-      bool isStart,
-      ) {
+  void _updateDraftBookingEdge(Offset globalPosition, RenderBox roomBox, bool isStart) {
     final local = roomBox.globalToLocal(globalPosition);
 
-    final newPixelOffset = local.dy.clamp(
-      0.0,
-      (endHour - startHour) * hourHeight,
-    );
+    final newPixelOffset = local.dy.clamp(0.0, (endHour - startHour) * hourHeight);
 
     setState(() {
       if (isStart) {
@@ -611,23 +888,15 @@ class _CalendarViewState extends State<CalendarView> {
       }
 
       if (_draftBooking!.endTime.isBefore(_draftBooking!.startTime)) {
-        _draftBooking!.endTime =
-            _draftBooking!.startTime.add(const Duration(minutes: 30));
-        _draftBooking!.endPixelOffset =
-            _draftBooking!.startPixelOffset + hourHeight / 2;
+        _draftBooking!.endTime = _draftBooking!.startTime.add(const Duration(minutes: 30));
+        _draftBooking!.endPixelOffset = _draftBooking!.startPixelOffset + hourHeight / 2;
       }
     });
   }
 
-
-
   void _confirmDraftBooking() {
     if (_draftBooking != null) {
-      widget.onBookingSelected(
-        _draftBooking!.roomInfo,
-        _draftBooking!.startTime,
-        _draftBooking!.endTime,
-      );
+      widget.onBookingSelected(_draftBooking!.roomInfo, _draftBooking!.startTime, _draftBooking!.endTime);
       setState(() => _draftBooking = null);
     }
   }
@@ -647,8 +916,6 @@ class _CalendarViewState extends State<CalendarView> {
 
   @override
   Widget build(BuildContext context) {
-    final renderBox = context.findRenderObject() as RenderBox?;
-
     return Stack(
       children: [
         ClipRRect(
@@ -668,11 +935,7 @@ class _CalendarViewState extends State<CalendarView> {
                       children: [
                         _buildTimeColumn(),
                         Expanded(
-                          child: Row(
-                            children: widget.visibleRooms
-                                .map((room) => _buildRoomColumn(room))
-                                .toList(),
-                          ),
+                          child: Row(children: widget.visibleRooms.map((room) => _buildRoomColumn(room)).toList()),
                         ),
                       ],
                     ),
@@ -719,39 +982,32 @@ class _CalendarViewState extends State<CalendarView> {
         children: widget.visibleRooms
             .map(
               (room) => Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              child: Column(
-                children: [
-                  Icon(room.icon, color: room.color, size: 20),
-                  const SizedBox(height: 4),
-                  Text(
-                    room.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: room.color,
-                    ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  child: Column(
+                    children: [
+                      Icon(room.icon, color: room.color, size: 20),
+                      const SizedBox(height: 4),
+                      Text(
+                        room.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: room.color),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        room.building,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 8, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    room.building,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 8,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-        )
+            )
             .toList(),
       ),
     );
@@ -761,24 +1017,18 @@ class _CalendarViewState extends State<CalendarView> {
     return SizedBox(
       width: 60,
       child: Column(
-        children: List.generate(
-          endHour - startHour,
-              (index) {
-            final hour = startHour + index;
-            return SizedBox(
-              height: hourHeight,
-              child: Center(
-                child: Text(
-                  '${hour.toString().padLeft(2, '0')}:00',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                ),
+        children: List.generate(endHour - startHour, (index) {
+          final hour = startHour + index;
+          return SizedBox(
+            height: hourHeight,
+            child: Center(
+              child: Text(
+                '${hour.toString().padLeft(2, '0')}:00',
+                style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -791,18 +1041,10 @@ class _CalendarViewState extends State<CalendarView> {
           final bookingsForRoom = _getBookingsForRoom(room.id);
 
           return GestureDetector(
-            onTapDown: (details) =>
-                _startDraftBooking(room, details.localPosition),
+            onTapDown: (details) => _startDraftBooking(room, details.localPosition),
             child: Container(
               decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withOpacity(0.2),
-                  ),
-                ),
+                border: Border(left: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.2))),
               ),
               child: Stack(
                 children: [
@@ -810,16 +1052,11 @@ class _CalendarViewState extends State<CalendarView> {
                   Column(
                     children: List.generate(
                       endHour - startHour,
-                          (index) => Container(
+                      (index) => Container(
                         height: hourHeight,
                         decoration: BoxDecoration(
                           border: Border(
-                            bottom: BorderSide(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outline
-                                  .withOpacity(0.1),
-                            ),
+                            bottom: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.1)),
                           ),
                           color: room.color.withOpacity(0.02),
                         ),
@@ -842,8 +1079,7 @@ class _CalendarViewState extends State<CalendarView> {
                   }),
 
                   // Draft booking
-                  if (_draftBooking != null &&
-                      _draftBooking!.roomId == room.id)
+                  if (_draftBooking != null && _draftBooking!.roomId == room.id)
                     Positioned(
                       top: _draftBooking!.startPixelOffset,
                       left: 2,
@@ -859,14 +1095,10 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-
   Widget _buildBookingBlock(Booking booking, RoomInfo room, double height) {
     return Container(
       height: height,
-      decoration: BoxDecoration(
-        color: room.color.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(4),
-      ),
+      decoration: BoxDecoration(color: room.color.withOpacity(0.8), borderRadius: BorderRadius.circular(4)),
       padding: const EdgeInsets.all(4),
       child: SingleChildScrollView(
         child: Column(
@@ -877,11 +1109,7 @@ class _CalendarViewState extends State<CalendarView> {
               booking.title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+              style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w600, color: Colors.white),
             ),
           ],
         ),
@@ -897,11 +1125,7 @@ class _CalendarViewState extends State<CalendarView> {
       decoration: BoxDecoration(
         color: room.color.withOpacity(0.5),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: room.color,
-          width: 2,
-          strokeAlign: BorderSide.strokeAlignOutside,
-        ),
+        border: Border.all(color: room.color, width: 2, strokeAlign: BorderSide.strokeAlignOutside),
       ),
       child: Stack(
         children: [
@@ -911,19 +1135,11 @@ class _CalendarViewState extends State<CalendarView> {
               children: [
                 Text(
                   '${DateFormat('HH:mm').format(_draftBooking!.startTime)} - ${DateFormat('HH:mm').format(_draftBooking!.endTime)}',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white),
                 ),
                 const Text(
                   'Draft',
-                  style: TextStyle(
-                    fontSize: 8,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(fontSize: 8, fontStyle: FontStyle.italic, color: Colors.white70),
                 ),
               ],
             ),
@@ -946,22 +1162,14 @@ class _CalendarViewState extends State<CalendarView> {
         child: GestureDetector(
           onPanUpdate: (details) {
             if (renderBox != null) {
-              _updateDraftBookingEdge(
-                details.globalPosition,
-                renderBox,
-                isTop,
-              );
+              _updateDraftBookingEdge(details.globalPosition, renderBox, isTop);
             }
           },
           child: Container(
             height: 12,
-            decoration: BoxDecoration(
-              color: _draftBooking!.roomInfo.color,
-              borderRadius: BorderRadius.circular(4),
-            ),
+            decoration: BoxDecoration(color: _draftBooking!.roomInfo.color, borderRadius: BorderRadius.circular(4)),
           ),
         ),
-
       ),
     );
   }
@@ -976,7 +1184,7 @@ class BookingConfirmationDialog extends StatefulWidget {
   final DateTime selectedDate;
   final DateTime startTime;
   final DateTime endTime;
-  final Function(String) onConfirm;
+  final Future<void> Function(String) onConfirm;
 
   const BookingConfirmationDialog({
     super.key,
@@ -993,6 +1201,7 @@ class BookingConfirmationDialog extends StatefulWidget {
 
 class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
   late TextEditingController _titleController;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -1088,16 +1297,27 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: _isSubmitting ? null : () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      onPressed: () {
-                        if (_titleController.text.isNotEmpty) {
-                          widget.onConfirm(_titleController.text);
-                        }
-                      },
+                      onPressed: _isSubmitting
+                          ? null
+                          : () async {
+                              if (_titleController.text.isEmpty) return;
+                              setState(() => _isSubmitting = true);
+                              try {
+                                await widget.onConfirm(_titleController.text);
+                              } finally {
+                                if (mounted) setState(() => _isSubmitting = false);
+                              }
+                            },
                       style: ElevatedButton.styleFrom(backgroundColor: widget.room.color),
-                      child: const Text('Confirm Booking'),
+                      child: _isSubmitting
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Text('Confirm Booking'),
                     ),
                   ],
                 ),
