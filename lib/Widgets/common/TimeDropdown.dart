@@ -19,13 +19,25 @@ class TimeDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final times = List.generate(24, (i) => '${i.toString().padLeft(2, '0')}:00');
+    final times = <String>[];
+
+    // 06:00 → 23:30
+    for (int h = 6; h < 24; h++) {
+      for (int m in [0, 30]) {
+        times.add(
+          '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}',
+        );
+      }
+    }
+
+    // Add 24:00 manually (end-of-day)
+    times.add('24:00');
 
     return DropdownButtonFormField<String>(
-      value: selectedTime,
+      value: times.contains(selectedTime) ? selectedTime : null,
       decoration: InputDecoration(
         filled: true,
-        fillColor: isDark ? Color(0xFF333535) : Colors.white,
+        fillColor: isDark ? const Color(0xFF333535) : Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: mutedColor.withOpacity(0.3)),
@@ -40,7 +52,14 @@ class TimeDropdown extends StatelessWidget {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
-      items: times.map((time) => DropdownMenuItem(value: time, child: Text(time))).toList(),
+      items: times
+          .map(
+            (time) => DropdownMenuItem(
+          value: time,
+          child: Text(time),
+        ),
+      )
+          .toList(),
       onChanged: (value) {
         if (value != null) {
           onChanged(value);

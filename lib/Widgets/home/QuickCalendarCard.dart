@@ -179,13 +179,17 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
               _selectedDate = selectedDate;
             });
 
-            // Navigate to BookingAvailabilityPage with only the date
+            // Navigate to BookingAvailabilityPage with default values for time/capacity/equipment
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => BookingAvailabilityPage(
                   date: selectedDate,
-                  isFromQuickCalendar: true,
+                  startTime: '09:00',              // ✅ Default start time
+                  endTime: '17:00',                // ✅ Default end time
+                  capacity: 1,                     // ✅ Default capacity (1 person)
+                  equipment: const [],             // ✅ Empty equipment list
+                  isFromQuickCalendar: true,       // ✅ Flag for quick calendar navigation
                 ),
               ),
             );

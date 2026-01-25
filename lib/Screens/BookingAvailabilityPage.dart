@@ -65,22 +65,20 @@ class DraftBooking {
 // ============================================================================
 
 class BookingAvailabilityPage extends StatefulWidget {
-  final DateTime? date;
-  final String? startTime; // "HH:mm"
-  final String? endTime; // "HH:mm"
-  final String? building;
-  final int? attendees;
-  final List<String>? equipment;
+  final DateTime date;
+  final String startTime; // "HH:mm"
+  final String endTime; // "HH:mm"
+  final int capacity;
+  final List<String> equipment;
   final bool isFromQuickCalendar;
 
   const BookingAvailabilityPage({
     super.key,
-    this.date,
-    this.startTime,
-    this.endTime,
-    this.building,
-    this.attendees,
-    this.equipment,
+    required this.date,
+    required this.startTime,
+    required this.endTime,
+    required this.capacity,
+    required this.equipment,
     this.isFromQuickCalendar = false,
   });
 
@@ -102,8 +100,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   bool _isLoading = false;
   String? _loadError;
 
-  List<Map<String, dynamic>>? _buildingsCache;
-
   @override
   void initState() {
     super.initState();
@@ -114,19 +110,9 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   }
 
   void _initializeBookingData() {
-    _selectedDate = widget.date ?? DateTime.now();
-
-    if (widget.startTime != null) {
-      _suggestedStartTime = _parseTimeString(widget.startTime!, _selectedDate);
-    } else {
-      _suggestedStartTime = _selectedDate.add(const Duration(hours: 9));
-    }
-
-    if (widget.endTime != null) {
-      _suggestedEndTime = _parseTimeString(widget.endTime!, _selectedDate);
-    } else {
-      _suggestedEndTime = _suggestedStartTime.add(const Duration(hours: 1));
-    }
+    _selectedDate = widget.date;
+    _suggestedStartTime = _parseTimeString(widget.startTime, _selectedDate);
+    _suggestedEndTime = _parseTimeString(widget.endTime, _selectedDate);
   }
 
   DateTime _parseTimeString(String timeString, DateTime dateBase) {
@@ -144,12 +130,10 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
     final parsed = int.tryParse(rawId);
     if (parsed != null) return parsed;
 
-    // Stable-ish hash (do NOT use Object.hashCode which is not stable across runs).
     int hash = 0;
     for (final unit in rawId.codeUnits) {
       hash = (hash * 31 + unit) & 0x7fffffff;
     }
-    // Avoid zero which can be a sentinel in some code.
     return hash == 0 ? 1 : hash;
   }
 
@@ -168,40 +152,15 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   }
 
   IconData _iconForRoom(api.Room room) {
-    // Keep it simple/consistent until backend provides room type metadata.
     if (room.capacity >= 15) return Icons.school;
     if (room.capacity >= 10) return Icons.meeting_room;
     return Icons.person;
   }
 
   String _avatarForRoom(api.Room room) {
-    // The original UI expects a short avatar string.
-    // Use the first letter as a stable placeholder.
     final trimmed = room.name.trim();
     if (trimmed.isEmpty) return '🏢';
     return trimmed.characters.first.toUpperCase();
-  }
-
-  String _equipmentLabel(String raw) {
-    final normalized = raw.trim();
-    if (normalized.isEmpty) return 'Other';
-
-    // Map enum-ish values to user friendly labels.
-    switch (normalized.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '')) {
-      case 'beamer':
-      case 'projector':
-        return 'Projector';
-      case 'whiteboard':
-        return 'Whiteboard';
-      case 'display':
-      case 'screen':
-        return 'Display';
-      case 'videoconference':
-        return 'Video Conference';
-      default:
-        // Capitalize first letter.
-        return normalized[0].toUpperCase() + normalized.substring(1);
-    }
   }
 
   RoomInfo _roomInfoFromApiRoom(api.Room room) {
@@ -213,30 +172,10 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       color: _colorForRoom(idInt),
       icon: _iconForRoom(room),
       avatar: _avatarForRoom(room),
-      building: room.location.isNotEmpty ? room.location : (widget.building ?? 'Unknown'),
+      building: room.location.isNotEmpty ? room.location : 'Unknown',
       floor: room.floor == 0 ? '—' : '${room.floor}. Floor',
-      equipment: room.equipment.map((e) => _equipmentLabel(e.type.name)).toList(),
+      equipment: room.equipment.map((e) => e.type.displayName).toList(),
     );
-  }
-
-  Future<int?> _resolveBuildingId(String? building) async {
-    if (building == null || building.trim().isEmpty) return null;
-
-    // If UI passes an ID as string already.
-    final parsed = int.tryParse(building);
-    if (parsed != null) return parsed;
-
-    _buildingsCache ??= await _roomService.getBuildings();
-    final normalized = building.trim().toLowerCase();
-
-    for (final b in _buildingsCache!) {
-      final name = (b['name'] ?? b['buildingName'] ?? '').toString().trim().toLowerCase();
-      if (name == normalized) {
-        return int.tryParse((b['id'] ?? '').toString());
-      }
-    }
-
-    return null;
   }
 
   Future<void> _loadAvailability() async {
@@ -247,24 +186,17 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
 
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-      final startStr = widget.startTime ?? DateFormat('HH:mm').format(_suggestedStartTime);
-      final endStr = widget.endTime ?? DateFormat('HH:mm').format(_suggestedEndTime);
-      final capacity = widget.attendees ?? 1;
-      final buildingId = await _resolveBuildingId(widget.building);
 
       final availableRooms = await _roomService.getAvailableRoomsWithBookings(
         date: dateStr,
-        startTime: startStr,
-        endTime: endStr,
-        capacity: capacity,
-        buildingId: buildingId,
-        equipment: widget.equipment,
+        startTime: widget.startTime,
+        endTime: widget.endTime,
+        capacity: widget.capacity,
+        equipment: widget.equipment.isEmpty ? null : widget.equipment,
       );
 
-      // Map API rooms to UI rooms.
       final rooms = availableRooms.map((ar) => _roomInfoFromApiRoom(ar.room)).toList();
 
-      // Map API bookings to UI booking blocks.
       final bookings = <Booking>[];
       for (final ar in availableRooms) {
         final roomIdInt = _roomIdAsInt(ar.room.id);
@@ -301,8 +233,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   }
 
   String _toApiUtcIso(DateTime dt) {
-    // Backend expects ISO-8601 UTC strings, e.g. `2026-01-14T12:34:56Z`.
-    // Dart includes milliseconds by default (`...56.000Z`) which is still valid ISO-8601.
     return dt.toUtc().toIso8601String();
   }
 
@@ -424,7 +354,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                 ],
               ),
             ),
-
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1200),
@@ -455,8 +384,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                 ),
               ),
             ),
-
-            if (widget.building != null || widget.startTime != null || widget.attendees != null)
+            if (widget.startTime.isNotEmpty || widget.capacity > 0 || widget.equipment.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Container(
@@ -474,15 +402,15 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (widget.startTime != null)
+                            if (widget.startTime.isNotEmpty)
                               Text(
                                 'Requested: ${widget.startTime}–${widget.endTime}',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
-                            if (widget.building != null)
-                              Text('Building: ${widget.building}', style: Theme.of(context).textTheme.bodySmall),
-                            if (widget.attendees != null)
-                              Text('For ${widget.attendees} attendees', style: Theme.of(context).textTheme.bodySmall),
+                            if (widget.capacity > 0)
+                              Text('For ${widget.capacity} attendees', style: Theme.of(context).textTheme.bodySmall),
+                            if (widget.equipment.isNotEmpty)
+                              Text('Equipment: ${widget.equipment.join(", ")}', style: Theme.of(context).textTheme.bodySmall),
                           ],
                         ),
                       ),
@@ -490,9 +418,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                   ),
                 ),
               ),
-
             const SizedBox(height: 16),
-
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -538,46 +464,44 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                             ),
                           )
                         else if (_rooms.isEmpty)
-                          const Expanded(child: Center(child: Text('No rooms available for the selected criteria.')))
-                        else ...[
-                          if (_rooms.length > _getColumnsCount())
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: _visibleRoomStart > 0 ? _previousRooms : null,
-                                    icon: const Icon(Icons.arrow_back),
-                                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                                    padding: EdgeInsets.zero,
+                            const Expanded(child: Center(child: Text('No rooms available for the selected criteria.')))
+                          else ...[
+                              if (_rooms.length > _getColumnsCount())
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Row(
+                                    children: [
+                                      IconButton(
+                                        onPressed: _visibleRoomStart > 0 ? _previousRooms : null,
+                                        icon: const Icon(Icons.arrow_back),
+                                        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                                        padding: EdgeInsets.zero,
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          'Room ${_visibleRoomStart + 1} - ${(_visibleRoomStart + _getColumnsCount()).clamp(0, _rooms.length)} of ${_rooms.length}',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: _visibleRoomStart < _rooms.length - _getColumnsCount() ? _nextRooms : null,
+                                        icon: const Icon(Icons.arrow_forward),
+                                        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                                        padding: EdgeInsets.zero,
+                                      ),
+                                    ],
                                   ),
-                                  Expanded(
-                                    child: Text(
-                                      'Room ${_visibleRoomStart + 1} - ${(_visibleRoomStart + _getColumnsCount()).clamp(0, _rooms.length)} of ${_rooms.length}',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    onPressed: _visibleRoomStart < _rooms.length - _getColumnsCount()
-                                        ? _nextRooms
-                                        : null,
-                                    icon: const Icon(Icons.arrow_forward),
-                                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                                ],
+                                ),
+                              Expanded(
+                                child: CalendarView(
+                                  selectedDate: _selectedDate,
+                                  visibleRooms: _visibleRooms,
+                                  bookings: _bookings,
+                                  onBookingSelected: _showBookingConfirmation,
+                                ),
                               ),
-                            ),
-                          Expanded(
-                            child: CalendarView(
-                              selectedDate: _selectedDate,
-                              visibleRooms: _visibleRooms,
-                              bookings: _bookings,
-                              onBookingSelected: _showBookingConfirmation,
-                            ),
-                          ),
-                        ],
+                            ],
                       ],
                     ),
                   ),
@@ -669,7 +593,6 @@ class _CalendarViewState extends State<CalendarView> {
 
   void _updateDraftBookingEdge(Offset globalPosition, RenderBox roomBox, bool isStart) {
     final local = roomBox.globalToLocal(globalPosition);
-
     final newPixelOffset = local.dy.clamp(0.0, (endHour - startHour) * hourHeight);
 
     setState(() {
@@ -739,7 +662,6 @@ class _CalendarViewState extends State<CalendarView> {
             ),
           ),
         ),
-
         if (_draftBooking != null)
           Positioned(
             bottom: 16,
@@ -776,32 +698,32 @@ class _CalendarViewState extends State<CalendarView> {
         children: widget.visibleRooms
             .map(
               (room) => Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                  child: Column(
-                    children: [
-                      Icon(room.icon, color: room.color, size: 20),
-                      const SizedBox(height: 4),
-                      Text(
-                        room.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: room.color),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        room.building,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 8, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-                      ),
-                    ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Column(
+                children: [
+                  Icon(room.icon, color: room.color, size: 20),
+                  const SizedBox(height: 4),
+                  Text(
+                    room.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: room.color),
                   ),
-                ),
+                  const SizedBox(height: 2),
+                  Text(
+                    room.building,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 8, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                  ),
+                ],
               ),
-            )
+            ),
+          ),
+        )
             .toList(),
       ),
     );
@@ -842,11 +764,10 @@ class _CalendarViewState extends State<CalendarView> {
               ),
               child: Stack(
                 children: [
-                  // Hour grid
                   Column(
                     children: List.generate(
                       endHour - startHour,
-                      (index) => Container(
+                          (index) => Container(
                         height: hourHeight,
                         decoration: BoxDecoration(
                           border: Border(
@@ -857,8 +778,6 @@ class _CalendarViewState extends State<CalendarView> {
                       ),
                     ),
                   ),
-
-                  // Existing bookings
                   ...bookingsForRoom.map((booking) {
                     final startPixel = _getPixelForTime(booking.startTime);
                     final endPixel = _getPixelForTime(booking.endTime);
@@ -871,8 +790,6 @@ class _CalendarViewState extends State<CalendarView> {
                       child: _buildBookingBlock(booking, room, height),
                     );
                   }),
-
-                  // Draft booking
                   if (_draftBooking != null && _draftBooking!.roomId == room.id)
                     Positioned(
                       top: _draftBooking!.startPixelOffset,
@@ -1043,11 +960,42 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                             '${widget.room.building} - ${widget.room.floor}',
                             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Capacity: ${widget.room.capacity} persons',
+                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                if (widget.room.equipment.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Available Equipment', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: widget.room.equipment
+                              .map((e) => Chip(
+                            label: Text(e, style: const TextStyle(fontSize: 11)),
+                            backgroundColor: Colors.blue.withOpacity(0.2),
+                          ))
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                  ),
                 const SizedBox(height: 24),
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -1100,14 +1048,14 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                       onPressed: _isSubmitting
                           ? null
                           : () async {
-                              if (_titleController.text.isEmpty) return;
-                              setState(() => _isSubmitting = true);
-                              try {
-                                await widget.onConfirm(_titleController.text);
-                              } finally {
-                                if (mounted) setState(() => _isSubmitting = false);
-                              }
-                            },
+                        if (_titleController.text.isEmpty) return;
+                        setState(() => _isSubmitting = true);
+                        try {
+                          await widget.onConfirm(_titleController.text);
+                        } finally {
+                          if (mounted) setState(() => _isSubmitting = false);
+                        }
+                      },
                       style: ElevatedButton.styleFrom(backgroundColor: widget.room.color),
                       child: _isSubmitting
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
