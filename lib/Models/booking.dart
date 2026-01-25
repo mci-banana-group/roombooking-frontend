@@ -61,17 +61,24 @@ class Booking {
     };
   }
 
+  static DateTime _readDateTime(dynamic value, {DateTime? fallback}) {
+    if (value is DateTime) return value;
+    final str = value?.toString();
+    if (str == null || str.isEmpty) return fallback ?? DateTime.fromMillisecondsSinceEpoch(0);
+    return DateTime.tryParse(str) ?? (fallback ?? DateTime.fromMillisecondsSinceEpoch(0));
+  }
+
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
-      id: json['id'] as String,
-      roomId: json['roomId'] as String,
-      userId: json['userId'] as String,
-      startTime: DateTime.parse(json['startTime'] as String),
-      endTime: DateTime.parse(json['endTime'] as String),
-      status: BookingStatus.fromString(json['status'] as String),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      confirmedAt: json['confirmedAt'] != null ? DateTime.parse(json['confirmedAt'] as String) : null,
-      cancelledAt: json['cancelledAt'] != null ? DateTime.parse(json['cancelledAt'] as String) : null,
+      id: (json['id'] ?? '').toString(),
+      roomId: (json['roomId'] ?? json['room'] ?? '').toString(),
+      userId: (json['userId'] ?? json['user'] ?? '').toString(),
+      startTime: _readDateTime(json['startTime'] ?? json['start'], fallback: DateTime.now()),
+      endTime: _readDateTime(json['endTime'] ?? json['end'], fallback: DateTime.now()),
+      status: BookingStatus.fromString((json['status'] ?? '').toString()),
+      createdAt: _readDateTime(json['createdAt'], fallback: DateTime.now()),
+      confirmedAt: json['confirmedAt'] != null ? _readDateTime(json['confirmedAt']) : null,
+      cancelledAt: json['cancelledAt'] != null ? _readDateTime(json['cancelledAt']) : null,
     );
   }
 

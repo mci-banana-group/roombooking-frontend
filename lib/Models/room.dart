@@ -5,7 +5,7 @@ class Room {
   final String id;
   final String name;
   final String roomNumber;
-  final int size;
+  final int capacity;
   final int floor;
   final String location;
   final List<RoomEquipment> equipment;
@@ -16,7 +16,7 @@ class Room {
     required this.id,
     required this.name,
     required this.roomNumber,
-    required this.size,
+    required this.capacity,
     required this.floor,
     required this.location,
     required this.equipment,
@@ -28,7 +28,7 @@ class Room {
     String? id,
     String? name,
     String? roomNumber,
-    int? size,
+    int? capacity,
     int? floor,
     String? location,
     List<RoomEquipment>? equipment,
@@ -39,7 +39,7 @@ class Room {
       id: id ?? this.id,
       name: name ?? this.name,
       roomNumber: roomNumber ?? this.roomNumber,
-      size: size ?? this.size,
+      capacity: capacity ?? this.capacity,
       floor: floor ?? this.floor,
       location: location ?? this.location,
       equipment: equipment ?? this.equipment,
@@ -53,7 +53,7 @@ class Room {
       'id': id,
       'name': name,
       'roomNumber': roomNumber,
-      'size': size,
+      'capacity': capacity,
       'floor': floor,
       'location': location,
       'equipment': equipment.map((e) => e.toJson()).toList(),
@@ -62,19 +62,27 @@ class Room {
     };
   }
 
+  static int _readInt(dynamic value, {int fallback = 0}) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? fallback;
+  }
+
   factory Room.fromJson(Map<String, dynamic> json) {
     return Room(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      roomNumber: json['roomNumber'] as String,
-      size: json['size'] as int,
-      floor: json['floor'] as int,
-      location: json['location'] as String,
-      equipment: (json['equipment'] as List<dynamic>)
-          .map((e) => RoomEquipment.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      currentStatus: RoomStatus.fromString(json['currentStatus'] as String),
-      estimatedWalkingTime: Duration(milliseconds: json['estimatedWalkingTime'] as int),
+      id: (json['id'] ?? json['roomNumber'] ?? '').toString(),
+      name: json['name'] as String? ?? '',
+      roomNumber: (json['roomNumber'] ?? '').toString(),
+      capacity: _readInt(json['capacity'], fallback: 0),
+      floor: _readInt(json['floor'], fallback: 0),
+      location: json['location'] as String? ?? '',
+      equipment:
+          (json['equipment'] as List<dynamic>?)
+              ?.map((e) => RoomEquipment.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      currentStatus: RoomStatus.fromString((json['status'] as String?)?.toUpperCase() ?? 'FREE'),
+      estimatedWalkingTime: Duration(milliseconds: _readInt(json['estimatedWalkingTime'], fallback: 0)),
     );
   }
 
@@ -89,7 +97,7 @@ class Room {
     return other.id == id &&
         other.name == name &&
         other.roomNumber == roomNumber &&
-        other.size == size &&
+        other.capacity == capacity &&
         other.floor == floor &&
         other.location == location &&
         other.currentStatus == currentStatus &&
@@ -101,7 +109,7 @@ class Room {
     id,
     name,
     roomNumber,
-    size,
+    capacity,
     floor,
     location,
     Object.hashAll(equipment),
@@ -111,5 +119,5 @@ class Room {
 
   @override
   String toString() =>
-      'Room(id: $id, name: $name, roomNumber: $roomNumber, size: $size, floor: $floor, location: $location, equipment: $equipment, currentStatus: $currentStatus, estimatedWalkingTime: $estimatedWalkingTime)';
+      'Room(id: $id, name: $name, roomNumber: $roomNumber, capacity: $capacity, floor: $floor, location: $location, equipment: $equipment, currentStatus: $currentStatus, estimatedWalkingTime: $estimatedWalkingTime)';
 }

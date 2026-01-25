@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../common/FormLabel.dart';
 import '../common/TimeDropdown.dart';
 import '../common/DurationChip.dart';
 import '../common/EquipmentCheckbox.dart';
 import '../../Screens/BookingAvailabilityPage.dart';
+import 'package:flutter/material.dart';
 
 class BookingDetailsCard extends StatefulWidget {
   @override
@@ -15,7 +17,8 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
   String _selectedStartTime = '09:00';
   String _selectedEndTime = '10:00';
   int _attendees = 4;
-  DateTime _selectedDate = DateTime(2026, 1, 9);
+  DateTime _selectedDate = DateTime.now();
+  String _selectedDuration = '1 hour';
 
   late final TextEditingController _attendeesController;
 
@@ -66,11 +69,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                   const SizedBox(width: 8),
                   Text(
                     'Booking Details',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
                   ),
                 ],
               ),
@@ -98,9 +97,12 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
-                items: ['Main Campus', 'Building A', 'Building B', 'Building C']
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
+                items: [
+                  'Main Campus',
+                  'Building A',
+                  'Building B',
+                  'Building C',
+                ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedBuilding = value ?? 'Main Campus';
@@ -112,36 +114,39 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
               // Meeting Date
               FormLabel('Meeting Date', primaryColor),
               const SizedBox(height: 8),
-              GestureDetector(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 90)),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      _selectedDate = picked;
-                    });
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isDark ? Color(0xFF333535) : Colors.white,
-                    border: Border.all(color: mutedColor.withOpacity(0.3)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.calendar_today, color: primaryColor, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${_selectedDate.day.toString().padLeft(2, '0')}.${_selectedDate.month.toString().padLeft(2, '0')}.${_selectedDate.year}',
-                        style: TextStyle(color: textColor),
-                      ),
-                    ],
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 90)),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _selectedDate = picked;
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isDark ? Color(0xFF333535) : Colors.white,
+                      border: Border.all(color: mutedColor.withOpacity(0.3)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today, color: primaryColor, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${_selectedDate.day.toString().padLeft(2, '0')}.${_selectedDate.month.toString().padLeft(2, '0')}.${_selectedDate.year}',
+                          style: TextStyle(color: textColor),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -179,10 +184,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    decoration: BoxDecoration(
-                      color: primaryColor,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
+                    decoration: BoxDecoration(color: primaryColor, borderRadius: BorderRadius.circular(6)),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -191,11 +193,11 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           color: Colors.white,
                           onPressed: _attendees > 1
                               ? () {
-                            setState(() {
-                              _attendees--;
-                              _attendeesController.text = _attendees.toString();
-                            });
-                          }
+                                  setState(() {
+                                    _attendees--;
+                                    _attendeesController.text = _attendees.toString();
+                                  });
+                                }
                               : null,
                           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                           padding: EdgeInsets.zero,
@@ -235,6 +237,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           onChanged: (value) {
                             setState(() {
                               _selectedStartTime = value;
+                              _selectedDuration = '';
                             });
                           },
                           isDark: isDark,
@@ -259,6 +262,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           onChanged: (value) {
                             setState(() {
                               _selectedEndTime = value;
+                              _selectedDuration = '';
                             });
                           },
                           isDark: isDark,
@@ -276,19 +280,39 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
               // Quick Duration Buttons
               Text(
                 'Quick Duration',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: mutedColor,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 12, color: mutedColor, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: ['30 min', '1 hour', '1.5 hours', '2 hours']
-                    .map((duration) => DurationChip(duration, primaryColor))
-                    .toList(),
+                children: ['30 min', '1 hour', '1.5 hours', '2 hours'].map((duration) {
+                  if (_selectedDuration.isEmpty) {
+                    return DurationChip(
+                      duration,
+                      primaryColor,
+                      isSelected: false,
+                      onTap: () {
+                        setState(() {
+                          _selectedDuration = duration;
+                          _calculateEndTime(duration);
+                        });
+                      },
+                    );
+                  } else {
+                    return DurationChip(
+                      duration,
+                      primaryColor,
+                      isSelected: _selectedDuration == duration,
+                      onTap: () {
+                        setState(() {
+                          _selectedDuration = duration;
+                          _calculateEndTime(duration);
+                        });
+                      },
+                    );
+                  }
+                }).toList(),
               ),
               const SizedBox(height: 16),
 
@@ -309,37 +333,19 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                       children: [
                         Text(
                           'Meeting Duration',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: textColor,
-                          ),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textColor),
                         ),
                         Text(
-                          '1h 0min',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: primaryColor,
-                          ),
+                          _formatDuration(_selectedDuration),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: primaryColor),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
+                    Text('Time Slot', style: TextStyle(fontSize: 12, color: mutedColor)),
                     Text(
-                      'Time Slot',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: mutedColor,
-                      ),
-                    ),
-                    Text(
-                      '09:00 - 10:00',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: textColor,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      '$_selectedStartTime - $_selectedEndTime',
+                      style: TextStyle(fontSize: 12, color: textColor, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -349,16 +355,12 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
               // Required Equipment Section
               Text(
                 'Required Equipment',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor),
               ),
               const SizedBox(height: 12),
               GridView.count(
                 crossAxisCount: 2,
-                shrinkWrap: true,  // ← Key: lets grid size itself
+                shrinkWrap: true, // ← Key: lets grid size itself
                 physics: const NeverScrollableScrollPhysics(),
                 childAspectRatio: 4,
                 crossAxisSpacing: 12,
@@ -381,7 +383,6 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
               const SizedBox(height: 20),
 
               // Find Available Rooms Button
-              // Find Available Rooms Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -395,12 +396,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => BookingAvailabilityPage(
-
-                          date: _selectedDate,
-
-                          isFromQuickCalendar: false,
-                        ),
+                        builder: (context) => BookingAvailabilityPage(date: _selectedDate, isFromQuickCalendar: false),
                       ),
                     );
                   },
@@ -408,9 +404,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -418,22 +412,57 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                     children: [
                       Icon(Icons.search, size: 18),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Find Available Rooms',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      const Text('Find Available Rooms', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
               ),
-
             ],
           ),
         ),
       ),
     );
+  }
+
+  void _calculateEndTime(String duration) {
+    final startTime = _parseTime(_selectedStartTime);
+    final durationMinutes = _parseDuration(duration);
+    final endTime = startTime.add(Duration(minutes: durationMinutes));
+    _selectedEndTime = _formatTime(endTime);
+  }
+
+  int _parseDuration(String duration) {
+    if (duration.contains('min')) {
+      return int.parse(duration.split(' ')[0]);
+    } else if (duration.contains('hour')) {
+      final hours = double.parse(duration.split(' ')[0]);
+      return (hours * 60).round();
+    }
+    return 60;
+  }
+
+  DateTime _parseTime(String time) {
+    final parts = time.split(':');
+    return DateTime(0, 0, 0, int.parse(parts[0]), int.parse(parts[1]));
+  }
+
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _formatDuration(String duration) {
+    if (duration.contains('min')) {
+      return '${duration.split(' ')[0]}min';
+    } else if (duration.contains('hour')) {
+      final hours = double.parse(duration.split(' ')[0]);
+      if (hours == 1) {
+        return '1h 0min';
+      } else if (hours == 1.5) {
+        return '1h 30min';
+      } else {
+        return '${hours.toInt()}h 0min';
+      }
+    }
+    return '1h 0min';
   }
 }
