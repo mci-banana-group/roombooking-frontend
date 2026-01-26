@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:mci_booking_app/Models/Enums/user_role.dart';
 import 'Models/user.dart';
 import 'Models/auth_models.dart';
 import 'Services/auth_service.dart';
@@ -9,6 +10,8 @@ class Session extends ChangeNotifier {
   final AuthService _authService = AuthService();
   UserResponse? currentUser;
 
+  bool get authenticated => currentUser != null;
+  bool get isAdmin => currentUser?.role == UserRole.admin;
   bool get isAuthenticated => _authService.isAuthenticated;
 
   // Login with cached credentials

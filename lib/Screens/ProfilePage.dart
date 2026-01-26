@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mci_booking_app/main.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -17,6 +19,22 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text('Your profile information'),
+          const SizedBox(height: 32),
+
+          //  Admin-Button per Consumer
+          Consumer(
+            builder: (context, ref, _) {
+              final session = ref.watch(sessionProvider);
+
+              if (!session.isAdmin) return const SizedBox.shrink();
+
+              return ElevatedButton.icon(
+                icon: const Icon(Icons.admin_panel_settings),
+                label: const Text('Admin Panel'),
+                onPressed: () => Navigator.pushNamed(context, '/admin'),
+              );
+            },
+          ),
         ],
       ),
     );

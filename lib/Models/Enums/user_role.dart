@@ -2,7 +2,8 @@ enum UserRole {
   student,
   lecturer,
   staff,
-  admin;
+  admin,
+  user;
 
   @override
   String toString() => name;
