@@ -37,8 +37,8 @@ class AuthService {
   Future<void> _saveUser(UserResponse user) async {
     _currentUser = user;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userIdKey, user.email); // Using email as unique identifier
-    await prefs.setString(_userRoleKey, user.role.name);
+    await prefs.setInt(_userIdKey, user.id);
+    await prefs.setString(_userRoleKey, user.role); // role is already a String
     await prefs.setString(_userFirstNameKey, user.firstName);
     await prefs.setString(_userLastNameKey, user.lastName);
     await prefs.setString(_userEmailKey, user.email);
@@ -49,13 +49,19 @@ class AuthService {
   Future<void> _loadToken() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString(_tokenKey);
-    _currentUser = UserResponse(
-      firstName: prefs.getString(_userFirstNameKey) ?? '',
-      lastName: prefs.getString(_userLastNameKey) ?? '',
-      email: prefs.getString(_userEmailKey) ?? '',
-      role: UserRoleResponse(name: prefs.getString(_userRoleKey) ?? 'STUDENT', ordinal: 0),
-      isAdmin: prefs.getBool(_userIsAdminKey) ?? false,
-    );
+
+    final userId = prefs.getInt(_userIdKey);
+
+    if (userId != null) {
+      _currentUser = UserResponse(
+        id: userId,
+        firstName: prefs.getString(_userFirstNameKey) ?? '',
+        lastName: prefs.getString(_userLastNameKey) ?? '',
+        email: prefs.getString(_userEmailKey) ?? '',
+        role: prefs.getString(_userRoleKey) ?? 'STUDENT',
+        isAdmin: prefs.getBool(_userIsAdminKey) ?? false,
+      );
+    }
   }
 
   // Login user

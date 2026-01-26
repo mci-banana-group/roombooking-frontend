@@ -11,7 +11,7 @@ class Session extends ChangeNotifier {
   UserResponse? currentUser;
 
   bool get authenticated => currentUser != null;
-  bool get isAdmin => currentUser?.role == UserRole.admin;
+  bool get isAdmin => currentUser?.isAdmin ?? false;  // Use isAdmin field from backend
   bool get isAuthenticated => _authService.isAuthenticated;
 
   // Login with cached credentials
