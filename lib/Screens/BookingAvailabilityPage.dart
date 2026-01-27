@@ -860,8 +860,9 @@ class _CalendarViewState extends State<CalendarView> {
           // preselection pixels
           final suggestionStart = _getPixelForTime(widget.initialStartTime);
           final suggestionEnd = _getPixelForTime(widget.initialEndTime);
-          // suggestion if room doesn't have the active draft
-          final showSuggestion = _draftBooking?.roomId != room.id;
+          // suggestion if room doesn't have the active draft and no overlap
+          final suggestionOverlaps = _getOverlappingBookings(room.id, widget.initialStartTime, widget.initialEndTime);
+          final showSuggestion = _draftBooking?.roomId != room.id && suggestionOverlaps.isEmpty;
 
           return GestureDetector(
             onTapDown: (details) => _startDraftBooking(room, details.localPosition),
