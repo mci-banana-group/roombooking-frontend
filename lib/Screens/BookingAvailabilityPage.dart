@@ -629,30 +629,6 @@ class _CalendarViewState extends State<CalendarView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_hasScrolledToInitial) {
         _scrollToInitialTime();
-
-        // ✅ FIX 3: Create draft booking to show pre-selected time
-        setState(() {
-          _draftBooking = DraftBooking(
-            roomId: -1,
-            roomInfo: RoomInfo(
-              id: -1,
-              name: 'Your Selected Time',
-              capacity: 0,
-              color: Colors.grey,
-              icon: Icons.schedule,
-              avatar: '⏰',
-              building: '',
-              floor: '',
-              equipment: [],
-            ),
-            startTime: widget.initialStartTime,
-            endTime: widget.initialEndTime,
-            startPixelOffset: _getPixelForTime(widget.initialStartTime),
-            endPixelOffset: _getPixelForTime(widget.initialEndTime),
-            isPreselected: true,
-          );
-        });
-
         _hasScrolledToInitial = true;
       }
     });
@@ -746,7 +722,6 @@ class _CalendarViewState extends State<CalendarView> {
     }).toList();
   }
 
-  // ✅ FIX 5: Overlap detection helper
   List<Booking> _getOverlappingBookings(int roomId, DateTime start, DateTime end) {
     return widget.bookings.where((booking) {
       if (booking.roomId != roomId) return false;
@@ -882,6 +857,12 @@ class _CalendarViewState extends State<CalendarView> {
           final roomBox = context.findRenderObject() as RenderBox?;
           final bookingsForRoom = _getBookingsForRoom(room.id);
 
+          // preselection pixels
+          final suggestionStart = _getPixelForTime(widget.initialStartTime);
+          final suggestionEnd = _getPixelForTime(widget.initialEndTime);
+          // suggestion if room doesn't have the active draft
+          final showSuggestion = _draftBooking?.roomId != room.id;
+
           return GestureDetector(
             onTapDown: (details) => _startDraftBooking(room, details.localPosition),
             child: Container(
@@ -890,7 +871,7 @@ class _CalendarViewState extends State<CalendarView> {
               ),
               child: Stack(
                 children: [
-                  Column(
+                   Column(
                     children: List.generate(
                       endHour - startHour,
                           (index) => Container(
@@ -916,7 +897,33 @@ class _CalendarViewState extends State<CalendarView> {
                       child: _buildBookingBlock(booking, room, height),
                     );
                   }),
-                  if (_draftBooking != null && (_draftBooking!.roomId == room.id || _draftBooking!.isPreselected))
+                  // SUGGESTION BLOCK
+                  if (showSuggestion)
+                    Positioned(
+                      top: suggestionStart,
+                      left: 2,
+                      right: 2,
+                      child: GestureDetector(
+                        onTap: () {
+                          // Click on suggestion -> Make it active for this room
+                          setState(() {
+                            _draftBooking = DraftBooking(
+                              roomId: room.id,
+                              roomInfo: room,
+                              startTime: widget.initialStartTime,
+                              endTime: widget.initialEndTime,
+                              startPixelOffset: suggestionStart,
+                              endPixelOffset: suggestionEnd,
+                              isPreselected: false, // Active!
+                            );
+                          });
+                        },
+                        child: _buildSuggestionBlock(room, suggestionEnd - suggestionStart),
+                      ),
+                    ),
+
+                  // ACTIVE DRAFT
+                  if (_draftBooking != null && _draftBooking!.roomId == room.id)
                     Positioned(
                       top: _draftBooking!.startPixelOffset,
                       left: 2,
@@ -954,23 +961,17 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  // ✅ FIX 4: Draft booking with red color + overlap detection
   Widget _buildDraftBookingBlock(RoomInfo room, RenderBox? renderBox) {
     final height = (_draftBooking!.endPixelOffset - _draftBooking!.startPixelOffset).abs();
-
-    // ✅ FIX 4a: Check for overlaps
     final overlappingBookings = _getOverlappingBookings(
-      _draftBooking!.roomId == -1 ? (widget.visibleRooms.isNotEmpty ? widget.visibleRooms.first.id : 0) : _draftBooking!.roomId,
+      _draftBooking!.roomId,
       _draftBooking!.startTime,
       _draftBooking!.endTime,
     );
-    final hasOverlap = overlappingBookings.isNotEmpty && _draftBooking!.roomId != -1;
+    final hasOverlap = overlappingBookings.isNotEmpty;
 
-    // ✅ FIX 4b: Color red if pre-selected or overlapping
-    final isPreselected = _draftBooking!.isPreselected;
-    final showAsRed = isPreselected || hasOverlap;
-    final borderColor = showAsRed ? Colors.red : room.color;
-    final bgColor = showAsRed ? Colors.red.withOpacity(isPreselected ? 0.15 : 0.1) : room.color.withOpacity(0.5);
+    final borderColor = hasOverlap ? Colors.red : room.color;
+    final bgColor = hasOverlap ? Colors.red.withOpacity(0.1) : room.color.withOpacity(0.5);
 
     return Container(
       height: height,
@@ -991,29 +992,45 @@ class _CalendarViewState extends State<CalendarView> {
               children: [
                 Text(
                   '${DateFormat('HH:mm').format(_draftBooking!.startTime)} - ${DateFormat('HH:mm').format(_draftBooking!.endTime)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: isPreselected ? Colors.red : (hasOverlap ? Colors.red : Colors.white),
+                    color: Colors.white,
                   ),
                 ),
-                Text(
-                  isPreselected ? 'Pre-selected' : (hasOverlap ? 'Overlaps booking!' : 'Draft'),
-                  style: TextStyle(
-                    fontSize: 8,
-                    fontStyle: FontStyle.italic,
-                    color: isPreselected ? Colors.red.shade700 : (hasOverlap ? Colors.red.shade700 : Colors.white70),
+                if (hasOverlap)
+                  Text(
+                    'Overlaps booking!',
+                    style: TextStyle(
+                      fontSize: 8,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.red.shade700,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
-          // ✅ FIX 4c: Only show drag handles if NOT pre-selected and NOT overlapping
-          if (!isPreselected && !hasOverlap) ...[
-            _buildDragHandle(true, renderBox),
-            _buildDragHandle(false, renderBox),
-          ]
+          _buildDragHandle(true, renderBox),
+          _buildDragHandle(false, renderBox),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSuggestionBlock(RoomInfo room, double height) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: room.color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: room.color.withOpacity(0.5),
+          width: 1,
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: Center(
+        child: Icon(Icons.add, color: room.color.withOpacity(0.5), size: 16),
       ),
     );
   }
