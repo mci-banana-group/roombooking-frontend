@@ -916,7 +916,7 @@ class _CalendarViewState extends State<CalendarView> {
                       child: _buildBookingBlock(booking, room, height),
                     );
                   }),
-                  if (_draftBooking != null && _draftBooking!.roomId == room.id)
+                  if (_draftBooking != null && (_draftBooking!.roomId == room.id || _draftBooking!.isPreselected))
                     Positioned(
                       top: _draftBooking!.startPixelOffset,
                       left: 2,
