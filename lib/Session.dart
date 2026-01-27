@@ -1,79 +1,133 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:mci_booking_app/Models/Enums/user_role.dart';
 import 'Models/user.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
+import 'Models/auth_models.dart';
+import 'Services/auth_service.dart';
 
 class Session extends ChangeNotifier {
-  User? currentUser;
-  String? token;
+  final AuthService _authService = AuthService();
+  UserResponse? currentUser;
 
-  bool get isAuthenticated => currentUser != null;
-  bool get isAdmin => currentUser?.role == UserRole.admin;
+  bool get authenticated => currentUser != null;
+  bool get isAdmin =>
+      currentUser?.isAdmin ?? false; // Use isAdmin field from backend
+  bool get isAuthenticated => _authService.isAuthenticated;
+  String? get token => _authService.token;
 
-  
-  Future<bool> login(String email, String password) async {
-    
-    final url = Uri.parse("https://roombooking-backend-17kv.onrender.com/auth/login");
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "email": email,
-          "password": password
-        }),
-      );
-
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-          // Token speichern
-        this.token = data['token'];
-        
-        // User Daten auslesen
-        final userData = data['user'];
-        
-        // Rolle prüfen 
-        final roleString = userData['role']?.toString().toUpperCase() ?? "USER";
-        final isUserAdmin = roleString == "ADMIN" || roleString == "STAFF";
-
-        // User im State speichern
-        setCurrentUser(User(
-          id: userData['id'].toString(),
-          name: "${userData['firstName']} ${userData['lastName']}",
-          role: isUserAdmin ? UserRole.admin : UserRole.user,
-        ));
-
-        return true; // Login erfolgreich
-      } else {
-        print("Login fehlgeschlagen: ${response.body}");
-        return false;
-      }
-    } catch (e) {
-      print("Login Fehler (Netzwerk?): $e");
-      return false;
-    }
-  }
-
+  // Login with cached credentials
+  // Returns true on success, false on no credentials saved / no success
   Future<bool> performCachedLogin() async {
+    // Check if we have a saved session
+    if (_authService.currentUser != null) {
+      currentUser = _authService.currentUser;
+      return true;
+    }
     return false;
   }
 
+  // Login with credentials
+  Future<bool> login(String email, String password) async {
+    final success = await _authService.login(email, password);
+    if (success) {
+      currentUser = _authService.currentUser;
+    }
+    return success;
+  }
 
-  void setCurrentUser(User? user) {
+  // Register new user
+  Future<bool> register(RegistrationRequest request) async {
+    final success = await _authService.register(request);
+    if (success) {
+      // Auto login after registration
+      final email = request.email;
+      final password = request.password;
+      await login(email, password);
+    }
+    return success;
+  }
+
+  // Check in to a booking
+  Future<bool> checkIn(int bookingId, String code) async {
+    final success = await _authService.checkIn(bookingId, code);
+    if (success) {
+      currentUser = _authService.currentUser;
+    }
+    return success;
+  }
+
+  // Get bookings for current user
+  Future<List<dynamic>> getMyBookings() async {
+    return _authService.getMyBookings();
+  }
+
+  // Create a new booking
+  Future<bool> createBooking(Map<String, dynamic> bookingData) async {
+    final success = await _authService.createBooking(bookingData);
+    if (success) {
+      currentUser = _authService.currentUser;
+    }
+    return success;
+  }
+
+  // Update an existing booking
+  Future<bool> updateBooking(
+    int bookingId,
+    Map<String, dynamic> bookingData,
+  ) async {
+    final success = await _authService.updateBooking(bookingId, bookingData);
+    if (success) {
+      currentUser = _authService.currentUser;
+    }
+    return success;
+  }
+
+  // Delete a booking
+  Future<bool> deleteBooking(int bookingId) async {
+    final success = await _authService.deleteBooking(bookingId);
+    if (success) {
+      currentUser = _authService.currentUser;
+    }
+    return success;
+  }
+
+  // Get all buildings
+  Future<List<dynamic>> getBuildings() async {
+    return _authService.getBuildings();
+  }
+
+  // Get all rooms with optional filters
+  Future<List<dynamic>> getRooms({
+    int? capacity,
+    String? equipment,
+    int? buildingId,
+    String? date,
+  }) async {
+    return _authService.getRooms(
+      capacity: capacity,
+      equipment: equipment,
+      buildingId: buildingId,
+      date: date,
+    );
+  }
+
+  // Get room equipment
+  Future<List<dynamic>> getRoomEquipment(int buildingId) async {
+    return _authService.getRoomEquipment(buildingId);
+  }
+
+  void setCurrentUser(UserResponse? user) {
     currentUser = user;
     notifyListeners();
   }
 
   void logout() {
+    _authService.clearSession();
     currentUser = null;
-    token = null;
     notifyListeners();
   }
-}
 
+  // Check if token is expired
+  bool get isTokenExpired => _authService.isTokenExpired;
+}
