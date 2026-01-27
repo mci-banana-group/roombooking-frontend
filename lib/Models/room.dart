@@ -1,16 +1,20 @@
 import 'Enums/room_status.dart';
 import 'room_equipment.dart';
+// import 'building.dart'; // Falls du das Building Model nutzen willst
 
 class Room {
   final String id;
   final String name;
   final String roomNumber;
   final int capacity;
-  final int floor;
-  final String location;
+  final int floor;             // Backend sendet das evtl. nicht -> wir setzen Default 0
+  final String location;       // Backend sendet "building" Objekt -> wir holen den Namen da raus
   final List<RoomEquipment> equipment;
   final RoomStatus currentStatus;
-  final Duration estimatedWalkingTime;
+  final Duration estimatedWalkingTime; // Backend sendet das nicht -> Default 0
+  
+  // Neu: Wir merken uns die BuildingID für Updates, falls nötig
+  final int? rawBuildingId; 
 
   const Room({
     required this.id,
@@ -22,102 +26,75 @@ class Room {
     required this.equipment,
     required this.currentStatus,
     required this.estimatedWalkingTime,
+    this.rawBuildingId,
   });
 
-  Room copyWith({
-    String? id,
-    String? name,
-    String? roomNumber,
-    int? capacity,
-    int? floor,
-    String? location,
-    List<RoomEquipment>? equipment,
-    RoomStatus? currentStatus,
-    Duration? estimatedWalkingTime,
-  }) {
-    return Room(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      roomNumber: roomNumber ?? this.roomNumber,
-      capacity: capacity ?? this.capacity,
-      floor: floor ?? this.floor,
-      location: location ?? this.location,
-      equipment: equipment ?? this.equipment,
-      currentStatus: currentStatus ?? this.currentStatus,
-      estimatedWalkingTime: estimatedWalkingTime ?? this.estimatedWalkingTime,
-    );
-  }
-
+  // --- HIER PASSIERT DIE MAGIE FÜR DAS BACKEND (POST/PUT) ---
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      // Backend erwartet diese Felder laut Swagger "Request body":
       'name': name,
-      'roomNumber': roomNumber,
+      'roomNumber': roomNumber, 
       'capacity': capacity,
-      'floor': floor,
-      'location': location,
+      // WICHTIG: Wenn wir eine ID haben, nutzen wir sie, sonst Default 1
+      'buildingId': rawBuildingId ?? 1, 
+      'description': "App Created Room", // Pflichtfeld im Backend, aber nicht in deiner UI
+      'status': currentStatus.toString().split('.').last, // "FREE" statt "RoomStatus.FREE"
+      'confirmationCode': "", // Pflichtfeld im Backend
       'equipment': equipment.map((e) => e.toJson()).toList(),
-      'currentStatus': currentStatus.toString(),
-      'estimatedWalkingTime': estimatedWalkingTime.inMilliseconds,
     };
   }
 
-  static int _readInt(dynamic value, {int fallback = 0}) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? fallback;
-  }
-
+  // --- HIER PASSIERT DIE MAGIE VOM BACKEND ZUR APP (GET) ---
   factory Room.fromJson(Map<String, dynamic> json) {
+    // Hilfsfunktion um Zahlen sicher zu lesen
+    int readInt(dynamic val) {
+      if (val == null) return 0;
+      if (val is int) return val;
+      return int.tryParse(val.toString()) ?? 0;
+    }
+
+    // Building auslesen (Swagger Antwort ist verschachtelt: "building": { "name": ... })
+    String locationName = "Unknown";
+    int bId = 1;
+    if (json['building'] != null && json['building'] is Map) {
+      locationName = json['building']['name'] ?? "Unknown";
+      bId = json['building']['id'] ?? 1;
+    }
+
     return Room(
-      id: (json['id'] ?? json['roomNumber'] ?? '').toString(),
-      name: json['name'] as String? ?? '',
-      roomNumber: (json['roomNumber'] ?? '').toString(),
-      capacity: _readInt(json['capacity'], fallback: 0),
-      floor: _readInt(json['floor'], fallback: 0),
-      location: json['location'] as String? ?? '',
-      equipment:
-          (json['equipment'] as List<dynamic>?)
-              ?.map((e) => RoomEquipment.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      currentStatus: RoomStatus.fromString((json['status'] as String?)?.toUpperCase() ?? 'FREE'),
-      estimatedWalkingTime: Duration(milliseconds: _readInt(json['estimatedWalkingTime'], fallback: 0)),
+      // Swagger ID ist int (z.B. 10), deine App will String. Wir wandeln um.
+      id: json['id']?.toString() ?? '', 
+      
+      name: json['name'] ?? 'Unnamed',
+      roomNumber: json['roomNumber']?.toString() ?? '',
+      capacity: readInt(json['capacity']),
+      
+      // Felder die das Backend NICHT liefert -> Defaults setzen
+      floor: readInt(json['floor']), 
+      location: locationName, 
+      
+      rawBuildingId: bId,
+
+      equipment: (json['equipment'] as List<dynamic>?)
+              ?.map((e) => RoomEquipment.fromJson(e))
+              .toList() ?? [],
+              
+      // Status String vom Backend ("AVAILABLE") in Enum wandeln
+      currentStatus: _parseStatus(json['status']),
+      
+      estimatedWalkingTime: const Duration(minutes: 0), // Backend liefert das nicht
     );
   }
 
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! Room) return false;
-    if (equipment.length != other.equipment.length) return false;
-    for (int i = 0; i < equipment.length; i++) {
-      if (equipment[i] != other.equipment[i]) return false;
+  static RoomStatus _parseStatus(String? status) {
+    if (status == null) return RoomStatus.free;
+    // Hier musst du prüfen wie dein Enum genau heißt vs was Swagger sendet
+    // Swagger Beispiel sagt "string", oft ist es "AVAILABLE" oder "OCCUPIED"
+    switch (status.toUpperCase()) {
+      case 'OCCUPIED': return RoomStatus.occupied;
+      case 'AVAILABLE': return RoomStatus.free; // oder wie dein Enum heißt
+      default: return RoomStatus.free;
     }
-    return other.id == id &&
-        other.name == name &&
-        other.roomNumber == roomNumber &&
-        other.capacity == capacity &&
-        other.floor == floor &&
-        other.location == location &&
-        other.currentStatus == currentStatus &&
-        other.estimatedWalkingTime == estimatedWalkingTime;
   }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    name,
-    roomNumber,
-    capacity,
-    floor,
-    location,
-    Object.hashAll(equipment),
-    currentStatus,
-    estimatedWalkingTime,
-  );
-
-  @override
-  String toString() =>
-      'Room(id: $id, name: $name, roomNumber: $roomNumber, capacity: $capacity, floor: $floor, location: $location, equipment: $equipment, currentStatus: $currentStatus, estimatedWalkingTime: $estimatedWalkingTime)';
 }
