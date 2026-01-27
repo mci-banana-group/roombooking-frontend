@@ -33,14 +33,17 @@ class LoginResponse {
       );
 }
 
+// In your Models/auth_models.dart
 class UserResponse {
+  final int id;
   final String firstName;
   final String lastName;
   final String email;
-  final UserRoleResponse role;
-  final bool isAdmin;
+  final String role;  // "STAFF", "USER", etc.
+  final bool isAdmin; // THIS is what determines admin access
 
   UserResponse({
+    required this.id,
     required this.firstName,
     required this.lastName,
     required this.email,
@@ -48,16 +51,18 @@ class UserResponse {
     required this.isAdmin,
   });
 
-  factory UserResponse.fromJson(Map<String, dynamic> json) => UserResponse(
-        firstName: json['firstName'] as String,
-        lastName: json['lastName'] as String,
-        email: json['email'] as String,
-        role: json['role'] is String
-            ? UserRoleResponse(name: json['role'] as String, ordinal: 0)
-            : UserRoleResponse.fromJson(json['role'] as Map<String, dynamic>),
-        isAdmin: json['isAdmin'] as bool,
-      );
+  factory UserResponse.fromJson(Map<String, dynamic> json) {
+    return UserResponse(
+      id: json['id'],
+      firstName: json['firstName'],
+      lastName: json['lastName'],
+      email: json['email'],
+      role: json['role'],
+      isAdmin: json['isAdmin'] ?? false,
+    );
+  }
 }
+
 
 class UserRoleResponse {
   final String name;

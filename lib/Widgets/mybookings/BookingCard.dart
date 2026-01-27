@@ -5,8 +5,18 @@ import '../../Models/Enums/booking_status.dart';
 class BookingCard extends StatelessWidget {
   final Booking booking;
   final String roomName;
+  final String buildingName;
+  final VoidCallback? onCheckIn;
+  final VoidCallback? onDelete;
 
-  const BookingCard({super.key, required this.booking, required this.roomName});
+  const BookingCard({
+    super.key,
+    required this.booking,
+    required this.roomName,
+    required this.buildingName,
+    this.onCheckIn,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +35,7 @@ class BookingCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with room name and status badge
+            // Header with room and building info
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -33,12 +43,20 @@ class BookingCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Room and Building name
                       Text(
-                        roomName,
+                        '$roomName • $buildingName',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
-                          fontSize: isMobile ? 14 : 16,
-                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Booking title/description
+                      Text(
+                        booking.description.isNotEmpty ? booking.description : 'No title',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: isMobile ? 12 : 13,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -46,7 +64,6 @@ class BookingCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
               ],
             ),
             const SizedBox(height: 12),
@@ -114,25 +131,28 @@ class BookingCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: Icon(Icons.edit, size: isMobile ? 16 : 18),
-                  label: const Text('Edit'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.primary,
-                    padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12, vertical: isMobile ? 4 : 8),
+                // ✅ Check-in button (only shown when available)
+                if (onCheckIn != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ElevatedButton.icon(
+                      onPressed: onCheckIn,
+                      icon: const Icon(Icons.login),
+                      label: const Text('Check In'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: Icon(Icons.close, size: isMobile ? 16 : 18),
-                  label: const Text('Cancel'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12, vertical: isMobile ? 4 : 8),
+                // ✅ Delete button (only shown for upcoming bookings)
+                if (onDelete != null)
+                  TextButton.icon(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.close),
+                    label: const Text('Cancel'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
                   ),
-                ),
               ],
             ),
           ],

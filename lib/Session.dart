@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:mci_booking_app/Models/Enums/user_role.dart';
 import 'Models/user.dart';
 
 class Session extends ChangeNotifier {
   User? currentUser;
-  String? token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwOi8vMC4wLjAuMDo4MDgwIiwiaXNzIjoiaHR0cDovLzAuMC4wLjA6ODA4MCIsInVzZXJJZCI6MSwicGVybWlzc2lvbkxldmVsIjoiQURNSU4ifQ.YaXkDzKitzuRjBYwIPOPTGMRdiqy3gBOMSBVv-oIBuw";
-
+  String? token;
   
   bool get authenticated => currentUser != null;
-
-  
-  bool get isAuthenticated => authenticated;
-
-  //Admin Check
-  bool get isAdmin => currentUser?.role == UserRole.admin;
+  bool get isAdmin => currentUser?.isAdmin ?? false;  // Use isAdmin field from backend
+  bool get isAuthenticated => _authService.isAuthenticated;
 
   // Login with cached credentials
   // Returns true on success, false on no credentials saved / no success

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:mci_booking_app/Session.dart';
 import 'package:mci_booking_app/Screens/HomePage.dart';
 import 'package:mci_booking_app/Screens/BookingsPage.dart';
 import 'package:mci_booking_app/Screens/ProfilePage.dart';
@@ -16,6 +16,18 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
+
+  static const List<Widget> _pages = [
+    HomePage(),
+    BookingsPage(),
+    ProfilePage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,33 +83,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
 
       body: pages[_selectedIndex],
-
-      /// 🔧 FIX für unsichtbare BottomBar bei 4 Tabs
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).dividerColor.withOpacity(0.25),
-              width: 1,
-            ),
-          ),
-        ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed, // ✅ extrem wichtig
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          selectedItemColor: Theme.of(context).colorScheme.primary,
-          unselectedItemColor:
-              Theme.of(context).colorScheme.onSurface.withOpacity(0.65),
-          showUnselectedLabels: true,
-          currentIndex: _selectedIndex,
-          items: items,
-          onTap: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: items,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed, // wichtig bei 4 Tabs
       ),
     );
   }

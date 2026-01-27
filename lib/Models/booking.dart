@@ -4,6 +4,7 @@ class Booking {
   final String id;
   final String roomId;
   final String userId;
+  final String description;
   final DateTime startTime;
   final DateTime endTime;
   final BookingStatus status;
@@ -15,6 +16,7 @@ class Booking {
     required this.id,
     required this.roomId,
     required this.userId,
+    required this.description,
     required this.startTime,
     required this.endTime,
     required this.status,
@@ -27,6 +29,7 @@ class Booking {
     String? id,
     String? roomId,
     String? userId,
+    String? description,
     DateTime? startTime,
     DateTime? endTime,
     BookingStatus? status,
@@ -38,6 +41,7 @@ class Booking {
       id: id ?? this.id,
       roomId: roomId ?? this.roomId,
       userId: userId ?? this.userId,
+      description: description ?? this.description,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       status: status ?? this.status,
@@ -73,6 +77,7 @@ class Booking {
       id: (json['id'] ?? '').toString(),
       roomId: (json['roomId'] ?? json['room'] ?? '').toString(),
       userId: (json['userId'] ?? json['user'] ?? '').toString(),
+      description: json['description']?.toString() ?? '',
       startTime: _readDateTime(json['startTime'] ?? json['start'], fallback: DateTime.now()),
       endTime: _readDateTime(json['endTime'] ?? json['end'], fallback: DateTime.now()),
       status: BookingStatus.fromString((json['status'] ?? '').toString()),

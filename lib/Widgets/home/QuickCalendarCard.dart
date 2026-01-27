@@ -179,16 +179,23 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
               _selectedDate = selectedDate;
             });
 
-            // Navigate to BookingAvailabilityPage with only the date
+            // Navigate to BookingAvailabilityPage with default values for time/capacity/equipment
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => BookingAvailabilityPage(
                   date: selectedDate,
-                  isFromQuickCalendar: true,
+                  startTime: '06:00',                     // ✅ Full day
+                  endTime: '23:59',                       // ✅ Full day
+                  capacity: 1,
+                  equipment: const [],
+                  isFromQuickCalendar: true,              // ✅ Flag ignores time filter
+                  buildingId: null,                       // ✅ Show all buildings
+                  buildingName: null,
                 ),
               ),
             );
+
           },
           child: Container(
             decoration: BoxDecoration(

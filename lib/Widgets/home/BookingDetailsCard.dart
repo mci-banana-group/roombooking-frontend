@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import '../common/FormLabel.dart';
 import '../common/TimeDropdown.dart';
 import '../common/DurationChip.dart';
-import '../common/EquipmentCheckbox.dart';
 import '../../Screens/BookingAvailabilityPage.dart';
-import 'package:flutter/material.dart';
+import '../../Services/building_service.dart';
+import '../../Services/room_service.dart';
+import '../../Models/building.dart';
+import '../../Models/Enums/equipment_type.dart';
 
 class BookingDetailsCard extends StatefulWidget {
   @override
@@ -13,7 +15,18 @@ class BookingDetailsCard extends StatefulWidget {
 }
 
 class _BookingDetailsCardState extends State<BookingDetailsCard> {
-  String _selectedBuilding = 'Main Campus';
+  final BuildingService _buildingService = BuildingService();
+  final RoomService _roomService = RoomService();
+
+  List<Building> _buildings = [];
+  int? _selectedBuildingId;
+  String? _selectedBuildingName;
+  bool _isLoadingBuildings = true;
+  String? _buildingsError;
+
+  bool _isLoadingEquipment = false;
+  String? _equipmentError;
+
   String _selectedStartTime = '09:00';
   String _selectedEndTime = '10:00';
   int _attendees = 4;
@@ -22,19 +35,101 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
 
   late final TextEditingController _attendeesController;
 
-  Map<String, bool> _equipment = {
-    'Computer': false,
-    'Display': false,
-    'Whiteboard': false,
-    'Phone': false,
-    'Video': false,
-    'WiFi': false,
-  };
+  Map<EquipmentType, bool> _equipment = {};
 
   @override
   void initState() {
     super.initState();
     _attendeesController = TextEditingController(text: _attendees.toString());
+    _loadBuildings();
+  }
+
+  Future<void> _loadBuildings() async {
+    try {
+      setState(() {
+        _isLoadingBuildings = true;
+        _buildingsError = null;
+      });
+
+      final buildings = await _buildingService.getBuildings();
+
+      if (mounted) {
+        setState(() {
+          _buildings = buildings;
+          _isLoadingBuildings = false;
+
+          if (_buildings.isNotEmpty) {
+            _selectedBuildingId = _buildings.first.id;
+            _selectedBuildingName = _buildings.first.name;
+            _loadEquipmentForBuilding(_buildings.first.id);
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _buildingsError = 'Failed to load buildings: $e';
+          _isLoadingBuildings = false;
+        });
+      }
+      print('Error loading buildings: $e');
+    }
+  }
+
+  int _timeToMinutes(String time) {
+    final parts = time.split(':');
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+  }
+
+  String _minutesToTime(int minutes) {
+    final h = (minutes ~/ 60).toString().padLeft(2, '0');
+    final m = (minutes % 60).toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
+  Future<void> _loadEquipmentForBuilding(int buildingId) async {
+    try {
+      setState(() {
+        _isLoadingEquipment = true;
+        _equipmentError = null;
+        _equipment = {};
+      });
+
+      final equipmentList = await _roomService.getRoomEquipment(buildingId);
+
+      if (mounted) {
+        setState(() {
+          final uniqueEquipmentTypes = <EquipmentType>{};
+
+          for (var item in equipmentList) {
+            if (item['name'] != null) {
+              final equipmentType = EquipmentType.fromString(item['name'] as String);
+              uniqueEquipmentTypes.add(equipmentType);
+            }
+          }
+
+          _equipment = {};
+          for (var equipmentType in uniqueEquipmentTypes) {
+            _equipment[equipmentType] = false;
+          }
+
+          _equipment = Map.fromEntries(
+              _equipment.entries.toList()
+                ..sort((a, b) => a.key.displayName.compareTo(b.key.displayName))
+          );
+
+          _isLoadingEquipment = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _equipmentError = 'Failed to load equipment: $e';
+          _isLoadingEquipment = false;
+        });
+      }
+      print('Error loading equipment: $e');
+    }
   }
 
   @override
@@ -62,7 +157,6 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header
               Row(
                 children: [
                   Icon(Icons.search, color: primaryColor, size: 20),
@@ -75,11 +169,66 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
               ),
               const SizedBox(height: 20),
 
-              // Building/Office Dropdown
+              // Building Dropdown
               FormLabel('Building / Office', primaryColor),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedBuilding,
+              _isLoadingBuildings
+                  ? Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? Color(0xFF333535) : Colors.white,
+                  border: Border.all(color: mutedColor.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+                  : _buildingsError != null
+                  ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _buildingsError!,
+                            style: TextStyle(color: Colors.red, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _loadBuildings,
+                      icon: Icon(Icons.refresh, size: 18),
+                      label: Text('Retry'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+                  : DropdownButtonFormField<int>(
+                value: _selectedBuildingId,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: isDark ? Color(0xFF333535) : Colors.white,
@@ -97,21 +246,28 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
-                items: [
-                  'Main Campus',
-                  'Building A',
-                  'Building B',
-                  'Building C',
-                ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                items: _buildings
+                    .map(
+                      (building) => DropdownMenuItem(
+                    value: building.id,
+                    child: Text(building.name),
+                  ),
+                )
+                    .toList(),
                 onChanged: (value) {
-                  setState(() {
-                    _selectedBuilding = value ?? 'Main Campus';
-                  });
+                  if (value != null) {
+                    final selected = _buildings.firstWhere((b) => b.id == value);
+                    setState(() {
+                      _selectedBuildingId = value;
+                      _selectedBuildingName = selected.name;
+                    });
+                    _loadEquipmentForBuilding(value);
+                  }
                 },
               ),
               const SizedBox(height: 16),
 
-              // Meeting Date
+              // Date
               FormLabel('Meeting Date', primaryColor),
               const SizedBox(height: 8),
               MouseRegion(
@@ -152,7 +308,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
               ),
               const SizedBox(height: 16),
 
-              // Number of Attendees
+              // Attendees
               FormLabel('Number of Attendees', primaryColor),
               const SizedBox(height: 8),
               Row(
@@ -193,11 +349,11 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           color: Colors.white,
                           onPressed: _attendees > 1
                               ? () {
-                                  setState(() {
-                                    _attendees--;
-                                    _attendeesController.text = _attendees.toString();
-                                  });
-                                }
+                            setState(() {
+                              _attendees--;
+                              _attendeesController.text = _attendees.toString();
+                            });
+                          }
                               : null,
                           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                           padding: EdgeInsets.zero,
@@ -221,7 +377,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
               ),
               const SizedBox(height: 16),
 
-              // Time Section - Start and End Time
+              // Time
               Row(
                 children: [
                   Flexible(
@@ -238,8 +394,18 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                             setState(() {
                               _selectedStartTime = value;
                               _selectedDuration = '';
+
+                              final startMinutes = _timeToMinutes(_selectedStartTime);
+                              final endMinutes = _timeToMinutes(_selectedEndTime);
+
+                              // If end <= start → auto-fix end (+30 min)
+                              if (endMinutes <= startMinutes) {
+                                final newEnd = startMinutes + 30;
+                                _selectedEndTime = _minutesToTime(newEnd);
+                              }
                             });
                           },
+
                           isDark: isDark,
                           primaryColor: primaryColor,
                           mutedColor: mutedColor,
@@ -259,6 +425,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                         const SizedBox(height: 8),
                         TimeDropdown(
                           selectedTime: _selectedEndTime,
+                          minTime: _selectedStartTime, // 👈 magic line
                           onChanged: (value) {
                             setState(() {
                               _selectedEndTime = value;
@@ -270,6 +437,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           mutedColor: mutedColor,
                           textColor: textColor,
                         ),
+
                       ],
                     ),
                   ),
@@ -277,7 +445,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
               ),
               const SizedBox(height: 16),
 
-              // Quick Duration Buttons
+              // Duration Buttons
               Text(
                 'Quick Duration',
                 style: TextStyle(fontSize: 12, color: mutedColor, fontWeight: FontWeight.w500),
@@ -287,36 +455,19 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                 spacing: 8,
                 runSpacing: 8,
                 children: ['30 min', '1 hour', '1.5 hours', '2 hours'].map((duration) {
-                  if (_selectedDuration.isEmpty) {
-                    return DurationChip(
-                      duration,
-                      primaryColor,
-                      isSelected: false,
-                      onTap: () {
-                        setState(() {
-                          _selectedDuration = duration;
-                          _calculateEndTime(duration);
-                        });
-                      },
-                    );
-                  } else {
-                    return DurationChip(
-                      duration,
-                      primaryColor,
-                      isSelected: _selectedDuration == duration,
-                      onTap: () {
-                        setState(() {
-                          _selectedDuration = duration;
-                          _calculateEndTime(duration);
-                        });
-                      },
-                    );
-                  }
+                  return DurationChip(
+                    duration,
+                    primaryColor,
+                    isSelected: _selectedDuration == duration,
+                    onTap: () {
+                      _calculateEndTime(duration);
+                    },
+                  );
                 }).toList(),
               ),
               const SizedBox(height: 16),
 
-              // Meeting Duration Info Card
+              // Duration Info
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -352,54 +503,88 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
               ),
               const SizedBox(height: 20),
 
-              // Required Equipment Section
+              // Equipment
               Text(
                 'Required Equipment',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor),
               ),
               const SizedBox(height: 12),
-              GridView.count(
+              _isLoadingEquipment
+                  ? Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              )
+                  : _equipmentError != null
+                  ? Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(_equipmentError!, style: TextStyle(color: Colors.red, fontSize: 12)),
+                    ),
+                  ],
+                ),
+              )
+                  : _equipment.isEmpty
+                  ? Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Center(
+                  child: Text('No equipment available', style: TextStyle(color: mutedColor, fontSize: 12)),
+                ),
+              )
+                  : GridView.count(
                 crossAxisCount: 2,
-                shrinkWrap: true, // ← Key: lets grid size itself
+                shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 4,
+                childAspectRatio: 4.5,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
                 children: _equipment.entries.map((entry) {
-                  return EquipmentCheckbox(
-                    label: entry.key,
-                    isSelected: entry.value,
-                    onChanged: (value) {
-                      setState(() {
-                        _equipment[entry.key] = value ?? false;
-                      });
-                    },
-                    isDark: isDark,
-                    primaryColor: primaryColor,
-                    textColor: textColor,
-                  );
+                  return _buildEquipmentCheckbox(entry.key, entry.value, isDark, primaryColor, textColor, mutedColor);
                 }).toList(),
               ),
               const SizedBox(height: 20),
 
-              // Find Available Rooms Button
+              // Book Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Collect selected equipment
+                  onPressed: _selectedBuildingId != null
+                      ? () {
+
                     List<String> selectedEquipment = _equipment.entries
                         .where((entry) => entry.value)
-                        .map((entry) => entry.key)
+                        .map((entry) => entry.key.apiValue)     // ✅ CORRECT: Sends "BEAMER"
                         .toList();
+
+                    print('DEBUG: Selected equipment = $selectedEquipment');
 
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => BookingAvailabilityPage(date: _selectedDate, isFromQuickCalendar: false),
+                        builder: (context) => BookingAvailabilityPage(
+                          date: _selectedDate,
+                          startTime: _selectedStartTime,
+                          endTime: _selectedEndTime,
+                          capacity: _attendees,
+                          equipment: selectedEquipment,         // ✅ Now correct format!
+                          isFromQuickCalendar: false,
+                          buildingId: _selectedBuildingId,
+                          buildingName: _selectedBuildingName,
+                        ),
                       ),
                     );
-                  },
+
+
+                  }
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
@@ -424,12 +609,76 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
     );
   }
 
-  void _calculateEndTime(String duration) {
-    final startTime = _parseTime(_selectedStartTime);
-    final durationMinutes = _parseDuration(duration);
-    final endTime = startTime.add(Duration(minutes: durationMinutes));
-    _selectedEndTime = _formatTime(endTime);
+  Widget _buildEquipmentCheckbox(
+      EquipmentType equipmentType,
+      bool isSelected,
+      bool isDark,
+      Color primaryColor,
+      Color textColor,
+      Color mutedColor,
+      ) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _equipment[equipmentType] = !isSelected;
+        });
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isSelected ? primaryColor : mutedColor.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Checkbox(
+                value: isSelected,
+                onChanged: (value) {
+                  setState(() {
+                    _equipment[equipmentType] = value ?? false;
+                  });
+                },
+                activeColor: primaryColor,
+              ),
+              Expanded(
+                child: Text(
+                  equipmentType.displayName,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: textColor,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
+
+  void _calculateEndTime(String duration) {
+    final startMinutes = _timeToMinutes(_selectedStartTime);
+    final durationMinutes = _parseDuration(duration);
+
+    final endMinutes = startMinutes + durationMinutes;
+
+    // ❌ Do not allow past 24:00
+    if (endMinutes > 24 * 60) return;
+
+    setState(() {
+      _selectedEndTime = _minutesToTime(endMinutes);
+      _selectedDuration = duration;
+    });
+  }
+
+
 
   int _parseDuration(String duration) {
     if (duration.contains('min')) {
