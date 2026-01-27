@@ -20,8 +20,8 @@ class AdminRepository {
     
     // Token holen
     final session = _ref.read(sessionProvider);
-    final token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwOi8vMC4wLjAuMDo4MDgwIiwiaXNzIjoiaHR0cDovLzAuMC4wLjA6ODA4MCIsInVzZXJJZCI6MSwicGVybWlzc2lvbkxldmVsIjoiQURNSU4ifQ.YaXkDzKitzuRjBYwIPOPTGMRdiqy3gBOMSBVv-oIBuw";
-    // final token = session.token ?? ""; // Später wieder aktivieren
+    final token = session.token ?? "";
+
 
     // Mapping: Frontend-Model -> Swagger Request Body
     final Map<String, dynamic> requestBody = {

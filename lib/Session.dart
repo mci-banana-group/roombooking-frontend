@@ -1,40 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:mci_booking_app/Models/Enums/user_role.dart';
 import 'Models/user.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 
 class Session extends ChangeNotifier {
   User? currentUser;
   String? token;
+
+  bool get isAuthenticated => currentUser != null;
+  bool get isAdmin => currentUser?.role == UserRole.admin;
+
   
-  bool get authenticated => currentUser != null;
-  bool get isAdmin => currentUser?.isAdmin ?? false;  // Use isAdmin field from backend
-  bool get isAuthenticated => _authService.isAuthenticated;
+  Future<bool> login(String email, String password) async {
+    
+    final url = Uri.parse("https://roombooking-backend-17kv.onrender.com/auth/login");
 
-  // Login with cached credentials
-  // Returns true on success, false on no credentials saved / no success
-  Future<bool> performCachedLogin() async {
-    await Future.delayed(const Duration(seconds: 2));
-    return false; // aktuell: keine Cache-Login Logik
-  }
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": email,
+          "password": password
+        }),
+      );
 
-  // Mock-Login (später ersetzt ihr das durch echtes Backend-Login)
-  Future<bool> login(String emailOrUsername, String password) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-   
-    if (emailOrUsername.trim().isEmpty || password.trim().isEmpty) {
+          // Token speichern
+        this.token = data['token'];
+        
+        // User Daten auslesen
+        final userData = data['user'];
+        
+        // Rolle prüfen 
+        final roleString = userData['role']?.toString().toUpperCase() ?? "USER";
+        final isUserAdmin = roleString == "ADMIN" || roleString == "STAFF";
+
+        // User im State speichern
+        setCurrentUser(User(
+          id: userData['id'].toString(),
+          name: "${userData['firstName']} ${userData['lastName']}",
+          role: isUserAdmin ? UserRole.admin : UserRole.user,
+        ));
+
+        return true; // Login erfolgreich
+      } else {
+        print("Login fehlgeschlagen: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("Login Fehler (Netzwerk?): $e");
       return false;
     }
-
-    // Demo-Regel: wenn Username "admin" ist -> Admin, sonst normaler User
-    final e = emailOrUsername.trim().toLowerCase();
-    final role = (e == 'admin' || e.startsWith('admin@')) ? UserRole.admin : UserRole.user;
-
-    setCurrentUser(User(id: 'local-1', name: emailOrUsername.trim(), role: role));
-    return true;
   }
+
+  Future<bool> performCachedLogin() async {
+    return false;
+  }
+
 
   void setCurrentUser(User? user) {
     currentUser = user;
@@ -43,6 +72,7 @@ class Session extends ChangeNotifier {
 
   void logout() {
     currentUser = null;
+    token = null;
     notifyListeners();
   }
 }
