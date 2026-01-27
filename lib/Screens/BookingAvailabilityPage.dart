@@ -5,6 +5,7 @@ import '../Models/room.dart' as api;
 import '../Models/Enums/equipment_type.dart';
 import '../Services/auth_service.dart';
 import '../Services/room_service.dart';
+import 'package:mci_booking_app/Screens/HomeScreen.dart';
 
 // ============================================================================
 // MODELS
@@ -327,11 +328,16 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
           if (!context.mounted) return;
 
           if (success) {
-            Navigator.pop(context);
-            await _loadAvailability();
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('✓ $title booked in ${room.name}'), duration: const Duration(seconds: 2)),
+            );
+
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const HomeScreen(initialIndex: 1),
+              ),
+              (route) => false,
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(

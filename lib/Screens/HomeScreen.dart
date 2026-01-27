@@ -8,14 +8,25 @@ import 'package:mci_booking_app/Screens/AdminDashboardPage.dart';
 import 'package:mci_booking_app/main.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  final int initialIndex;
+
+  const HomeScreen({
+    super.key,
+    this.initialIndex = 0,
+  });
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   static const List<Widget> _pages = [
     HomePage(),
