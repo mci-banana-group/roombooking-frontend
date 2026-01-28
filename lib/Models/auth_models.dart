@@ -33,7 +33,7 @@ class LoginResponse {
       );
 }
 
-// In your Models/auth_models.dart
+
 class UserResponse {
   final int id;
   final String firstName;

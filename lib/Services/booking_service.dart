@@ -24,11 +24,11 @@ class BookingService {
     print('   New Description: $newDescription');
 
     try {
-      // ✅ Send the full booking object with updated description
+
       final body = jsonEncode({
         'start': booking.startTime.toUtc().toIso8601String(),
         'end': booking.endTime.toUtc().toIso8601String(),
-        'description': newDescription,  // ✅ Updated description
+        'description': newDescription,
       });
 
       print('   Request Body: $body');
