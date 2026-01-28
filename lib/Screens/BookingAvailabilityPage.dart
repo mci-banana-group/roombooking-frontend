@@ -1092,17 +1092,28 @@ class BookingConfirmationDialog extends StatefulWidget {
 
 class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
   late TextEditingController _titleController;
+  late FocusNode _focusNode;
   bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: 'New Booking');
+    _focusNode = FocusNode();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (_focusNode.hasFocus && _titleController.text == 'New Booking') {
+      _titleController.clear();
+    }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -1207,6 +1218,7 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: _titleController,
+                      focusNode: _focusNode,
                       decoration: InputDecoration(
                         hintText: 'Enter booking title',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
