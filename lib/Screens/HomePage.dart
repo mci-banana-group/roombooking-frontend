@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../Widgets/home/BookingDetailsCard.dart';
 import '../Widgets/home/QuickCalendarCard.dart';
-import '../Widgets/home/HowToBookSection.dart';
+
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -75,16 +75,7 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: HowToBookSection(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
+
             ],
           ),
         ),

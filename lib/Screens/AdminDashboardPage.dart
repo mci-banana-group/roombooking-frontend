@@ -261,6 +261,7 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
   final _nameController = TextEditingController();
   final _numberController = TextEditingController();
   final _capacityController = TextEditingController();
+  final _confirmationCodeController = TextEditingController(); // Default empty
   final _buildingIdController = TextEditingController(text: "1"); // Default ID 1
 
   @override
@@ -281,13 +282,32 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
               TextFormField(
                 controller: _numberController,
                 decoration: const InputDecoration(labelText: "Raum Nummer (z.B. 101)"),
-                validator: (v) => v!.isEmpty ? "Pflichtfeld" : null,
+                keyboardType: TextInputType.number,
+
+                validator: (value) {
+                  if (value == null || value.isEmpty) return "Pflichtfeld";
+                  if (int.tryParse(value) == null) return "Bitte nur Zahlen eingeben!";
+                  return null;
+                },
+
               ),
               TextFormField(
                 controller: _capacityController,
                 decoration: const InputDecoration(labelText: "Kapazität"),
                 keyboardType: TextInputType.number,
                 validator: (v) => v!.isEmpty ? "Pflichtfeld" : null,
+              ),
+              TextFormField(
+                controller: _confirmationCodeController,
+                decoration: const InputDecoration(labelText: "Bestätigungscode (4-stellig)"),
+                keyboardType: TextInputType.number,
+                maxLength: 4,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return "Pflichtfeld";
+                  if (v.length != 4) return "Muss 4-stellig sein";
+                  if (int.tryParse(v) == null) return "Nur Zahlen erlaubt";
+                  return null;
+                },
               ),
               // Swagger braucht Building ID zwingend!
               TextFormField(
@@ -317,6 +337,7 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
                 equipment: [], 
                 currentStatus: RoomStatus.free, 
                 estimatedWalkingTime: Duration.zero,
+                confirmationCode: _confirmationCodeController.text,
               );
               
               // Zurückgeben an Parent mit BuildingID
@@ -351,6 +372,8 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
   late TextEditingController _numberController;
   late TextEditingController _capacityController;
   late TextEditingController _buildingIdController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _confirmationCodeController;
 
   @override
   void initState() {
@@ -360,6 +383,8 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
     _capacityController = TextEditingController(text: widget.room.capacity.toString());
     // Versuchen, die Building ID zu holen, sonst Default 1
     _buildingIdController = TextEditingController(text: widget.room.building?.id.toString() ?? "1");
+    _descriptionController = TextEditingController(text: widget.room.description);
+    _confirmationCodeController = TextEditingController(text: widget.room.confirmationCode);
   }
 
   @override
@@ -387,6 +412,22 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
                 decoration: const InputDecoration(labelText: "Kapazität"),
                 keyboardType: TextInputType.number,
                 validator: (v) => v!.isEmpty ? "Pflichtfeld" : null,
+              ),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(labelText: "Beschreibung"),
+              ),
+              TextFormField(
+                controller: _confirmationCodeController,
+                decoration: const InputDecoration(labelText: "Bestätigungscode (4-stellig)"),
+                keyboardType: TextInputType.number,
+                maxLength: 4,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return "Pflichtfeld";
+                  if (v.length != 4) return "Muss 4-stellig sein";
+                  if (int.tryParse(v) == null) return "Nur Zahlen erlaubt";
+                  return null;
+                },
               ),
               TextFormField(
                 controller: _buildingIdController,
@@ -419,6 +460,8 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
                   id: int.tryParse(_buildingIdController.text) ?? 1,
                   name: "Building ${int.tryParse(_buildingIdController.text)}", // Placeholder name
                 ),
+                description: _descriptionController.text,
+                confirmationCode: _confirmationCodeController.text,
               );
               
               widget.onSave(updatedRoom);

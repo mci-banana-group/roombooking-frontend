@@ -5,6 +5,7 @@ import '../Models/room.dart' as api;
 import '../Models/Enums/equipment_type.dart';
 import '../Services/auth_service.dart';
 import '../Services/room_service.dart';
+import 'package:mci_booking_app/Screens/HomeScreen.dart';
 
 // ============================================================================
 // MODELS
@@ -327,11 +328,16 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
           if (!context.mounted) return;
 
           if (success) {
-            Navigator.pop(context);
-            await _loadAvailability();
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('✓ $title booked in ${room.name}'), duration: const Duration(seconds: 2)),
+            );
+
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const HomeScreen(initialIndex: 1),
+              ),
+              (route) => false,
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -617,6 +623,8 @@ class _CalendarViewState extends State<CalendarView> {
   static const int startHour = 6;
   static const int endHour = 24;
   static const int snapMinutes = 15;
+  
+  Duration _preferredDuration = const Duration(hours: 1);
 
   DraftBooking? _draftBooking;
   late ScrollController _scrollController;
@@ -625,6 +633,12 @@ class _CalendarViewState extends State<CalendarView> {
   @override
   void initState() {
     super.initState();
+    
+    final initialDiff = widget.initialEndTime.difference(widget.initialStartTime);
+    if (initialDiff > Duration.zero) {
+      _preferredDuration = initialDiff;
+    }
+
     _scrollController = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_hasScrolledToInitial) {
@@ -659,6 +673,13 @@ class _CalendarViewState extends State<CalendarView> {
   DateTime _getTimeFromPixel(double pixel) {
     final totalMinutes = (pixel / hourHeight * 60).round();
     final snappedMinutes = (totalMinutes / snapMinutes).round() * snapMinutes;
+
+    // end of the day clamp to 23:59
+    final maxMinutes = (endHour - startHour) * 60;
+    if (snappedMinutes >= maxMinutes) {
+      return DateTime(widget.selectedDate.year, widget.selectedDate.month, widget.selectedDate.day, 23, 59);
+    }
+
     final hours = (startHour + snappedMinutes ~/ 60).clamp(startHour, endHour - 1);
     final minutes = (snappedMinutes % 60).clamp(0, 59);
 
@@ -667,7 +688,8 @@ class _CalendarViewState extends State<CalendarView> {
 
   void _startDraftBooking(RoomInfo room, Offset localPosition) {
     final startTime = _getTimeFromPixel(localPosition.dy);
-    final endTime = startTime.add(const Duration(hours: 1));
+    
+    final endTime = startTime.add(_preferredDuration);
 
     setState(() {
       _draftBooking = DraftBooking(
@@ -676,7 +698,7 @@ class _CalendarViewState extends State<CalendarView> {
         startTime: startTime,
         endTime: endTime,
         startPixelOffset: localPosition.dy,
-        endPixelOffset: localPosition.dy + hourHeight,
+        endPixelOffset: localPosition.dy + (hourHeight * (_preferredDuration.inMinutes / 60)),
         isPreselected: false,
       );
     });
@@ -699,6 +721,8 @@ class _CalendarViewState extends State<CalendarView> {
         _draftBooking!.endTime = _draftBooking!.startTime.add(const Duration(minutes: 30));
         _draftBooking!.endPixelOffset = _draftBooking!.startPixelOffset + hourHeight / 2;
       }
+      
+      _preferredDuration = _draftBooking!.endTime.difference(_draftBooking!.startTime);
     });
   }
 
@@ -725,7 +749,7 @@ class _CalendarViewState extends State<CalendarView> {
   List<Booking> _getOverlappingBookings(int roomId, DateTime start, DateTime end) {
     return widget.bookings.where((booking) {
       if (booking.roomId != roomId) return false;
-      return !(booking.endTime.isBefore(start) || booking.startTime.isAfter(end));
+      return booking.endTime.isAfter(start) && booking.startTime.isBefore(end);
     }).toList();
   }
 
@@ -1086,17 +1110,28 @@ class BookingConfirmationDialog extends StatefulWidget {
 
 class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
   late TextEditingController _titleController;
+  late FocusNode _focusNode;
   bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: 'New Booking');
+    _focusNode = FocusNode();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (_focusNode.hasFocus && _titleController.text == 'New Booking') {
+      _titleController.clear();
+    }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -1201,6 +1236,7 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: _titleController,
+                      focusNode: _focusNode,
                       decoration: InputDecoration(
                         hintText: 'Enter booking title',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
