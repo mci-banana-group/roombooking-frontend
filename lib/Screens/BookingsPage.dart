@@ -5,7 +5,7 @@ import '../Models/Enums/booking_status.dart';
 import '../Widgets/mybookings/BookingCard.dart';
 import '../Widgets/mybookings/BookingStats.dart';
 import '../Services/auth_service.dart';
-import '../Services/room_service.dart';
+
 import '../Services/booking_service.dart';
 
 class BookingsPage extends StatefulWidget {
@@ -17,11 +17,11 @@ class BookingsPage extends StatefulWidget {
 
 class _BookingsPageState extends State<BookingsPage> {
   final AuthService _authService = AuthService();
-  final RoomService _roomService = RoomService();
+
   final BookingService _bookingService = BookingService();
 
   List<Booking> _bookings = [];
-  Map<String, Room> _roomsCache = {};
+
   BookingFilterTab _selectedTab = BookingFilterTab.upcoming;
 
   bool _isLoading = false;
@@ -166,28 +166,15 @@ class _BookingsPageState extends State<BookingsPage> {
       final bookingsData = await _authService.getMyBookings();
       final bookings = bookingsData.map((json) => Booking.fromJson(json as Map<String, dynamic>)).toList();
 
-      // Fetch room details for all unique room IDs
-      final uniqueRoomIds = bookings.map((b) => b.roomId).toSet();
-      final roomsCache = <String, Room>{};
-
-      for (final roomId in uniqueRoomIds) {
-        final room = await _roomService.getRoomById(roomId);
-        if (room != null) {
-          roomsCache[roomId] = room;
-        }
-      }
-
       if (!mounted) return;
       setState(() {
         _bookings = bookings;
-        _roomsCache = roomsCache;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loadError = e.toString();
         _bookings = [];
-        _roomsCache = {};
       });
     } finally {
       if (mounted) {
@@ -291,14 +278,12 @@ class _BookingsPageState extends State<BookingsPage> {
     }
   }
 
-  String _getRoomName(String roomId) {
-    return _roomsCache[roomId]?.name ?? 'Room $roomId';
+  String _getRoomName(Booking booking) {
+    return booking.room?.name ?? 'Room ${booking.roomId}';
   }
 
-  String _getBuildingName(String roomId) {
-    // ✅ FIXED: Return empty or placeholder since building field doesn't exist
-    // Update this if your Room model has a building field
-    return '';
+  String _getBuildingName(Booking booking) {
+    return booking.room?.building?.name ?? '';
   }
 
   @override
@@ -441,8 +426,8 @@ class _BookingsPageState extends State<BookingsPage> {
 
                         return BookingCard(
                           booking: booking,
-                          roomName: _getRoomName(booking.roomId),
-                          buildingName: _getBuildingName(booking.roomId),
+                          roomName: _getRoomName(booking),
+                          buildingName: _getBuildingName(booking),
                           onCheckIn: isCheckInAvailable && !isPast ? () => _showCheckInDialog(booking) : null,
                           onDelete: !isPast ? () => _confirmDelete(booking) : null,
                         );

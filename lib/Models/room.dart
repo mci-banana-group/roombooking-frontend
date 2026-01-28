@@ -1,5 +1,6 @@
 import 'Enums/room_status.dart';
 import 'room_equipment.dart';
+import 'building.dart';
 
 class Room {
   final String id;
@@ -11,6 +12,7 @@ class Room {
   final List<RoomEquipment> equipment;
   final RoomStatus currentStatus;
   final Duration estimatedWalkingTime;
+  final Building? building;
 
   const Room({
     required this.id,
@@ -22,6 +24,7 @@ class Room {
     required this.equipment,
     required this.currentStatus,
     required this.estimatedWalkingTime,
+    this.building,
   });
 
   Room copyWith({
@@ -34,6 +37,7 @@ class Room {
     List<RoomEquipment>? equipment,
     RoomStatus? currentStatus,
     Duration? estimatedWalkingTime,
+    Building? building,
   }) {
     return Room(
       id: id ?? this.id,
@@ -45,6 +49,7 @@ class Room {
       equipment: equipment ?? this.equipment,
       currentStatus: currentStatus ?? this.currentStatus,
       estimatedWalkingTime: estimatedWalkingTime ?? this.estimatedWalkingTime,
+      building: building ?? this.building,
     );
   }
 
@@ -59,6 +64,7 @@ class Room {
       'equipment': equipment.map((e) => e.toJson()).toList(),
       'currentStatus': currentStatus.toString(),
       'estimatedWalkingTime': estimatedWalkingTime.inMilliseconds,
+      'building': building?.toJson(),
     };
   }
 
@@ -83,6 +89,7 @@ class Room {
           [],
       currentStatus: RoomStatus.fromString((json['status'] as String?)?.toUpperCase() ?? 'FREE'),
       estimatedWalkingTime: Duration(milliseconds: _readInt(json['estimatedWalkingTime'], fallback: 0)),
+      building: json['building'] != null ? Building.fromJson(json['building'] as Map<String, dynamic>) : null,
     );
   }
 
@@ -101,7 +108,8 @@ class Room {
         other.floor == floor &&
         other.location == location &&
         other.currentStatus == currentStatus &&
-        other.estimatedWalkingTime == estimatedWalkingTime;
+        other.estimatedWalkingTime == estimatedWalkingTime &&
+        other.building == building;
   }
 
   @override
@@ -115,9 +123,10 @@ class Room {
     Object.hashAll(equipment),
     currentStatus,
     estimatedWalkingTime,
+    building,
   );
 
   @override
   String toString() =>
-      'Room(id: $id, name: $name, roomNumber: $roomNumber, capacity: $capacity, floor: $floor, location: $location, equipment: $equipment, currentStatus: $currentStatus, estimatedWalkingTime: $estimatedWalkingTime)';
+      'Room(id: $id, name: $name, roomNumber: $roomNumber, capacity: $capacity, floor: $floor, location: $location, equipment: $equipment, currentStatus: $currentStatus, estimatedWalkingTime: $estimatedWalkingTime, building: $building)';
 }
