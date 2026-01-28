@@ -153,23 +153,12 @@ class AdminRepository {
   // 4. GET ALL ROOMS
   Future<List<Room>> getAllRooms() async {
     final session = _ref.read(sessionProvider);
-    List<Room> allRooms = [];
-
+    
     try {
-      final buildings = await session.getBuildings();
-      
-      for (var b in buildings) {
-        final bId = b['id'];
-        // Ruft Räume pro Gebäude ab
-        final roomData = await session.getRooms(buildingId: bId);
-        
-        // Wandelt JSON in Room Objekte um und fügt sie der Liste hinzu
-        allRooms.addAll(roomData.map((json) => Room.fromJson(json)).toList());
-      }
-      
-      return allRooms;
+      final roomData = await session.getAdminRooms();
+      return roomData.map((json) => Room.fromJson(json)).toList();
     } catch (e) {
-      print("Fehler beim Laden der Räume: $e");
+      print("Fehler beim Laden der Admin-Räume: $e");
       return [];
     }
   }
