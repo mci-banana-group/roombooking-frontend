@@ -5,7 +5,6 @@ import '../Models/room.dart';
 import '../Session.dart';
 import '../Resources/API.dart'; 
 import '../main.dart';
-import '../Helper/http_client.dart';
 
 
 final adminRepositoryProvider = Provider((ref) => AdminRepository(ref));
@@ -73,7 +72,7 @@ class AdminRepository {
     try {
       print("Lösche Raum ID: $roomId");
       
-      final response = await HttpClient.delete(
+      final response = await http.delete(
         url,
         headers: {
           'Content-Type': 'application/json',
@@ -104,23 +103,24 @@ class AdminRepository {
 
     final Map<String, dynamic> requestBody = {
       "name": updatedRoom.name,
-      "roomNumber": updatedRoom.roomNumber,
+      "roomNumber": int.tryParse(updatedRoom.roomNumber) ?? 999,
       "capacity": updatedRoom.capacity,
       "buildingId": updatedRoom.rawBuildingId ?? 1,
       "description": "Updated via App",
       "status": "FREE", 
-      "confirmationCode": "",
-      "equipment": updatedRoom.equipment.map((e) => {
-        "type": "Whiteboard", 
-        "quantity": 1,
-        "description": ""
-      }).toList(),
+      "confirmationCode": "000",
+      "equipment": []//updatedRoom.equipment.map((e) => {
+        //"type": "WHITEBOARD", 
+        //"quantity": 1,
+        //"description": ""
+      //}).toList(),
     };
 
     try {
       print("Update Raum ID: $roomId");
+      print("DEBUG Update: Sende an $url");
       
-      final response = await HttpClient.put(
+      final response = await http.put(
         url,
         headers: {
           'Content-Type': 'application/json',
@@ -132,9 +132,10 @@ class AdminRepository {
 
       print("Update Status: ${response.statusCode}");
       
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 202) {
         return true;
       }
+      print("DEBUG Update FEHLER BODY: ${response.body}");
       return false;
     } catch (e) {
       print("Fehler beim Update: $e");
