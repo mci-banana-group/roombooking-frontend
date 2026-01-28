@@ -271,23 +271,32 @@ class _BookingsPageState extends State<BookingsPage> {
     switch (_selectedTab) {
       case BookingFilterTab.upcoming:
       // Upcoming = RESERVED status and start time in the future
-        return _bookings
+        final bookings = _bookings
             .where((booking) =>
-        booking.status == BookingStatus.confirmed &&
-            booking.startTime.isAfter(DateTime.now()))
+                booking.status == BookingStatus.confirmed &&
+                booking.startTime.isAfter(DateTime.now()))
             .toList();
+        // Sort earliest first
+        bookings.sort((a, b) => a.startTime.compareTo(b.startTime));
+        return bookings;
 
       case BookingFilterTab.past:
       // Past = CANCELLED, CHECKED_IN, or NO_SHOW status
-        return _bookings
+        final bookings = _bookings
             .where((booking) =>
-        booking.status == BookingStatus.cancelled ||
-            booking.status == BookingStatus.checkedIn ||
-            booking.status == BookingStatus.expired)
+                booking.status == BookingStatus.cancelled ||
+                booking.status == BookingStatus.checkedIn ||
+                booking.status == BookingStatus.expired)
             .toList();
+        // Sort most recent first
+        bookings.sort((a, b) => b.startTime.compareTo(a.startTime));
+        return bookings;
 
       case BookingFilterTab.all:
-        return _bookings;
+        final bookings = List<Booking>.from(_bookings);
+        // Sort most recent first
+        bookings.sort((a, b) => b.startTime.compareTo(a.startTime));
+        return bookings;
     }
   }
 
