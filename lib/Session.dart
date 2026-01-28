@@ -111,6 +111,11 @@ class Session extends ChangeNotifier {
       date: date,
     );
   }
+  
+  // Get all rooms (ADMIN)
+  Future<List<dynamic>> getAdminRooms() async {
+    return _authService.getAdminRooms();
+  }
 
   // Get room equipment
   Future<List<dynamic>> getRoomEquipment(int buildingId) async {

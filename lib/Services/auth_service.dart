@@ -249,6 +249,25 @@ class AuthService {
       return [];
     }
   }
+  
+  // Get all rooms (ADMIN) - includes confirmation code
+  Future<List<dynamic>> getAdminRooms() async {
+    try {
+      final response = await HttpClient.get(
+        Uri.parse('${API.base_url}${API.adminRooms}'),
+        headers: {'Authorization': 'Bearer $_token'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data; // Returns raw JSON list
+      }
+      return [];
+    } catch (e) {
+      print('Get admin rooms error: $e');
+      return [];
+    }
+  }
 
   // Get room equipment
   Future<List<dynamic>> getRoomEquipment(int buildingId) async {

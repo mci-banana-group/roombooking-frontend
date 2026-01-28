@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:mci_booking_app/Helper/http_client.dart';
 import '../Models/room.dart';
 import '../Session.dart';
 import '../Resources/API.dart'; 
 import '../main.dart';
-import '../Helper/http_client.dart';
 
 
 final adminRepositoryProvider = Provider((ref) => AdminRepository(ref));
@@ -30,14 +30,11 @@ class AdminRepository {
       "buildingId": buildingId, 
       "description": "room created via app",
       "status": "FREE",         
-      "confirmationCode": "000",   
+      "confirmationCode": room.confirmationCode,   
       "equipment": []
     };
 
     try {
-      print('DEBUG AdminRepository: Sending create room request to $url');
-      print('DEBUG AdminRepository: Payload: ${jsonEncode(requestBody)}');
-      
       final response = await http.post(
         url,
         headers: {
@@ -47,8 +44,6 @@ class AdminRepository {
         },
         body: jsonEncode(requestBody),
       );
-      print('DEBUG AdminRepository: Response status: ${response.statusCode}');
-      print('DEBUG AdminRepository: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
@@ -102,24 +97,29 @@ class AdminRepository {
 
     if (token == null) return false;
 
+    final int? parsedRoomNumber = int.tryParse(updatedRoom.roomNumber);
+    
+    if (parsedRoomNumber == null) {
+      print("Raumnummer '${updatedRoom.roomNumber}' ist keine gültige Zahl.");
+      return false;
+    }
+
     final Map<String, dynamic> requestBody = {
       "name": updatedRoom.name,
-      "roomNumber": updatedRoom.roomNumber,
+      "roomNumber": parsedRoomNumber,
       "capacity": updatedRoom.capacity,
       "buildingId": updatedRoom.rawBuildingId ?? 1,
-      "description": "Updated via App",
-      "status": "FREE", 
-      "confirmationCode": "",
+      "description": updatedRoom.description,
+      "status": updatedRoom.currentStatus.name.toUpperCase(), 
+      "confirmationCode": updatedRoom.confirmationCode,
       "equipment": updatedRoom.equipment.map((e) => {
-        "type": "Whiteboard", 
-        "quantity": 1,
-        "description": ""
+        "type": e.type.apiValue, 
+        "quantity": e.quantity,
+        "description": e.description ?? ""
       }).toList(),
     };
 
     try {
-      print("Update Raum ID: $roomId");
-      
       final response = await HttpClient.put(
         url,
         headers: {
@@ -130,9 +130,9 @@ class AdminRepository {
         body: jsonEncode(requestBody),
       );
 
-      print("Update Status: ${response.statusCode}");
+
       
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 202) {
         return true;
       }
       return false;
@@ -145,23 +145,12 @@ class AdminRepository {
   // 4. GET ALL ROOMS
   Future<List<Room>> getAllRooms() async {
     final session = _ref.read(sessionProvider);
-    List<Room> allRooms = [];
-
+    
     try {
-      final buildings = await session.getBuildings();
-      
-      for (var b in buildings) {
-        final bId = b['id'];
-        // Ruft Räume pro Gebäude ab
-        final roomData = await session.getRooms(buildingId: bId);
-        
-        // Wandelt JSON in Room Objekte um und fügt sie der Liste hinzu
-        allRooms.addAll(roomData.map((json) => Room.fromJson(json)).toList());
-      }
-      
-      return allRooms;
+      final roomData = await session.getAdminRooms();
+      return roomData.map((json) => Room.fromJson(json)).toList();
     } catch (e) {
-      print("Fehler beim Laden der Räume: $e");
+      print("Fehler beim Laden der Admin-Räume: $e");
       return [];
     }
   }

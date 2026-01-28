@@ -12,7 +12,9 @@ class Room {
   final List<RoomEquipment> equipment;
   final RoomStatus currentStatus;
   final Duration estimatedWalkingTime; // Backend sendet das nicht -> Default 0
-  
+  final String description;
+  final String confirmationCode;
+
   // Neu: Wir merken uns die BuildingID für Updates, falls nötig
   final int? rawBuildingId; 
 
@@ -27,6 +29,8 @@ class Room {
     required this.currentStatus,
     required this.estimatedWalkingTime,
     this.rawBuildingId,
+    this.description = '',
+    this.confirmationCode = '',
   });
 
   // --- HIER PASSIERT DIE MAGIE VOM BACKEND ZUR APP (GET) ---
@@ -37,7 +41,7 @@ class Room {
     final Map<String, dynamic> data = (json['room'] != null && json['room'] is Map<String, dynamic>) 
         ? json['room'] 
         : json;
-
+  
     // Hilfsfunktion um Zahlen sicher zu lesen
     int readInt(dynamic val) {
       if (val == null) return 0;
@@ -69,6 +73,8 @@ class Room {
       roomNumber: data['roomNumber']?.toString() ?? '',
       capacity: readInt(data['capacity']),
       
+      description: data['description'] ?? "",
+      confirmationCode: data['confirmationCode']?.toString() ?? "",
       floor: readInt(data['floor']), 
       location: locationName, 
       
