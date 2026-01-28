@@ -29,24 +29,15 @@ class Room {
     this.rawBuildingId,
   });
 
-  // --- HIER PASSIERT DIE MAGIE FÜR DAS BACKEND (POST/PUT) ---
-  Map<String, dynamic> toJson() {
-    return {
-      // Backend erwartet diese Felder laut Swagger "Request body":
-      'name': name,
-      'roomNumber': roomNumber, 
-      'capacity': capacity,
-      // WICHTIG: Wenn wir eine ID haben, nutzen wir sie, sonst Default 1
-      'buildingId': rawBuildingId ?? 1, 
-      'description': "App Created Room", // Pflichtfeld im Backend, aber nicht in deiner UI
-      'status': currentStatus.toString().split('.').last, // "FREE" statt "RoomStatus.FREE"
-      'confirmationCode': "", // Pflichtfeld im Backend
-      'equipment': equipment.map((e) => e.toJson()).toList(),
-    };
-  }
-
   // --- HIER PASSIERT DIE MAGIE VOM BACKEND ZUR APP (GET) ---
   factory Room.fromJson(Map<String, dynamic> json) {
+    // 1. DAS PÄCKCHEN AUSPACKEN
+    // Der Server verpackt die Infos im Key "room".
+    // Wir prüfen: Gibt es "room"? Wenn ja, nehmen wir das. Sonst nehmen wir json direkt.
+    final Map<String, dynamic> data = (json['room'] != null && json['room'] is Map<String, dynamic>) 
+        ? json['room'] 
+        : json;
+
     // Hilfsfunktion um Zahlen sicher zu lesen
     int readInt(dynamic val) {
       if (val == null) return 0;
@@ -54,46 +45,54 @@ class Room {
       return int.tryParse(val.toString()) ?? 0;
     }
 
-    // Building auslesen (Swagger Antwort ist verschachtelt: "building": { "name": ... })
+    // 2. Building auslesen
+    // Laut Screenshot liegt "building" NEBEN "room" (also im originalen json), nicht darin.
     String locationName = "Unknown";
     int bId = 1;
+    
+    // Wir schauen erst im Haupt-JSON
     if (json['building'] != null && json['building'] is Map) {
       locationName = json['building']['name'] ?? "Unknown";
       bId = json['building']['id'] ?? 1;
+    } 
+    // Fallback: Manchmal ist building auch im room-Objekt
+    else if (data['building'] != null && data['building'] is Map) {
+      locationName = data['building']['name'] ?? "Unknown";
+      bId = data['building']['id'] ?? 1;
     }
 
     return Room(
-      // Swagger ID ist int (z.B. 10), deine App will String. Wir wandeln um.
-      id: json['id']?.toString() ?? '', 
+      // WICHTIG: Wir nutzen jetzt 'data' statt 'json' für die Raum-Details!
+      id: data['id']?.toString() ?? '', 
       
-      name: json['name'] ?? 'Unnamed',
-      roomNumber: json['roomNumber']?.toString() ?? '',
-      capacity: readInt(json['capacity']),
+      name: data['name'] ?? 'Unnamed', // Jetzt sollte hier "Seminar Room A" stehen
+      roomNumber: data['roomNumber']?.toString() ?? '',
+      capacity: readInt(data['capacity']),
       
-      // Felder die das Backend NICHT liefert -> Defaults setzen
-      floor: readInt(json['floor']), 
+      floor: readInt(data['floor']), 
       location: locationName, 
       
       rawBuildingId: bId,
 
-      equipment: (json['equipment'] as List<dynamic>?)
+      equipment: (data['equipment'] as List<dynamic>?)
               ?.map((e) => RoomEquipment.fromJson(e))
               .toList() ?? [],
               
-      // Status String vom Backend ("AVAILABLE") in Enum wandeln
-      currentStatus: _parseStatus(json['status']),
+      // Status parsen
+      currentStatus: _parseStatus(data['status']),
       
-      estimatedWalkingTime: const Duration(minutes: 0), // Backend liefert das nicht
+      estimatedWalkingTime: const Duration(minutes: 0),
     );
   }
 
   static RoomStatus _parseStatus(String? status) {
     if (status == null) return RoomStatus.free;
-    // Hier musst du prüfen wie dein Enum genau heißt vs was Swagger sendet
-    // Swagger Beispiel sagt "string", oft ist es "AVAILABLE" oder "OCCUPIED"
+    // Dein Screenshot zeigte "FREE" als Status -> das müssen wir abfangen!
     switch (status.toUpperCase()) {
       case 'OCCUPIED': return RoomStatus.occupied;
-      case 'AVAILABLE': return RoomStatus.free; // oder wie dein Enum heißt
+      case 'AVAILABLE': 
+      case 'FREE':      // <--- Das hier hat gefehlt!
+        return RoomStatus.free;
       default: return RoomStatus.free;
     }
   }

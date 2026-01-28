@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../Models/room.dart';
-import '../Models/Enums/room_status.dart'; // Importieren
+import '../Models/Enums/room_status.dart';
 import '../Services/admin_repository.dart';
-import '../Session.dart'; // Importieren, falls SessionProvider hier definiert ist
-import '../main.dart'; // Falls sessionProvider hier ist
+import '../Session.dart'; 
+import '../main.dart';
 
 class AdminDashboardPage extends ConsumerWidget {
   const AdminDashboardPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Falls du einen sessionProvider hast:
-    // final session = ref.watch(sessionProvider);
-    // if (!session.isAdmin) return ... (Dein alter Guard Code)
+
 
     return DefaultTabController(
       length: 2,
@@ -30,7 +28,7 @@ class AdminDashboardPage extends ConsumerWidget {
         body: const TabBarView(
           children: [
             _AdminBookingsOverview(),
-            _AdminRoomManagement(), // Unsere neue Klasse
+            _AdminRoomManagement(), //neue Klasse
           ],
         ),
       ),
@@ -46,7 +44,8 @@ class _AdminBookingsOverview extends StatelessWidget {
   }
 }
 
-// --- HIER IST DER NEUE CODE FÜR RÄUME ---
+
+// Räume
 
 class _AdminRoomManagement extends ConsumerStatefulWidget {
   const _AdminRoomManagement();
@@ -56,22 +55,54 @@ class _AdminRoomManagement extends ConsumerStatefulWidget {
 }
 
 class _AdminRoomManagementState extends ConsumerState<_AdminRoomManagement> {
-  // Liste der Räume (könnte später auch aus einem Provider kommen)
-  List<Room> rooms = []; 
+  // Liste der Räume
+  List<Room> rooms = [];
+  // Variable um zu prüfen, ob wir gerade laden
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Sofort beim Starten die echten Daten holen
+    _loadRooms();
+  }
+
+  // Diese Methode holt die Daten vom Server
+  Future<void> _loadRooms() async {
+    try {
+      final loadedRooms = await ref.read(adminRepositoryProvider).getAllRooms();
+      
+      if (mounted) {
+        setState(() {
+          rooms = loadedRooms;
+          _isLoading = false; // Laden fertig
+        });
+      }
+    } catch (e) {
+      print("Fehler beim Laden: $e");
+      if (mounted) {
+        setState(() {
+          _isLoading = false; // Laden fertig (auch bei Fehler, damit der Kreis weggeht)
+        });
+      }
+    }
+  }
 
   void _openCreateDialog() {
     showDialog(
       context: context,
       builder: (ctx) => _CreateRoomDialog(
         onSave: (newRoom, buildingId) async {
+          // Lade-Kreis zeigen während des Speicherns (optional, aber schick)
+          // setState(() => _isLoading = true); 
+
           // 1. API Aufruf via Repository
           final success = await ref.read(adminRepositoryProvider).createRoom(newRoom, buildingId);
           
           if (success) {
-            // 2. UI aktualisieren (Normalerweise hier Liste neu laden)
-            setState(() {
-              rooms.add(newRoom);
-            });
+            // 2. Liste neu vom Server laden, damit wir die echte ID und alles haben
+            await _loadRooms(); 
+            
             if (mounted) Navigator.pop(ctx);
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Raum erstellt!")));
           } else {
@@ -90,25 +121,36 @@ class _AdminRoomManagementState extends ConsumerState<_AdminRoomManagement> {
         backgroundColor: Colors.teal,
         child: const Icon(Icons.add),
       ),
-      body: rooms.isEmpty
-          ? Center(
-              child: Text("Keine Räume geladen.\nDrücke + um einen zu erstellen.", 
-              textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[400]))
-            )
-          : ListView.builder(
-              itemCount: rooms.length,
-              itemBuilder: (context, index) {
-                final room = rooms[index];
-                return Card(
-                  margin: const EdgeInsets.all(8),
-                  child: ListTile(
-                    title: Text(room.name),
-                    subtitle: Text("Nr: ${room.roomNumber} | Kapazität: ${room.capacity}"),
-                    trailing: Chip(label: Text(room.currentStatus.name)),
-                  ),
-                );
-              },
-            ),
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator()) // Zeige Ladekreis wenn _isLoading true ist
+          : rooms.isEmpty
+              ? Center(
+                  child: Text("Keine Räume gefunden.\n(Oder Verbindung fehlgeschlagen)", 
+                  textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[400]))
+                )
+              : ListView.builder(
+                  itemCount: rooms.length,
+                  itemBuilder: (context, index) {
+                    final room = rooms[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      elevation: 2,
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.teal.withOpacity(0.1),
+                          child: Text(room.roomNumber, style: const TextStyle(color: Colors.teal, fontSize: 12)),
+                        ),
+                        title: Text(room.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text("Kapazität: ${room.capacity} Personen"),
+                        trailing: Chip(
+                          label: Text(room.currentStatus.name.toUpperCase()),
+                          backgroundColor: room.currentStatus.name == 'free' ? Colors.green[100] : Colors.orange[100],
+                          labelStyle: TextStyle(fontSize: 10, color: Colors.black87),
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
