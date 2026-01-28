@@ -5,6 +5,7 @@ import '../Models/room.dart';
 import '../Session.dart';
 import '../Resources/API.dart'; 
 import '../main.dart';
+import '../Helper/http_client.dart';
 
 
 final adminRepositoryProvider = Provider((ref) => AdminRepository(ref));
@@ -15,52 +16,57 @@ class AdminRepository {
 
   AdminRepository(this._ref);
 
-  Future<bool> createRoom(Room room, int buildingId) async {
+Future<bool> createRoom(Room room, int buildingId) async {
+    // URL laut Swagger
     final url = Uri.parse('$baseUrl/admin/rooms');
     
-    // Token holen
+    // Wir nutzen die Session, die beim GET ja funktioniert
     final session = _ref.read(sessionProvider);
-    final token = session.token ?? "";
+    final token = session.token;
 
+    if (token == null) {
+      print("ABBRUCH: Kein Token.");
+      return false;
+    }
 
-    // Mapping: Frontend-Model -> Swagger Request Body
+    // --- SICHERHEITS-BODY ---
+    // Wir ignorieren kurz das Formular und senden Daten, die 100% klappen müssen.
+    // Damit schließen wir Tippfehler im UI aus.
     final Map<String, dynamic> requestBody = {
-      "name": room.name,
-      "roomNumber": room.roomNumber, // Backend scheint String zu akzeptieren laut Schema "string"
-      "capacity": room.capacity,
-      "buildingId": buildingId, //Das erwartet Swagger
-      
-      // Felder, die Swagger will, aber wir im Frontend-Model (noch) nicht haben:
-      "description": "Created via Admin Dashboard", 
-      "status": "AVAILABLE", // oder room.currentStatus.toString()
-      "confirmationCode": "", 
-      
-      // Equipment mappen
-      "equipment": room.equipment.map((e) => {
-        "type": "Whiteboard", // Annahme: Dein EquipmentModel hat 'name' oder 'type'
-        "quantity": 1,   // Default, falls du keine Anzahl hast
-        "description": ""
-      }).toList(),
+      "name": "Test Room Branch",
+      "roomNumber": "999",
+      "capacity": 10,
+      "buildingId": buildingId, 
+      "description": "Created via App",
+      "status": "FREE",         
+      "confirmationCode": "",   
+      "equipment": [] // WICHTIG: Leer lassen!
     };
 
     try {
-      final response = await http.post(
+      print("Sende POST via HttpClient...");
+      
+      // HIER IST DER SCHLÜSSEL: Wir nutzen HttpClient!
+      final response = await HttpClient.post(
         url,
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode(requestBody),
       );
 
+      print("Status: ${response.statusCode}");
+      print("Antwort: ${response.body}");
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
-      } else {
-        print("Fehler Backend: ${response.body}");
-        return false;
       }
+      return false;
+
     } catch (e) {
-      print("Exception: $e");
+      print("CRASH: $e");
       return false;
     }
   }
