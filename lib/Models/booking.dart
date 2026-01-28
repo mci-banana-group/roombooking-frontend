@@ -76,8 +76,8 @@ class Booking {
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
       id: (json['id'] ?? '').toString(),
-      roomId: (json['roomId'] ?? json['room'] ?? '').toString(),
-      userId: (json['userId'] ?? json['user'] ?? '').toString(),
+      roomId: (json['roomId'] ?? (json['room'] is Map ? json['room']['id'] : json['room']) ?? '').toString(),
+      userId: (json['userId'] ?? (json['user'] is Map ? json['user']['id'] : json['user']) ?? '').toString(),
       description: json['description']?.toString() ?? '',
       startTime: _readDateTime(json['startTime'] ?? json['start'], fallback: DateTime.now()),
       endTime: _readDateTime(json['endTime'] ?? json['end'], fallback: DateTime.now()),
