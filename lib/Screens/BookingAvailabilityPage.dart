@@ -623,6 +623,8 @@ class _CalendarViewState extends State<CalendarView> {
   static const int startHour = 6;
   static const int endHour = 24;
   static const int snapMinutes = 15;
+  
+  Duration _preferredDuration = const Duration(hours: 1);
 
   DraftBooking? _draftBooking;
   late ScrollController _scrollController;
@@ -631,6 +633,12 @@ class _CalendarViewState extends State<CalendarView> {
   @override
   void initState() {
     super.initState();
+    
+    final initialDiff = widget.initialEndTime.difference(widget.initialStartTime);
+    if (initialDiff > Duration.zero) {
+      _preferredDuration = initialDiff;
+    }
+
     _scrollController = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_hasScrolledToInitial) {
@@ -680,7 +688,8 @@ class _CalendarViewState extends State<CalendarView> {
 
   void _startDraftBooking(RoomInfo room, Offset localPosition) {
     final startTime = _getTimeFromPixel(localPosition.dy);
-    final endTime = startTime.add(const Duration(hours: 1));
+    
+    final endTime = startTime.add(_preferredDuration);
 
     setState(() {
       _draftBooking = DraftBooking(
@@ -689,7 +698,7 @@ class _CalendarViewState extends State<CalendarView> {
         startTime: startTime,
         endTime: endTime,
         startPixelOffset: localPosition.dy,
-        endPixelOffset: localPosition.dy + hourHeight,
+        endPixelOffset: localPosition.dy + (hourHeight * (_preferredDuration.inMinutes / 60)),
         isPreselected: false,
       );
     });
@@ -712,6 +721,8 @@ class _CalendarViewState extends State<CalendarView> {
         _draftBooking!.endTime = _draftBooking!.startTime.add(const Duration(minutes: 30));
         _draftBooking!.endPixelOffset = _draftBooking!.startPixelOffset + hourHeight / 2;
       }
+      
+      _preferredDuration = _draftBooking!.endTime.difference(_draftBooking!.startTime);
     });
   }
 
