@@ -35,9 +35,6 @@ class AdminRepository {
     };
 
     try {
-      print('DEBUG AdminRepository: Sending create room request to $url');
-      print('DEBUG AdminRepository: Payload: ${jsonEncode(requestBody)}');
-      
       final response = await http.post(
         url,
         headers: {
@@ -47,8 +44,6 @@ class AdminRepository {
         },
         body: jsonEncode(requestBody),
       );
-      print('DEBUG AdminRepository: Response status: ${response.statusCode}');
-      print('DEBUG AdminRepository: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
@@ -125,9 +120,6 @@ class AdminRepository {
     };
 
     try {
-      print("Update Raum ID: $roomId");
-      print("DEBUG Update: Sende an $url");
-      
       final response = await HttpClient.put(
         url,
         headers: {
@@ -138,7 +130,7 @@ class AdminRepository {
         body: jsonEncode(requestBody),
       );
 
-      print("Update Status: ${response.statusCode}");
+
       
       if (response.statusCode == 200 || response.statusCode == 202) {
         return true;

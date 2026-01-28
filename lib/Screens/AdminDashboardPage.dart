@@ -336,7 +336,7 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
                 equipment: [], 
                 currentStatus: RoomStatus.free, 
                 estimatedWalkingTime: Duration.zero,
-                confirmationCode: int.tryParse(_confirmationCodeController.text) ?? 0,
+                confirmationCode: _confirmationCodeController.text,
               );
               
               // Zurückgeben an Parent mit BuildingID
@@ -382,7 +382,7 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
     _capacityController = TextEditingController(text: widget.room.capacity.toString());
     _buildingIdController = TextEditingController(text: widget.room.rawBuildingId?.toString() ?? "1");
     _descriptionController = TextEditingController(text: widget.room.description);
-    _confirmationCodeController = TextEditingController(text: widget.room.confirmationCode.toString());
+    _confirmationCodeController = TextEditingController(text: widget.room.confirmationCode);
   }
 
   @override
@@ -456,7 +456,7 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
                 estimatedWalkingTime: widget.room.estimatedWalkingTime,
                 rawBuildingId: int.tryParse(_buildingIdController.text),
                 description: _descriptionController.text,
-                confirmationCode: int.tryParse(_confirmationCodeController.text) ?? 0,
+                confirmationCode: _confirmationCodeController.text,
               );
               
               widget.onSave(updatedRoom);
