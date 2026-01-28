@@ -7,6 +7,8 @@ import 'package:mci_booking_app/Screens/HomeScreen.dart';
 import 'Resources/AppColors.dart';
 import 'Session.dart';
 
+import 'package:mci_booking_app/Screens/AdminDashboardPage.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -28,6 +30,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/login': (context) => const LoginScreen(),
           '/home': (context) => const HomeScreen(),
+          '/admin': (context) => const AdminDashboardPage(),
         },
       ),
     );

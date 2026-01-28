@@ -9,5 +9,6 @@ class API {
   static const String checkInBooking = '/bookings/checkin';
   static const String getBuildings = '/buildings';
   static const String getRooms = '/rooms';
+  static const String adminRooms = '/admin/rooms';
   static const String getRoomEquipment = '/rooms/equipment';
 }

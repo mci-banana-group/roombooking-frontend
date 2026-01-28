@@ -32,18 +32,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(sessionProvider);
-    final isAdmin = session.isAdmin;
+    final bool isAdmin = session.isAdmin;
 
-    // Pages dynamisch (Admin nur wenn Admin)
-    final pages = <Widget>[
+    /// Seiten (Admin bekommt extra Tab)
+    final List<Widget> pages = [
       const HomePage(),
       const BookingsPage(),
-      if (isAdmin) const AdminDashboardPage(),
       const ProfilePage(),
+      if (isAdmin) const AdminDashboardPage(),
     ];
 
-    // Items dynamisch (Admin-Tab nur wenn Admin)
-    final items = <BottomNavigationBarItem>[
+    /// Bottom-Navigation Items
+    final List<BottomNavigationBarItem> items = [
       const BottomNavigationBarItem(
         icon: Icon(Icons.home),
         label: 'Home',
@@ -52,36 +52,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         icon: Icon(Icons.book),
         label: 'Bookings',
       ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.person),
+        label: 'Profile',
+      ),
       if (isAdmin)
         const BottomNavigationBarItem(
           icon: Icon(Icons.admin_panel_settings),
           label: 'Admin',
         ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.person),
-        label: 'Profile',
-      ),
     ];
 
-    // Schutz: Index kann "zu groß" sein, wenn Admin-Role wegfällt
+    /// Sicherheit: falls Admin → User wechselt
     if (_selectedIndex >= pages.length) {
-      _selectedIndex = pages.length - 1;
+      _selectedIndex = 0;
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Room Booking'),
+        title: Text(isAdmin ? 'Room Booking (Admin)' : 'Room Booking'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
-              Session session = ref.read(sessionProvider);
-              session.logout();
+              ref.read(sessionProvider).logout();
               Navigator.of(context).pushReplacementNamed('/login');
             },
           ),
         ],
       ),
+
       body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: items,

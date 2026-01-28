@@ -11,8 +11,10 @@ class Session extends ChangeNotifier {
   UserResponse? currentUser;
 
   bool get authenticated => currentUser != null;
-  bool get isAdmin => currentUser?.isAdmin ?? false;  // Use isAdmin field from backend
+  bool get isAdmin =>
+      currentUser?.isAdmin ?? false; // Use isAdmin field from backend
   bool get isAuthenticated => _authService.isAuthenticated;
+  String? get token => _authService.token;
 
   // Login with cached credentials
   // Returns true on success, false on no credentials saved / no success
@@ -70,7 +72,10 @@ class Session extends ChangeNotifier {
   }
 
   // Update an existing booking
-  Future<bool> updateBooking(int bookingId, Map<String, dynamic> bookingData) async {
+  Future<bool> updateBooking(
+    int bookingId,
+    Map<String, dynamic> bookingData,
+  ) async {
     final success = await _authService.updateBooking(bookingId, bookingData);
     if (success) {
       currentUser = _authService.currentUser;
@@ -94,11 +99,11 @@ class Session extends ChangeNotifier {
 
   // Get all rooms with optional filters
   Future<List<dynamic>> getRooms({
-        int? capacity,
-        String? equipment,
-        int? buildingId,
-        String? date,
-      }) async {
+    int? capacity,
+    String? equipment,
+    int? buildingId,
+    String? date,
+  }) async {
     return _authService.getRooms(
       capacity: capacity,
       equipment: equipment,
