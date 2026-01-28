@@ -665,6 +665,13 @@ class _CalendarViewState extends State<CalendarView> {
   DateTime _getTimeFromPixel(double pixel) {
     final totalMinutes = (pixel / hourHeight * 60).round();
     final snappedMinutes = (totalMinutes / snapMinutes).round() * snapMinutes;
+
+    // end of the day clamp to 23:59
+    final maxMinutes = (endHour - startHour) * 60;
+    if (snappedMinutes >= maxMinutes) {
+      return DateTime(widget.selectedDate.year, widget.selectedDate.month, widget.selectedDate.day, 23, 59);
+    }
+
     final hours = (startHour + snappedMinutes ~/ 60).clamp(startHour, endHour - 1);
     final minutes = (snappedMinutes % 60).clamp(0, 59);
 
