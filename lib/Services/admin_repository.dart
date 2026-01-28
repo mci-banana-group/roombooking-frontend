@@ -30,7 +30,7 @@ class AdminRepository {
       "buildingId": buildingId, 
       "description": "room created via app",
       "status": "FREE",         
-      "confirmationCode": room.confirmationCode.isEmpty ? "000" : room.confirmationCode,   
+      "confirmationCode": room.confirmationCode,   
       "equipment": []
     };
 
