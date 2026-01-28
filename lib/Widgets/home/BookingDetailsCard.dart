@@ -41,7 +41,31 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
   void initState() {
     super.initState();
     _attendeesController = TextEditingController(text: _attendees.toString());
+    _initializeTimes();
     _loadBuildings();
+  }
+
+  void _initializeTimes() {
+    final now = DateTime.now();
+    int minutes = now.hour * 60 + now.minute;
+    
+    // Round to next 30 min
+    int remainder = minutes % 30;
+    int nextSlot = minutes + (30 - remainder);
+    
+
+    int startMinutes = nextSlot % (24 * 60 + 30); 
+    if (startMinutes >= 24 * 60) startMinutes = 0; 
+
+    _selectedStartTime = _minutesToTime(startMinutes);
+    
+    int endMinutes = startMinutes + 60;
+    if (endMinutes >= 24 * 60) { 
+       endMinutes = endMinutes % (24 * 60);
+    }
+    
+    _selectedEndTime = _minutesToTime(endMinutes);
+    _selectedDuration = '1 hour';
   }
 
   Future<void> _loadBuildings() async {
