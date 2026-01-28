@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../Widgets/home/BookingDetailsCard.dart';
 import '../Widgets/home/QuickCalendarCard.dart';
-import '../Widgets/home/HowToBookSection.dart';
+
 import '../Services/auth_service.dart';
 import '../Services/booking_service.dart';
 import '../Services/room_service.dart';
@@ -350,16 +350,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 32),
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: HowToBookSection(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
+
             ],
           ),
         ),
