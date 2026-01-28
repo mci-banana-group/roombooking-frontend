@@ -11,5 +11,4 @@ class API {
   static const String getRooms = '/rooms';
   static const String adminRooms = '/admin/rooms';
   static const String getRoomEquipment = '/rooms/equipment';
-  static const String adminRooms = '/admin/rooms';
 }
