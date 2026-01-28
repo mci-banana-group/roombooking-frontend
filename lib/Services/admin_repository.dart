@@ -16,11 +16,10 @@ class AdminRepository {
 
   AdminRepository(this._ref);
 
-Future<bool> createRoom(Room room, int buildingId) async {
-    // URL laut Swagger
+  // 1. CREATE ROOM
+  Future<bool> createRoom(Room room, int buildingId) async {
     final url = Uri.parse('$baseUrl/admin/rooms');
     
-    // Wir nutzen die Session, die beim GET ja funktioniert
     final session = _ref.read(sessionProvider);
     final token = session.token;
 
@@ -29,24 +28,21 @@ Future<bool> createRoom(Room room, int buildingId) async {
       return false;
     }
 
-    // --- SICHERHEITS-BODY ---
-    // Wir ignorieren kurz das Formular und senden Daten, die 100% klappen müssen.
-    // Damit schließen wir Tippfehler im UI aus.
+    // SICHERHEITS-BODY
     final Map<String, dynamic> requestBody = {
-      "name": "Test Room Branch",
+      "name": room.name.isEmpty ? "Test Room" : room.name,
       "roomNumber": "999",
       "capacity": 10,
       "buildingId": buildingId, 
       "description": "Created via App",
       "status": "FREE",         
       "confirmationCode": "",   
-      "equipment": [] // WICHTIG: Leer lassen!
+      "equipment": []
     };
 
     try {
       print("Sende POST via HttpClient...");
       
-      // HIER IST DER SCHLÜSSEL: Wir nutzen HttpClient!
       final response = await HttpClient.post(
         url,
         headers: {
@@ -57,8 +53,7 @@ Future<bool> createRoom(Room room, int buildingId) async {
         body: jsonEncode(requestBody),
       );
 
-      print("Status: ${response.statusCode}");
-      print("Antwort: ${response.body}");
+      print("Create Status: ${response.statusCode}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
@@ -66,54 +61,112 @@ Future<bool> createRoom(Room room, int buildingId) async {
       return false;
 
     } catch (e) {
-      print("CRASH: $e");
+      print("CRASH Create: $e");
       return false;
     }
   }
 
-  // Hilfsmethode um Räume zu laden (GET)
+  //2. DELETE ROOM
+  Future<bool> deleteRoom(String roomId) async {
+    final url = Uri.parse('$baseUrl/admin/rooms/$roomId');
+    
+    final session = _ref.read(sessionProvider);
+    final token = session.token;
+
+    if (token == null) return false;
+
+    try {
+      print("Lösche Raum ID: $roomId");
+      
+      final response = await HttpClient.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print("Delete Status: ${response.statusCode}");
+      
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("Fehler beim Löschen: $e");
+      return false;
+    }
+  }
+
+  //3. UPDATE ROOM
+  Future<bool> updateRoom(String roomId, Room updatedRoom) async {
+    final url = Uri.parse('$baseUrl/admin/rooms/$roomId');
+    
+    final session = _ref.read(sessionProvider);
+    final token = session.token;
+
+    if (token == null) return false;
+
+    final Map<String, dynamic> requestBody = {
+      "name": updatedRoom.name,
+      "roomNumber": updatedRoom.roomNumber,
+      "capacity": updatedRoom.capacity,
+      "buildingId": updatedRoom.rawBuildingId ?? 1,
+      "description": "Updated via App",
+      "status": "FREE", 
+      "confirmationCode": "",
+      "equipment": updatedRoom.equipment.map((e) => {
+        "type": "Whiteboard", 
+        "quantity": 1,
+        "description": ""
+      }).toList(),
+    };
+
+    try {
+      print("Update Raum ID: $roomId");
+      
+      final response = await HttpClient.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      print("Update Status: ${response.statusCode}");
+      
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("Fehler beim Update: $e");
+      return false;
+    }
+  }
+
+  // 4. GET ALL ROOMS
   Future<List<Room>> getAllRooms() async {
     final session = _ref.read(sessionProvider);
     List<Room> allRooms = [];
 
     try {
-      print("Strategie 1: Versuche ALLE Räume auf einmal zu laden...");
-      // Versuch 1: Globaler Abruf via Session (AuthService)
-      final List<dynamic> rawData = await session.getRooms();
-      
-      if (rawData.isNotEmpty) {
-        print("Treffer! Globaler Endpunkt hat funktioniert.");
-        return rawData.map((json) => Room.fromJson(json)).toList();
-      }
-    } catch (e) {
-      print("Strategie 1 fehlgeschlagen ($e). Versuche Strategie 2...");
-    }
-
-    // Strategie 2: Verschachtelung (Deine Vermutung!)
-    // Wenn global nicht geht, laden wir Gebäude und dann die Räume pro Gebäude.
-    try {
-      print("Strategie 2: Lade Räume pro Gebäude (Nested)...");
-      
-      // 1. Gebäude holen
       final buildings = await session.getBuildings();
       
       for (var b in buildings) {
         final bId = b['id'];
-        print("Lade Räume für Gebäude ID: $bId");
-        
-        // 2. Räume NUR für dieses Gebäude holen
-        // Wir nutzen den Parameter buildingId, den AuthService anbietet
+        // Ruft Räume pro Gebäude ab
         final roomData = await session.getRooms(buildingId: bId);
         
-        final roomsForBuilding = roomData.map((json) => Room.fromJson(json)).toList();
-        allRooms.addAll(roomsForBuilding);
+        // Wandelt JSON in Room Objekte um und fügt sie der Liste hinzu
+        allRooms.addAll(roomData.map((json) => Room.fromJson(json)).toList());
       }
       
-      print("Fertig! Insgesamt ${allRooms.length} Räume über Loop gefunden.");
       return allRooms;
-
     } catch (e) {
-      print("Auch Strategie 2 fehlgeschlagen: $e");
+      print("Fehler beim Laden der Räume: $e");
       return [];
     }
   }
