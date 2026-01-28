@@ -731,7 +731,7 @@ class _CalendarViewState extends State<CalendarView> {
   List<Booking> _getOverlappingBookings(int roomId, DateTime start, DateTime end) {
     return widget.bookings.where((booking) {
       if (booking.roomId != roomId) return false;
-      return !(booking.endTime.isBefore(start) || booking.startTime.isAfter(end));
+      return booking.endTime.isAfter(start) && booking.startTime.isBefore(end);
     }).toList();
   }
 
