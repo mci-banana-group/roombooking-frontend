@@ -280,7 +280,14 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
               TextFormField(
                 controller: _numberController,
                 decoration: const InputDecoration(labelText: "Raum Nummer (z.B. 101)"),
-                validator: (v) => v!.isEmpty ? "Pflichtfeld" : null,
+                keyboardType: TextInputType.number,
+
+                validator: (value) {
+                  if (value == null || value.isEmpty) return "Pflichtfeld";
+                  if (int.tryParse(value) == null) return "Bitte nur Zahlen eingeben!";
+                  return null;
+                },
+
               ),
               TextFormField(
                 controller: _capacityController,

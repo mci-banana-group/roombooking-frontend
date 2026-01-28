@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:mci_booking_app/Helper/http_client.dart';
 import '../Models/room.dart';
 import '../Session.dart';
 import '../Resources/API.dart'; 
@@ -72,7 +73,7 @@ class AdminRepository {
     try {
       print("Lösche Raum ID: $roomId");
       
-      final response = await http.delete(
+      final response = await HttpClient.delete(
         url,
         headers: {
           'Content-Type': 'application/json',
@@ -101,19 +102,26 @@ class AdminRepository {
 
     if (token == null) return false;
 
+    final int? parsedRoomNumber = int.tryParse(updatedRoom.roomNumber);
+    
+    if (parsedRoomNumber == null) {
+      print("Raumnummer '${updatedRoom.roomNumber}' ist keine gültige Zahl.");
+      return false;
+    }
+
     final Map<String, dynamic> requestBody = {
       "name": updatedRoom.name,
-      "roomNumber": int.tryParse(updatedRoom.roomNumber) ?? 999,
+      "roomNumber": parsedRoomNumber,
       "capacity": updatedRoom.capacity,
       "buildingId": updatedRoom.rawBuildingId ?? 1,
-      "description": "Updated via App",
-      "status": "FREE", 
+      "description": updatedRoom.description,
+      "status": updatedRoom.currentStatus, 
       "confirmationCode": "000",
-      "equipment": []//updatedRoom.equipment.map((e) => {
-        //"type": "WHITEBOARD", 
-        //"quantity": 1,
-        //"description": ""
-      //}).toList(),
+      "equipment": updatedRoom.equipment.map((e) => {
+        "type": e.type.name.toUpperCase(), 
+        "quantity": e.quantity,
+        "description": e.description ?? ""
+      }).toList(),
     };
 
     try {
@@ -135,7 +143,6 @@ class AdminRepository {
       if (response.statusCode == 200 || response.statusCode == 202) {
         return true;
       }
-      print("DEBUG Update FEHLER BODY: ${response.body}");
       return false;
     } catch (e) {
       print("Fehler beim Update: $e");
