@@ -260,6 +260,7 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
   final _nameController = TextEditingController();
   final _numberController = TextEditingController();
   final _capacityController = TextEditingController();
+  final _confirmationCodeController = TextEditingController(text: "000"); // Default 000
   final _buildingIdController = TextEditingController(text: "1"); // Default ID 1
 
   @override
@@ -295,6 +296,10 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
                 keyboardType: TextInputType.number,
                 validator: (v) => v!.isEmpty ? "Pflichtfeld" : null,
               ),
+              TextFormField(
+                controller: _confirmationCodeController,
+                decoration: const InputDecoration(labelText: "Bestätigungscode"),
+              ),
               // Swagger braucht Building ID zwingend!
               TextFormField(
                 controller: _buildingIdController,
@@ -323,6 +328,7 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
                 equipment: [], 
                 currentStatus: RoomStatus.free, 
                 estimatedWalkingTime: Duration.zero,
+                confirmationCode: _confirmationCodeController.text,
               );
               
               // Zurückgeben an Parent mit BuildingID
@@ -357,6 +363,8 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
   late TextEditingController _numberController;
   late TextEditingController _capacityController;
   late TextEditingController _buildingIdController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _confirmationCodeController;
 
   @override
   void initState() {
@@ -364,8 +372,9 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
     _nameController = TextEditingController(text: widget.room.name);
     _numberController = TextEditingController(text: widget.room.roomNumber);
     _capacityController = TextEditingController(text: widget.room.capacity.toString());
-    // Versuchen, die Building ID zu holen, sonst Default 1
     _buildingIdController = TextEditingController(text: widget.room.rawBuildingId?.toString() ?? "1");
+    _descriptionController = TextEditingController(text: widget.room.description);
+    _confirmationCodeController = TextEditingController(text: widget.room.confirmationCode);
   }
 
   @override
@@ -395,6 +404,14 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
                 validator: (v) => v!.isEmpty ? "Pflichtfeld" : null,
               ),
               TextFormField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(labelText: "Beschreibung"),
+              ),
+              TextFormField(
+                controller: _confirmationCodeController,
+                decoration: const InputDecoration(labelText: "Bestätigungscode"),
+              ),
+              TextFormField(
                 controller: _buildingIdController,
                 decoration: const InputDecoration(labelText: "Building ID"),
                 keyboardType: TextInputType.number,
@@ -422,6 +439,8 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
                 currentStatus: widget.room.currentStatus,
                 estimatedWalkingTime: widget.room.estimatedWalkingTime,
                 rawBuildingId: int.tryParse(_buildingIdController.text),
+                description: _descriptionController.text,
+                confirmationCode: _confirmationCodeController.text,
               );
               
               widget.onSave(updatedRoom);

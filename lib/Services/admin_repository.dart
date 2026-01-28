@@ -30,7 +30,7 @@ class AdminRepository {
       "buildingId": buildingId, 
       "description": "room created via app",
       "status": "FREE",         
-      "confirmationCode": "000",   
+      "confirmationCode": room.confirmationCode.isEmpty ? "000" : room.confirmationCode,   
       "equipment": []
     };
 
@@ -115,10 +115,10 @@ class AdminRepository {
       "capacity": updatedRoom.capacity,
       "buildingId": updatedRoom.rawBuildingId ?? 1,
       "description": updatedRoom.description,
-      "status": updatedRoom.currentStatus, 
-      "confirmationCode": "000",
+      "status": updatedRoom.currentStatus.name.toUpperCase(), 
+      "confirmationCode": updatedRoom.confirmationCode,
       "equipment": updatedRoom.equipment.map((e) => {
-        "type": e.type.name.toUpperCase(), 
+        "type": e.type.apiValue, 
         "quantity": e.quantity,
         "description": e.description ?? ""
       }).toList(),
@@ -128,7 +128,7 @@ class AdminRepository {
       print("Update Raum ID: $roomId");
       print("DEBUG Update: Sende an $url");
       
-      final response = await http.put(
+      final response = await HttpClient.put(
         url,
         headers: {
           'Content-Type': 'application/json',

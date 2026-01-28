@@ -13,6 +13,7 @@ class Room {
   final RoomStatus currentStatus;
   final Duration estimatedWalkingTime; // Backend sendet das nicht -> Default 0
   final String description;
+  final String confirmationCode;
 
   // Neu: Wir merken uns die BuildingID für Updates, falls nötig
   final int? rawBuildingId; 
@@ -29,6 +30,7 @@ class Room {
     required this.estimatedWalkingTime,
     this.rawBuildingId,
     this.description = '',
+    this.confirmationCode = '',
   });
 
   // --- HIER PASSIERT DIE MAGIE VOM BACKEND ZUR APP (GET) ---
@@ -72,6 +74,7 @@ class Room {
       capacity: readInt(data['capacity']),
       
       description: data['description'] ?? "",
+      confirmationCode: data['confirmationCode'] ?? "",
       floor: readInt(data['floor']), 
       location: locationName, 
       
