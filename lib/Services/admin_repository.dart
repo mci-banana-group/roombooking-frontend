@@ -12,38 +12,33 @@ final adminRepositoryProvider = Provider((ref) => AdminRepository(ref));
 
 class AdminRepository {
   final Ref _ref;
-  final String baseUrl = "https://roombooking-backend-17kv.onrender.com";
 
   AdminRepository(this._ref);
 
   // 1. CREATE ROOM
   Future<bool> createRoom(Room room, int buildingId) async {
-    final url = Uri.parse('$baseUrl/admin/rooms');
+    final url = Uri.parse('${API.base_url}${API.adminRooms}');
     
     final session = _ref.read(sessionProvider);
-    final token = session.token;
-
-    if (token == null) {
-      print("ABBRUCH: Kein Token.");
-      return false;
-    }
+    final token = session.token ?? "";
 
     // SICHERHEITS-BODY
     final Map<String, dynamic> requestBody = {
       "name": room.name.isEmpty ? "Test Room" : room.name,
-      "roomNumber": "999",
-      "capacity": 10,
+      "roomNumber": int.tryParse(room.roomNumber) ?? 0,
+      "capacity": room.capacity,
       "buildingId": buildingId, 
-      "description": "Created via App",
+      "description": "room created via app",
       "status": "FREE",         
-      "confirmationCode": "",   
+      "confirmationCode": "000",   
       "equipment": []
     };
 
     try {
-      print("Sende POST via HttpClient...");
+      print('DEBUG AdminRepository: Sending create room request to $url');
+      print('DEBUG AdminRepository: Payload: ${jsonEncode(requestBody)}');
       
-      final response = await HttpClient.post(
+      final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
@@ -52,8 +47,8 @@ class AdminRepository {
         },
         body: jsonEncode(requestBody),
       );
-
-      print("Create Status: ${response.statusCode}");
+      print('DEBUG AdminRepository: Response status: ${response.statusCode}');
+      print('DEBUG AdminRepository: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
@@ -68,7 +63,7 @@ class AdminRepository {
 
   //2. DELETE ROOM
   Future<bool> deleteRoom(String roomId) async {
-    final url = Uri.parse('$baseUrl/admin/rooms/$roomId');
+    final url = Uri.parse('${API.base_url}${API.adminRooms}/$roomId');
     
     final session = _ref.read(sessionProvider);
     final token = session.token;
@@ -100,7 +95,7 @@ class AdminRepository {
 
   //3. UPDATE ROOM
   Future<bool> updateRoom(String roomId, Room updatedRoom) async {
-    final url = Uri.parse('$baseUrl/admin/rooms/$roomId');
+    final url = Uri.parse('${API.base_url}${API.adminRooms}/$roomId');
     
     final session = _ref.read(sessionProvider);
     final token = session.token;
