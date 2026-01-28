@@ -393,12 +393,26 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                           onChanged: (value) {
                             setState(() {
                               _selectedStartTime = value;
+
+                              // If a quick duration is selected, maintain it
+                              if (_selectedDuration.isNotEmpty) {
+                                final startMinutes = _timeToMinutes(_selectedStartTime);
+                                final durationMinutes = _parseDuration(_selectedDuration);
+                                final newEnd = startMinutes + durationMinutes;
+
+                                // new end time valid?
+                                if (newEnd <= 24 * 60) {
+                                  _selectedEndTime = _minutesToTime(newEnd);
+                                  return;
+                                }
+                              }
+
+                              // Clear duration and ensure end > start
                               _selectedDuration = '';
 
                               final startMinutes = _timeToMinutes(_selectedStartTime);
                               final endMinutes = _timeToMinutes(_selectedEndTime);
 
-                              // If end <= start → auto-fix end (+30 min)
                               if (endMinutes <= startMinutes) {
                                 final newEnd = startMinutes + 30;
                                 _selectedEndTime = _minutesToTime(newEnd);
