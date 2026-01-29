@@ -79,7 +79,11 @@ class _CalendarViewState extends State<CalendarView> {
   }
 
   double _getPixelForTime(DateTime time) {
-    final hourOffset = time.hour - startHour;
+    var hour = time.hour;
+    if (hour < startHour && time.day != widget.selectedDate.day) {
+      hour += 24;
+    }
+    final hourOffset = hour - startHour;
     final minuteOffset = time.minute / 60.0;
     return (hourOffset + minuteOffset) * hourHeight;
   }
@@ -131,16 +135,22 @@ class _CalendarViewState extends State<CalendarView> {
       // Check if pointer is within this room's column width
       if (localPosition.dx >= 0 && localPosition.dx <= size.width) {
         // Calculate new start time based on pointer position - offset
-        // We clamp the Y coordinate to be within valid hours
-        final newTopPixel = (localPosition.dy - _dragDyOffset).clamp(
-          0.0,
-          (endHour - startHour) * hourHeight,
-        );
-
-        final newStartTime = _getTimeFromPixel(newTopPixel);
+        // We clamp the Y coordinate to be within valid hours, ensuring
+        // the bottom of the booking doesn't go below the end hour (24:00).
         final duration = _draftBooking!.endTime.difference(
           _draftBooking!.startTime,
         );
+        final bookingPixelHeight = hourHeight * (duration.inMinutes / 60);
+        final maxTopPixel =
+            (endHour - startHour) * hourHeight - bookingPixelHeight;
+
+        final newTopPixel = (localPosition.dy - _dragDyOffset).clamp(
+          0.0,
+          maxTopPixel > 0 ? maxTopPixel : 0.0,
+        );
+
+        final newStartTime = _getTimeFromPixel(newTopPixel);
+        // duration is already calculated above
         final newEndTime = newStartTime.add(duration);
 
         // Calculate exact pixels for smoothness during drag

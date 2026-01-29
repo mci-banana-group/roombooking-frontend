@@ -209,8 +209,8 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
           final success = await AuthService().createBooking({
             'roomId': room.id,
             'description': title,
-            'startTime': start.toIso8601String(),
-            'endTime': end.toIso8601String(),
+            'start': start.toUtc().toIso8601String(),
+            'end': end.toUtc().toIso8601String(),
           });
 
           if (success) {
