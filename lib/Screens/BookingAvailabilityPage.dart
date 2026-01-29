@@ -219,7 +219,13 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Booking created successfully!')),
               );
-              _loadAvailability(); // Reload data
+
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => const HomeScreen(initialIndex: 1),
+                ),
+                (route) => false,
+              );
             }
           } else {
             if (context.mounted) {
