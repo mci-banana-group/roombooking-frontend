@@ -70,12 +70,17 @@ class AuthService {
       final url = '${API.base_url}${API.loginUser}';
       print('Login URL: $url');
 
-      final requestBody = jsonEncode(LoginRequest(email: email, password: password).toJson());
+      final requestBody = jsonEncode(
+        LoginRequest(email: email, password: password).toJson(),
+      );
       print('Request body: $requestBody');
 
       final response = await HttpClient.post(
         Uri.parse(url),
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: requestBody,
       );
 
@@ -123,8 +128,13 @@ class AuthService {
     try {
       final response = await HttpClient.post(
         Uri.parse('${API.base_url}${API.checkInBooking}'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
-        body: jsonEncode(CheckInRequest(bookingId: bookingId, code: code).toJson()),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode(
+          CheckInRequest(bookingId: bookingId, code: code).toJson(),
+        ),
       );
 
       return response.statusCode == 200;
@@ -156,10 +166,16 @@ class AuthService {
   // Create a new booking
   Future<bool> createBooking(Map<String, dynamic> bookingData) async {
     try {
+      final requestBody = jsonEncode(bookingData);
+      print('DEBUG: Create Booking Payload: $requestBody');
+
       final response = await HttpClient.post(
         Uri.parse('${API.base_url}${API.createBooking}'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
-        body: jsonEncode(bookingData),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: requestBody,
       );
       print(response.body);
 
@@ -171,11 +187,17 @@ class AuthService {
   }
 
   // Update an existing booking
-  Future<bool> updateBooking(int bookingId, Map<String, dynamic> bookingData) async {
+  Future<bool> updateBooking(
+    int bookingId,
+    Map<String, dynamic> bookingData,
+  ) async {
     try {
       final response = await HttpClient.put(
         Uri.parse('${API.base_url}${API.updateBooking}/$bookingId'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $_token'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
         body: jsonEncode(bookingData),
       );
 
@@ -221,7 +243,12 @@ class AuthService {
   }
 
   // Get all rooms with optional filters
-  Future<List<dynamic>> getRooms({int? capacity, String? equipment, int? buildingId, String? date}) async {
+  Future<List<dynamic>> getRooms({
+    int? capacity,
+    String? equipment,
+    int? buildingId,
+    String? date,
+  }) async {
     try {
       var uri = Uri.parse('${API.base_url}${API.getRooms}?');
       if (capacity != null) {
@@ -231,13 +258,18 @@ class AuthService {
         uri = uri.replace(queryParameters: {'equipment': equipment});
       }
       if (buildingId != null) {
-        uri = uri.replace(queryParameters: {'buildingId': buildingId.toString()});
+        uri = uri.replace(
+          queryParameters: {'buildingId': buildingId.toString()},
+        );
       }
       if (date != null) {
         uri = uri.replace(queryParameters: {'date': date});
       }
 
-      final response = await HttpClient.get(uri, headers: {'Authorization': 'Bearer $_token'});
+      final response = await HttpClient.get(
+        uri,
+        headers: {'Authorization': 'Bearer $_token'},
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -249,7 +281,7 @@ class AuthService {
       return [];
     }
   }
-  
+
   // Get all rooms (ADMIN) - includes confirmation code
   Future<List<dynamic>> getAdminRooms() async {
     try {
@@ -273,7 +305,9 @@ class AuthService {
   Future<List<dynamic>> getRoomEquipment(int buildingId) async {
     try {
       final response = await HttpClient.get(
-        Uri.parse('${API.base_url}${API.getRoomEquipment}?buildingId=$buildingId'),
+        Uri.parse(
+          '${API.base_url}${API.getRoomEquipment}?buildingId=$buildingId',
+        ),
         headers: {'Authorization': 'Bearer $_token'},
       );
 

@@ -74,8 +74,9 @@ class Booking {
   static DateTime _readDateTime(dynamic value, {DateTime? fallback}) {
     if (value is DateTime) return value.toLocal();
     final str = value?.toString();
-    if (str == null || str.isEmpty)
+    if (str == null || str.isEmpty) {
       return (fallback ?? DateTime.fromMillisecondsSinceEpoch(0)).toLocal();
+    }
     final parsed = DateTime.tryParse(str);
     return parsed?.toLocal() ??
         (fallback ?? DateTime.fromMillisecondsSinceEpoch(0)).toLocal();
