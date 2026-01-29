@@ -108,7 +108,7 @@ class AdminRepository {
       "name": updatedRoom.name,
       "roomNumber": parsedRoomNumber,
       "capacity": updatedRoom.capacity,
-      "buildingId": updatedRoom.rawBuildingId ?? 1,
+      "buildingId": updatedRoom.building?.id ?? 1,
       "description": updatedRoom.description,
       "status": updatedRoom.currentStatus.name.toUpperCase(), 
       "confirmationCode": updatedRoom.confirmationCode,

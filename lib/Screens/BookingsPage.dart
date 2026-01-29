@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../Models/booking.dart';
 import '../Models/room.dart';
 import '../Models/Enums/booking_status.dart';
 import '../Widgets/mybookings/BookingCard.dart';
 import '../Widgets/mybookings/BookingStats.dart';
 import '../Services/auth_service.dart';
-import '../Services/room_service.dart';
+
 import '../Services/booking_service.dart';
 
 class BookingsPage extends StatefulWidget {
@@ -17,11 +17,11 @@ class BookingsPage extends StatefulWidget {
 
 class _BookingsPageState extends State<BookingsPage> {
   final AuthService _authService = AuthService();
-  final RoomService _roomService = RoomService();
+
   final BookingService _bookingService = BookingService();
 
   List<Booking> _bookings = [];
-  Map<String, Room> _roomsCache = {};
+
   BookingFilterTab _selectedTab = BookingFilterTab.upcoming;
 
   bool _isLoading = false;
@@ -33,7 +33,7 @@ class _BookingsPageState extends State<BookingsPage> {
     _loadBookings();
   }
 
-  // ✅ Check-in function
+  // âœ… Check-in function
   Future<void> _showCheckInDialog(Booking booking) async {
     final controller = TextEditingController();
 
@@ -85,9 +85,9 @@ class _BookingsPageState extends State<BookingsPage> {
       }
 
       try {
-        print('✅ Checking in with code: $code');
+        print('âœ… Checking in with code: $code');
 
-        // ✅ Use BookingService.checkInBooking instead of AuthService.checkIn
+        // âœ… Use BookingService.checkInBooking instead of AuthService.checkIn
         final bookingIdInt = int.tryParse(booking.id) ?? 0;
         final success = await _bookingService.checkInBooking(
           bookingId: bookingIdInt,
@@ -97,7 +97,7 @@ class _BookingsPageState extends State<BookingsPage> {
         if (mounted) Navigator.pop(context); // Close loading dialog
 
         if (success) {
-          print('✅ Check-in successful');
+          print('âœ… Check-in successful');
           await _loadBookings();
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -109,7 +109,7 @@ class _BookingsPageState extends State<BookingsPage> {
             );
           }
         } else {
-          print('❌ Check-in failed');
+          print('âŒ Check-in failed');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -122,7 +122,7 @@ class _BookingsPageState extends State<BookingsPage> {
         }
       } catch (e) {
         if (mounted) Navigator.pop(context); // Close loading dialog
-        print('❌ Check-in error: $e');
+        print('âŒ Check-in error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -138,7 +138,7 @@ class _BookingsPageState extends State<BookingsPage> {
     controller.dispose();
   }
 
-  // ✅ Check if booking is within 15 minutes before start time
+  // âœ… Check if booking is within 15 minutes before start time
   bool _isCheckInAvailable(Booking booking) {
     final now = DateTime.now();
     final fifteenMinutesBefore = booking.startTime.subtract(
@@ -152,7 +152,7 @@ class _BookingsPageState extends State<BookingsPage> {
         now.isBefore(fifteenMinutesAfter);
   }
 
-  // ✅ Check if booking is in the past (based on status)
+  // âœ… Check if booking is in the past (based on status)
   bool _isBookingPast(Booking booking) {
     // A booking is past if its status is CANCELLED, CHECKED_IN, or NO_SHOW
     return booking.status == BookingStatus.cancelled ||
@@ -172,28 +172,15 @@ class _BookingsPageState extends State<BookingsPage> {
           .map((json) => Booking.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      // Fetch room details for all unique room IDs
-      final uniqueRoomIds = bookings.map((b) => b.roomId).toSet();
-      final roomsCache = <String, Room>{};
-
-      for (final roomId in uniqueRoomIds) {
-        final room = await _roomService.getRoomById(roomId);
-        if (room != null) {
-          roomsCache[roomId] = room;
-        }
-      }
-
       if (!mounted) return;
       setState(() {
         _bookings = bookings;
-        _roomsCache = roomsCache;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loadError = e.toString();
         _bookings = [];
-        _roomsCache = {};
       });
     } finally {
       if (mounted) {
@@ -312,14 +299,12 @@ class _BookingsPageState extends State<BookingsPage> {
     }
   }
 
-  String _getRoomName(String roomId) {
-    return _roomsCache[roomId]?.name ?? 'Room $roomId';
+  String _getRoomName(Booking booking) {
+    return booking.room?.name ?? 'Room ${booking.roomId}';
   }
 
-  String _getBuildingName(String roomId) {
-    // ✅ FIXED: Return empty or placeholder since building field doesn't exist
-    // Update this if your Room model has a building field
-    return '';
+  String _getBuildingName(Booking booking) {
+    return booking.room?.building?.name ?? '';
   }
 
   @override
@@ -388,84 +373,75 @@ class _BookingsPageState extends State<BookingsPage> {
             )
           : CustomScrollView(
               slivers: [
-                // Header Section
 
-                // Statistics cards with max width
-                SliverToBoxAdapter(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: BookingStats(
-                          totalBookings: totalBookings,
-                          upcomingBookings: upcomingBookings,
-                          pastBookings: pastBookings,
-                        ),
-                      ),
-                    ),
+
+          // Statistics cards with max width
+          SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: BookingStats(
+                    totalBookings: totalBookings,
+                    upcomingBookings: upcomingBookings,
+                    pastBookings: pastBookings,
                   ),
                 ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-                // Tab filter with max width
-                SliverToBoxAdapter(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: _buildTabBar(context),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-                // Bookings list with max width
-                if (filteredBookings.isEmpty)
-                  SliverFillRemaining(child: _buildEmptyState(context))
-                else
-                  SliverToBoxAdapter(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1200),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: filteredBookings.length,
-                            itemBuilder: (context, index) {
-                              final booking = filteredBookings[index];
-                              final isCheckInAvailable = _isCheckInAvailable(
-                                booking,
-                              );
-                              final isPast = _isBookingPast(booking);
-
-                              return BookingCard(
-                                booking: booking,
-                                roomName: _getRoomName(booking.roomId),
-                                buildingName: _getBuildingName(booking.roomId),
-                                onCheckIn: isCheckInAvailable && !isPast
-                                    ? () => _showCheckInDialog(booking)
-                                    : null,
-                                onDelete: !isPast
-                                    ? () => _confirmDelete(booking)
-                                    : null,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
-              ],
+              ),
             ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+          // Tab filter with max width
+          SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _buildTabBar(context)),
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+          // Bookings list with max width
+          if (filteredBookings.isEmpty)
+            SliverFillRemaining(child: _buildEmptyState(context))
+          else
+            SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredBookings.length,
+                      itemBuilder: (context, index) {
+                        final booking = filteredBookings[index];
+                        final isCheckInAvailable = _isCheckInAvailable(booking);
+                        final isPast = _isBookingPast(booking);
+
+                        return BookingCard(
+                          booking: booking,
+                          roomName: _getRoomName(booking),
+                          buildingName: _getBuildingName(booking),
+                          onCheckIn: isCheckInAvailable && !isPast ? () => _showCheckInDialog(booking) : null,
+                          onDelete: !isPast ? () => _confirmDelete(booking) : null,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
     );
   }
 
