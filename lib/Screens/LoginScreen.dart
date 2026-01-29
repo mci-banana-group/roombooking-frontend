@@ -101,7 +101,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.meeting_room, size: 80, color: AppColors.primaryAccent),
+                    Icon(Icons.meeting_room, size: 80, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(height: 24),
                     const Text(
                       'Welcome Back',
@@ -151,7 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleLogin,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryAccent,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
@@ -173,7 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         TextButton(
                           onPressed: () {},
-                          child: Text('Forgot password?', style: TextStyle(color: AppColors.primaryAccent)),
+                          child: Text('Forgot password?', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
                         ),
                       ],
                     ),
@@ -191,9 +191,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Email',
-        prefixIcon: Icon(Icons.email, color: AppColors.primaryAccent),
+        prefixIcon: Icon(Icons.email, color: Theme.of(context).colorScheme.primary),
         border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
         hintText: 'Enter your email',
       ),
@@ -215,9 +215,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       obscureText: _obscurePassword,
       decoration: InputDecoration(
         labelText: 'Password',
-        prefixIcon: const Icon(Icons.lock, color: AppColors.primaryAccent),
+        prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
         suffixIcon: IconButton(
-          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: AppColors.primaryAccent),
+          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Theme.of(context).colorScheme.primary),
           onPressed: () {
             setState(() {
               _obscurePassword = !_obscurePassword;

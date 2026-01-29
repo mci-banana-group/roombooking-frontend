@@ -1,22 +1,20 @@
 import 'Enums/room_status.dart';
 import 'room_equipment.dart';
-// import 'building.dart'; // Falls du das Building Model nutzen willst
+import 'building.dart';
 
 class Room {
   final String id;
   final String name;
   final String roomNumber;
   final int capacity;
-  final int floor;             // Backend sendet das evtl. nicht -> wir setzen Default 0
-  final String location;       // Backend sendet "building" Objekt -> wir holen den Namen da raus
+  final int floor;
+  final String location;
   final List<RoomEquipment> equipment;
   final RoomStatus currentStatus;
-  final Duration estimatedWalkingTime; // Backend sendet das nicht -> Default 0
+  final Duration estimatedWalkingTime;
+  final Building? building;
   final String description;
   final String confirmationCode;
-
-  // Neu: Wir merken uns die BuildingID für Updates, falls nötig
-  final int? rawBuildingId; 
 
   const Room({
     required this.id,
@@ -28,78 +26,152 @@ class Room {
     required this.equipment,
     required this.currentStatus,
     required this.estimatedWalkingTime,
-    this.rawBuildingId,
+    this.building,
     this.description = '',
     this.confirmationCode = '',
   });
 
-  // --- HIER PASSIERT DIE MAGIE VOM BACKEND ZUR APP (GET) ---
+  Room copyWith({
+    String? id,
+    String? name,
+    String? roomNumber,
+    int? capacity,
+    int? floor,
+    String? location,
+    List<RoomEquipment>? equipment,
+    RoomStatus? currentStatus,
+    Duration? estimatedWalkingTime,
+    Building? building,
+    String? description,
+    String? confirmationCode,
+  }) {
+    return Room(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      roomNumber: roomNumber ?? this.roomNumber,
+      capacity: capacity ?? this.capacity,
+      floor: floor ?? this.floor,
+      location: location ?? this.location,
+      equipment: equipment ?? this.equipment,
+      currentStatus: currentStatus ?? this.currentStatus,
+      estimatedWalkingTime: estimatedWalkingTime ?? this.estimatedWalkingTime,
+      building: building ?? this.building,
+      description: description ?? this.description,
+      confirmationCode: confirmationCode ?? this.confirmationCode,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'roomNumber': roomNumber,
+      'capacity': capacity,
+      'floor': floor,
+      'location': location,
+      'equipment': equipment.map((e) => e.toJson()).toList(),
+      'currentStatus': currentStatus.toString(),
+      'estimatedWalkingTime': estimatedWalkingTime.inMilliseconds,
+      'building': building?.toJson(),
+      'description': description,
+      'confirmationCode': confirmationCode,
+    };
+  }
+
+  static int _readInt(dynamic value, {int fallback = 0}) {
+    if (value == null) return fallback;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString()) ?? fallback;
+  }
+
   factory Room.fromJson(Map<String, dynamic> json) {
-    // 1. DAS PÄCKCHEN AUSPACKEN
-    // Der Server verpackt die Infos im Key "room".
-    // Wir prüfen: Gibt es "room"? Wenn ja, nehmen wir das. Sonst nehmen wir json direkt.
+    // 1. Unwrap "room" key if present (from dev branch logic)
     final Map<String, dynamic> data = (json['room'] != null && json['room'] is Map<String, dynamic>) 
         ? json['room'] 
         : json;
-  
-    // Hilfsfunktion um Zahlen sicher zu lesen
-    int readInt(dynamic val) {
-      if (val == null) return 0;
-      if (val is int) return val;
-      return int.tryParse(val.toString()) ?? 0;
-    }
 
-    // 2. Building auslesen
-    // Laut Screenshot liegt "building" NEBEN "room" (also im originalen json), nicht darin.
-    String locationName = "Unknown";
-    int bId = 1;
+    // 2. Building parsing
+    Building? parsedBuilding;
+    String buildingName = '';
     
-    // Wir schauen erst im Haupt-JSON
-    if (json['building'] != null && json['building'] is Map) {
-      locationName = json['building']['name'] ?? "Unknown";
-      bId = json['building']['id'] ?? 1;
-    } 
-    // Fallback: Manchmal ist building auch im room-Objekt
-    else if (data['building'] != null && data['building'] is Map) {
-      locationName = data['building']['name'] ?? "Unknown";
-      bId = data['building']['id'] ?? 1;
+    // Check main JSON for building (sibling of room) or fallback to inner data
+    if (json['building'] != null && json['building'] is Map<String, dynamic>) {
+      parsedBuilding = Building.fromJson(json['building']);
+      buildingName = parsedBuilding.name;
+    } else if (data['building'] != null && data['building'] is Map<String, dynamic>) {
+      parsedBuilding = Building.fromJson(data['building']);
+      buildingName = parsedBuilding.name;
     }
 
     return Room(
-      // WICHTIG: Wir nutzen jetzt 'data' statt 'json' für die Raum-Details!
-      id: data['id']?.toString() ?? '', 
-      
-      name: data['name'] ?? 'Unnamed', // Jetzt sollte hier "Seminar Room A" stehen
-      roomNumber: data['roomNumber']?.toString() ?? '',
-      capacity: readInt(data['capacity']),
-      
-      description: data['description'] ?? "",
-      confirmationCode: data['confirmationCode']?.toString() ?? "",
-      floor: readInt(data['floor']), 
-      location: locationName, 
-      
-      rawBuildingId: bId,
-
+      id: (data['id'] ?? data['roomNumber'] ?? '').toString(),
+      name: data['name'] as String? ?? 'Unnamed',
+      roomNumber: (data['roomNumber'] ?? '').toString(),
+      capacity: _readInt(data['capacity']),
+      floor: _readInt(data['floor']),
+      // Use location from data, fallback to building name if available
+      location: (data['location'] as String? ?? '').isNotEmpty 
+          ? (data['location'] as String) 
+          : buildingName,
       equipment: (data['equipment'] as List<dynamic>?)
-              ?.map((e) => RoomEquipment.fromJson(e))
-              .toList() ?? [],
-              
-      // Status parsen
-      currentStatus: _parseStatus(data['status']),
-      
-      estimatedWalkingTime: const Duration(minutes: 0),
+              ?.map((e) => RoomEquipment.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      currentStatus: _parseStatus(data['status'] as String?),
+      estimatedWalkingTime: Duration(milliseconds: _readInt(data['estimatedWalkingTime'])),
+      building: parsedBuilding,
+      description: data['description']?.toString() ?? "",
+      confirmationCode: data['confirmationCode']?.toString() ?? "",
     );
   }
 
   static RoomStatus _parseStatus(String? status) {
     if (status == null) return RoomStatus.free;
-    // Dein Screenshot zeigte "FREE" als Status -> das müssen wir abfangen!
     switch (status.toUpperCase()) {
       case 'OCCUPIED': return RoomStatus.occupied;
       case 'AVAILABLE': 
-      case 'FREE':      // <--- Das hier hat gefehlt!
+      case 'FREE':
         return RoomStatus.free;
       default: return RoomStatus.free;
     }
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+  
+    return other is Room &&
+      other.id == id &&
+      other.name == name &&
+      other.roomNumber == roomNumber &&
+      other.capacity == capacity &&
+      other.floor == floor &&
+      other.location == location &&
+      other.currentStatus == currentStatus &&
+      other.estimatedWalkingTime == estimatedWalkingTime &&
+      other.building == building &&
+      other.description == description &&
+      other.confirmationCode == confirmationCode;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    roomNumber,
+    capacity,
+    floor,
+    location,
+    Object.hashAll(equipment),
+    currentStatus,
+    estimatedWalkingTime,
+    building,
+    description,
+    confirmationCode,
+  );
+
+  @override
+  String toString() =>
+      'Room(id: $id, name: $name, roomNumber: $roomNumber, capacity: $capacity, floor: $floor, location: $location, equipment: $equipment, currentStatus: $currentStatus, estimatedWalkingTime: $estimatedWalkingTime, building: $building, description: $description, confirmationCode: $confirmationCode)';
 }

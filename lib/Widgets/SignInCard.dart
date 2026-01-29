@@ -73,7 +73,7 @@ class _SignInCardState extends ConsumerState<SignInCard> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = AppColors.primaryAccent;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 500),
@@ -93,7 +93,7 @@ class _SignInCardState extends ConsumerState<SignInCard> {
                 Container(
                   width: 100,
                   height: 100,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: primaryColor,
                   ),
@@ -144,7 +144,7 @@ class _SignInCardState extends ConsumerState<SignInCard> {
                   },
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    prefixIcon: const Icon(Icons.person, color: primaryColor),
+                    prefixIcon: Icon(Icons.person, color: primaryColor),
                     border: OutlineInputBorder(
                       borderRadius: Dimen.inputElementRadius,
                     ),
@@ -171,7 +171,7 @@ class _SignInCardState extends ConsumerState<SignInCard> {
                   },
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock, color: primaryColor),
+                    prefixIcon: Icon(Icons.lock, color: primaryColor),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _passwordVisible ? Icons.visibility : Icons.visibility_off,
@@ -194,7 +194,7 @@ class _SignInCardState extends ConsumerState<SignInCard> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
-                    child: const Text(
+                    child: Text(
                       'Forgot password?',
                       style: TextStyle(color: primaryColor),
                     ),
@@ -282,7 +282,7 @@ class _SignInCardState extends ConsumerState<SignInCard> {
                         style: TextStyle(color: primaryColor),
                       ),
                     ),
-                    const Text('•', style: TextStyle(color: primaryColor)),
+                    Text('•', style: TextStyle(color: primaryColor)),
                     TextButton(
                       onPressed: () {},
                       child: Text(
