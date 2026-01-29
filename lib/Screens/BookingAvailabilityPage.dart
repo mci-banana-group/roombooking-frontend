@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../Models/room.dart' as api;
 import '../Models/Enums/equipment_type.dart';
 import '../Services/auth_service.dart';
 import '../Services/room_service.dart';
@@ -10,7 +9,6 @@ import 'package:mci_booking_app/Screens/HomeScreen.dart';
 import '../Widgets/calendar/calendar_models.dart';
 import '../Widgets/calendar/calendar_view.dart';
 import '../Widgets/calendar/booking_confirmation_dialog.dart';
-import '../Models/available_room.dart';
 
 // ============================================================================
 // BOOKING AVAILABILITY PAGE
@@ -239,6 +237,59 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
     );
   }
 
+  bool _canGoPreviousDay() {
+    final today = DateTime.now();
+    final selected = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+    );
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    return selected.isAfter(todayOnly);
+  }
+
+  void _goToPreviousDay() {
+    if (_canGoPreviousDay()) {
+      setState(() {
+        _selectedDate = _selectedDate.subtract(const Duration(days: 1));
+      });
+      _loadAvailability();
+    }
+  }
+
+  void _goToNextDay() {
+    setState(() {
+      _selectedDate = _selectedDate.add(const Duration(days: 1));
+    });
+    _loadAvailability();
+  }
+
+  List<String> _getEquipmentDisplayNames(List<String> apiValues) {
+    if (apiValues.isEmpty) {
+      print('DEBUG: Equipment list is empty');
+      return [];
+    }
+
+    print('DEBUG: Converting equipment: $apiValues');
+
+    final result = apiValues.map((value) {
+      // Try matching against EquipmentType enum
+      for (final equipType in EquipmentType.values) {
+        // Match by apiValue OR displayName (handles both cases)
+        if (equipType.apiValue.toUpperCase() == value.toUpperCase() ||
+            equipType.displayName.toLowerCase() == value.toLowerCase()) {
+          print('DEBUG: Matched "$value" to "${equipType.displayName}"');
+          return equipType.displayName;
+        }
+      }
+      print('DEBUG: No match for "$value", using fallback');
+      return value; // Fallback if not found
+    }).toList();
+
+    print('DEBUG: Final equipment display: $result');
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -279,6 +330,130 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
 
           return Column(
             children: [
+              // Date Navigation
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            onPressed: _canGoPreviousDay()
+                                ? _goToPreviousDay
+                                : null,
+                            icon: const Icon(Icons.arrow_back),
+                          ),
+                          Text(
+                            DateFormat(
+                              'EEEE, d. MMMM yyyy',
+                            ).format(_selectedDate),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _goToNextDay,
+                            icon: const Icon(Icons.arrow_forward),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Info Badge
+              if (!widget.isFromQuickCalendar &&
+                  (widget.startTime.isNotEmpty ||
+                      widget.capacity > 1 ||
+                      widget.equipment.isNotEmpty))
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Wrap(
+                                spacing: 16,
+                                runSpacing: 8,
+                                children: [
+                                  if (widget.startTime.isNotEmpty)
+                                    Text(
+                                      'Requested: ${widget.startTime}–${widget.endTime}',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  if (widget.capacity > 1)
+                                    Text(
+                                      'For ${widget.capacity} attendees',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  if (widget.equipment.isNotEmpty) ...[
+                                    Builder(
+                                      builder: (context) {
+                                        final displayNames =
+                                            _getEquipmentDisplayNames(
+                                              widget.equipment,
+                                            );
+                                        return Text(
+                                          'Equipment: ${displayNames.join(", ")}',
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodySmall,
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 16),
+
               // Pagination / Navigation controls if needed
               if (_rooms.length > _getColumnsCount())
                 Padding(

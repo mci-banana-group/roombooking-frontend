@@ -1,4 +1,5 @@
 import 'Enums/booking_status.dart';
+import 'room.dart';
 
 class Booking {
   final String id;
@@ -11,6 +12,7 @@ class Booking {
   final DateTime createdAt;
   final DateTime? confirmedAt;
   final DateTime? cancelledAt;
+  final Room? room;
 
   const Booking({
     required this.id,
@@ -23,6 +25,7 @@ class Booking {
     required this.createdAt,
     this.confirmedAt,
     this.cancelledAt,
+    this.room,
   });
 
   Booking copyWith({
@@ -36,6 +39,7 @@ class Booking {
     DateTime? createdAt,
     DateTime? confirmedAt,
     DateTime? cancelledAt,
+    Room? room,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -48,6 +52,7 @@ class Booking {
       createdAt: createdAt ?? this.createdAt,
       confirmedAt: confirmedAt ?? this.confirmedAt,
       cancelledAt: cancelledAt ?? this.cancelledAt,
+      room: room ?? this.room,
     );
   }
 
@@ -62,30 +67,44 @@ class Booking {
       'createdAt': createdAt.toIso8601String(),
       'confirmedAt': confirmedAt?.toIso8601String(),
       'cancelledAt': cancelledAt?.toIso8601String(),
+      'room': room?.toJson(),
     };
   }
 
   static DateTime _readDateTime(dynamic value, {DateTime? fallback}) {
     if (value is DateTime) return value.toLocal();
     final str = value?.toString();
-    if (str == null || str.isEmpty)
+    if (str == null || str.isEmpty) {
       return (fallback ?? DateTime.fromMillisecondsSinceEpoch(0)).toLocal();
+    }
     final parsed = DateTime.tryParse(str);
     return parsed?.toLocal() ??
         (fallback ?? DateTime.fromMillisecondsSinceEpoch(0)).toLocal();
   }
 
   factory Booking.fromJson(Map<String, dynamic> json) {
-    String extractId(dynamic val) {
-      if (val == null) return '';
-      if (val is Map) return val['id']?.toString() ?? '';
-      return val.toString();
+    final roomJson = json['room'];
+    Room? parsedRoom;
+    String parsedRoomId = (json['roomId'] ?? '').toString();
+
+    if (roomJson is Map<String, dynamic>) {
+      parsedRoom = Room.fromJson(roomJson);
+      if (parsedRoomId.isEmpty) {
+        parsedRoomId = parsedRoom.id;
+      }
+    } else if (roomJson is String && parsedRoomId.isEmpty) {
+      // Fallback if 'room' is sent as an ID string (legacy support)
+      parsedRoomId = roomJson;
     }
 
     return Booking(
       id: (json['id'] ?? '').toString(),
-      roomId: (json['roomId']?.toString()) ?? extractId(json['room']),
-      userId: (json['userId'] ?? json['user'] ?? '').toString(),
+      roomId: parsedRoomId,
+      userId:
+          (json['userId'] ??
+                  (json['user'] is Map ? json['user']['id'] : json['user']) ??
+                  '')
+              .toString(),
       description: json['description']?.toString() ?? '',
       startTime: _readDateTime(
         json['startTime'] ?? json['start'],
@@ -103,6 +122,7 @@ class Booking {
       cancelledAt: json['cancelledAt'] != null
           ? _readDateTime(json['cancelledAt'])
           : null,
+      room: parsedRoom,
     );
   }
 
@@ -118,7 +138,8 @@ class Booking {
         other.status == status &&
         other.createdAt == createdAt &&
         other.confirmedAt == confirmedAt &&
-        other.cancelledAt == cancelledAt;
+        other.cancelledAt == cancelledAt &&
+        other.room == room;
   }
 
   @override
@@ -132,9 +153,10 @@ class Booking {
     createdAt,
     confirmedAt,
     cancelledAt,
+    room,
   );
 
   @override
   String toString() =>
-      'Booking(id: $id, roomId: $roomId, userId: $userId, startTime: $startTime, endTime: $endTime, status: $status, createdAt: $createdAt, confirmedAt: $confirmedAt, cancelledAt: $cancelledAt)';
+      'Booking(id: $id, roomId: $roomId, userId: $userId, startTime: $startTime, endTime: $endTime, status: $status, createdAt: $createdAt, confirmedAt: $confirmedAt, cancelledAt: $cancelledAt, room: $room)';
 }
