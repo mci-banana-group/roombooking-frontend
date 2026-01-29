@@ -105,13 +105,26 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
         equipment: widget.equipment,
       );
 
-      final mappedRooms = availableRooms.map((ar) {
+      final roomColors = [
+        const Color(0xFF42A5F5), // Blue
+        const Color(0xFFEF5350), // Red
+        const Color(0xFF66BB6A), // Green
+        const Color(0xFFAB47BC), // Purple
+        const Color(0xFFFFA726), // Orange
+        const Color(0xFF26C6DA), // Cyan
+      ];
+
+      final mappedRooms = availableRooms.asMap().entries.map((entry) {
+        final index = entry.key;
+        final ar = entry.value;
+        final color = roomColors[index % roomColors.length];
+
         return RoomGridItem(
           id: int.parse(ar.room.id),
           name: ar.room.name,
           capacity: ar.room.capacity,
-          color: _getRoomColor(ar.room.name),
-          icon: _getRoomIcon(ar.room.name),
+          color: color,
+          icon: Icons.meeting_room,
           avatar: ar.room.name.isNotEmpty ? ar.room.name[0].toUpperCase() : '?',
           building: ar.room.location,
           floor: 'Floor ${ar.room.floor}',
@@ -178,17 +191,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
         _updateVisibleRooms();
       });
     }
-  }
-
-  // Helpers for Mock/Mapping
-  Color _getRoomColor(String name) {
-    if (name.toLowerCase().contains('meeting')) return Colors.blue;
-    if (name.toLowerCase().contains('conf')) return Colors.orange;
-    return Colors.green;
-  }
-
-  IconData _getRoomIcon(String name) {
-    return Icons.meeting_room;
   }
 
   void _showBookingConfirmation(
