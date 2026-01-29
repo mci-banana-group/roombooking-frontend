@@ -44,7 +44,7 @@ class Booking {
   Booking({required this.roomId, required this.title, required this.startTime, required this.endTime});
 }
 
-// ✅ FIX 1: Added isPreselected flag
+
 class DraftBooking {
   final int roomId;
   final RoomInfo roomInfo;
@@ -349,7 +349,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
     );
   }
 
-  // ✅ FIX 6: Equipment display with better matching
+
   List<String> _getEquipmentDisplayNames(List<String> apiValues) {
     if (apiValues.isEmpty) {
       print('DEBUG: Equipment list is empty');
@@ -439,7 +439,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                 ),
               ),
             ),
-            // ✅ FIX 2: Filter info box with ConstrainedBox for consistent width
+
             if (!widget.isFromQuickCalendar && (widget.startTime.isNotEmpty || widget.capacity > 1 || widget.equipment.isNotEmpty))
               Center(
                 child: ConstrainedBox(

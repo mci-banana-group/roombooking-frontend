@@ -33,7 +33,7 @@ class LoginResponse {
       );
 }
 
-// In your Models/auth_models.dart
+
 class UserResponse {
   final int id;
   final String firstName;
@@ -57,7 +57,7 @@ class UserResponse {
       firstName: json['firstName'],
       lastName: json['lastName'],
       email: json['email'],
-      role: json['role'],
+      role: (json['role'] is Map ? json['role']['name'] : json['role'])?.toString() ?? 'STUDENT',
       isAdmin: json['isAdmin'] ?? false,
     );
   }
