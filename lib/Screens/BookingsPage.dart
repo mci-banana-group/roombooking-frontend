@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../Models/booking.dart';
 import '../Models/room.dart';
 import '../Models/Enums/booking_status.dart';
@@ -33,7 +33,7 @@ class _BookingsPageState extends State<BookingsPage> {
     _loadBookings();
   }
 
-  // ✅ Check-in function
+  // âœ… Check-in function
   Future<void> _showCheckInDialog(Booking booking) async {
     final controller = TextEditingController();
 
@@ -79,16 +79,15 @@ class _BookingsPageState extends State<BookingsPage> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
         );
       }
 
       try {
-        print('✅ Checking in with code: $code');
+        print('âœ… Checking in with code: $code');
 
-        // ✅ Use BookingService.checkInBooking instead of AuthService.checkIn
+        // âœ… Use BookingService.checkInBooking instead of AuthService.checkIn
         final bookingIdInt = int.tryParse(booking.id) ?? 0;
         final success = await _bookingService.checkInBooking(
           bookingId: bookingIdInt,
@@ -98,7 +97,7 @@ class _BookingsPageState extends State<BookingsPage> {
         if (mounted) Navigator.pop(context); // Close loading dialog
 
         if (success) {
-          print('✅ Check-in successful');
+          print('âœ… Check-in successful');
           await _loadBookings();
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -110,7 +109,7 @@ class _BookingsPageState extends State<BookingsPage> {
             );
           }
         } else {
-          print('❌ Check-in failed');
+          print('âŒ Check-in failed');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -123,7 +122,7 @@ class _BookingsPageState extends State<BookingsPage> {
         }
       } catch (e) {
         if (mounted) Navigator.pop(context); // Close loading dialog
-        print('❌ Check-in error: $e');
+        print('âŒ Check-in error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -139,16 +138,21 @@ class _BookingsPageState extends State<BookingsPage> {
     controller.dispose();
   }
 
-  // ✅ Check if booking is within 15 minutes before start time
+  // âœ… Check if booking is within 15 minutes before start time
   bool _isCheckInAvailable(Booking booking) {
     final now = DateTime.now();
-    final fifteenMinutesBefore = booking.startTime.subtract(const Duration(minutes: 15));
-    final fifteenMinutesAfter = booking.startTime.add(const Duration(minutes: 15));
+    final fifteenMinutesBefore = booking.startTime.subtract(
+      const Duration(minutes: 15),
+    );
+    final fifteenMinutesAfter = booking.startTime.add(
+      const Duration(minutes: 15),
+    );
 
-    return now.isAfter(fifteenMinutesBefore) && now.isBefore(fifteenMinutesAfter);
+    return now.isAfter(fifteenMinutesBefore) &&
+        now.isBefore(fifteenMinutesAfter);
   }
 
-  // ✅ Check if booking is in the past (based on status)
+  // âœ… Check if booking is in the past (based on status)
   bool _isBookingPast(Booking booking) {
     // A booking is past if its status is CANCELLED, CHECKED_IN, or NO_SHOW
     return booking.status == BookingStatus.cancelled ||
@@ -164,7 +168,9 @@ class _BookingsPageState extends State<BookingsPage> {
 
     try {
       final bookingsData = await _authService.getMyBookings();
-      final bookings = bookingsData.map((json) => Booking.fromJson(json as Map<String, dynamic>)).toList();
+      final bookings = bookingsData
+          .map((json) => Booking.fromJson(json as Map<String, dynamic>))
+          .toList();
 
       if (!mounted) return;
       setState(() {
@@ -190,7 +196,10 @@ class _BookingsPageState extends State<BookingsPage> {
         title: const Text('Cancel booking?'),
         content: const Text('Are you sure you want to cancel this booking?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('No')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('No'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
@@ -206,9 +215,8 @@ class _BookingsPageState extends State<BookingsPage> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
         );
       }
 
@@ -257,23 +265,27 @@ class _BookingsPageState extends State<BookingsPage> {
   List<Booking> _getFilteredBookings() {
     switch (_selectedTab) {
       case BookingFilterTab.upcoming:
-      // Upcoming = RESERVED status and start time in the future
+        // Upcoming = RESERVED status and start time in the future
         final bookings = _bookings
-            .where((booking) =>
-                booking.status == BookingStatus.confirmed &&
-                booking.startTime.isAfter(DateTime.now()))
+            .where(
+              (booking) =>
+                  booking.status == BookingStatus.confirmed &&
+                  booking.startTime.isAfter(DateTime.now()),
+            )
             .toList();
         // Sort earliest first
         bookings.sort((a, b) => a.startTime.compareTo(b.startTime));
         return bookings;
 
       case BookingFilterTab.past:
-      // Past = CANCELLED, CHECKED_IN, or NO_SHOW status
+        // Past = CANCELLED, CHECKED_IN, or NO_SHOW status
         final bookings = _bookings
-            .where((booking) =>
-                booking.status == BookingStatus.cancelled ||
-                booking.status == BookingStatus.checkedIn ||
-                booking.status == BookingStatus.expired)
+            .where(
+              (booking) =>
+                  booking.status == BookingStatus.cancelled ||
+                  booking.status == BookingStatus.checkedIn ||
+                  booking.status == BookingStatus.expired,
+            )
             .toList();
         // Sort most recent first
         bookings.sort((a, b) => b.startTime.compareTo(a.startTime));
@@ -303,85 +315,65 @@ class _BookingsPageState extends State<BookingsPage> {
     // Calculate stats based on status
     final totalBookings = _bookings.length;
     final upcomingBookings = _bookings
-        .where((b) => b.status == BookingStatus.confirmed && b.startTime.isAfter(now))
+        .where(
+          (b) =>
+              b.status == BookingStatus.confirmed && b.startTime.isAfter(now),
+        )
         .length;
     final pastBookings = _bookings
-        .where((b) =>
-    b.status == BookingStatus.cancelled ||
-        b.status == BookingStatus.checkedIn ||
-        b.status == BookingStatus.expired)
+        .where(
+          (b) =>
+              b.status == BookingStatus.cancelled ||
+              b.status == BookingStatus.checkedIn ||
+              b.status == BookingStatus.expired,
+        )
         .length;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('My Bookings'),
-        elevation: 0,
-        actions: [
-          IconButton(tooltip: 'Refresh', onPressed: _isLoading ? null : _loadBookings, icon: const Icon(Icons.refresh)),
-        ],
-      ),
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _loadError != null
           ? Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48),
-              const SizedBox(height: 16),
-              const Text('Failed to load bookings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Text(
-                _loadError!,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _loadBookings,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      )
-          : CustomScrollView(
-        slivers: [
-          // Header Section
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 24),
-                Text(
-                  'My Bookings',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'Manage your meeting room reservations',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Failed to load bookings',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _loadError!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: _loadBookings,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
+              ),
+            )
+          : CustomScrollView(
+              slivers: [
+
 
           // Statistics cards with max width
           SliverToBoxAdapter(
@@ -458,7 +450,9 @@ class _BookingsPageState extends State<BookingsPage> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.2)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        ),
       ),
       child: Row(
         children: [
@@ -481,7 +475,13 @@ class _BookingsPageState extends State<BookingsPage> {
             ),
           ),
           Expanded(
-            child: _buildTab(context, label: 'All Bookings', tab: BookingFilterTab.all, isFirst: false, isLast: true),
+            child: _buildTab(
+              context,
+              label: 'All Bookings',
+              tab: BookingFilterTab.all,
+              isFirst: false,
+              isLast: true,
+            ),
           ),
         ],
       ),
@@ -489,12 +489,12 @@ class _BookingsPageState extends State<BookingsPage> {
   }
 
   Widget _buildTab(
-      BuildContext context, {
-        required String label,
-        required BookingFilterTab tab,
-        required bool isFirst,
-        required bool isLast,
-      }) {
+    BuildContext context, {
+    required String label,
+    required BookingFilterTab tab,
+    required bool isFirst,
+    required bool isLast,
+  }) {
     final isSelected = _selectedTab == tab;
 
     return Material(
@@ -511,9 +511,16 @@ class _BookingsPageState extends State<BookingsPage> {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.1) : Colors.transparent,
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                : Colors.transparent,
             border: isSelected
-                ? Border(bottom: BorderSide(color: Theme.of(context).colorScheme.primary, width: 3))
+                ? Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 3,
+                    ),
+                  )
                 : null,
             borderRadius: BorderRadius.horizontal(
               left: isFirst ? const Radius.circular(12) : Radius.zero,
@@ -555,11 +562,18 @@ class _BookingsPageState extends State<BookingsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.calendar_today, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+          Icon(
+            Icons.calendar_today,
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          ),
           const SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            ),
           ),
         ],
       ),
