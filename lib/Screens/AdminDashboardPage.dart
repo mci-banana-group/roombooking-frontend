@@ -5,6 +5,7 @@ import '../Models/Enums/room_status.dart';
 import '../Services/admin_repository.dart';
 import '../Session.dart'; 
 import '../main.dart';
+import 'AdminStatsView.dart';
 
 class AdminDashboardPage extends ConsumerWidget {
   const AdminDashboardPage({super.key});
@@ -12,7 +13,7 @@ class AdminDashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold( // Scaffold hinzugefügt für bessere Struktur
         appBar: AppBar(
           title: const Text("Admin Dashboard"),
@@ -20,6 +21,7 @@ class AdminDashboardPage extends ConsumerWidget {
             tabs: [
               Tab(icon: Icon(Icons.view_list), text: 'Bookings'),
               Tab(icon: Icon(Icons.meeting_room), text: 'Rooms'),
+              Tab(icon: Icon(Icons.bar_chart), text: 'Statistics')
             ],
           ),
         ),
@@ -27,6 +29,7 @@ class AdminDashboardPage extends ConsumerWidget {
           children: [
             _AdminBookingsOverview(),
             _AdminRoomManagement(), //neue Klasse
+            AdminStatsView(),
           ],
         ),
       ),
