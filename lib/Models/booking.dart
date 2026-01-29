@@ -68,23 +68,41 @@ class Booking {
   static DateTime _readDateTime(dynamic value, {DateTime? fallback}) {
     if (value is DateTime) return value.toLocal();
     final str = value?.toString();
-    if (str == null || str.isEmpty) return (fallback ?? DateTime.fromMillisecondsSinceEpoch(0)).toLocal();
+    if (str == null || str.isEmpty)
+      return (fallback ?? DateTime.fromMillisecondsSinceEpoch(0)).toLocal();
     final parsed = DateTime.tryParse(str);
-    return parsed?.toLocal() ?? (fallback ?? DateTime.fromMillisecondsSinceEpoch(0)).toLocal();
+    return parsed?.toLocal() ??
+        (fallback ?? DateTime.fromMillisecondsSinceEpoch(0)).toLocal();
   }
 
   factory Booking.fromJson(Map<String, dynamic> json) {
+    String extractId(dynamic val) {
+      if (val == null) return '';
+      if (val is Map) return val['id']?.toString() ?? '';
+      return val.toString();
+    }
+
     return Booking(
       id: (json['id'] ?? '').toString(),
-      roomId: (json['roomId'] ?? json['room'] ?? '').toString(),
+      roomId: (json['roomId']?.toString()) ?? extractId(json['room']),
       userId: (json['userId'] ?? json['user'] ?? '').toString(),
       description: json['description']?.toString() ?? '',
-      startTime: _readDateTime(json['startTime'] ?? json['start'], fallback: DateTime.now()),
-      endTime: _readDateTime(json['endTime'] ?? json['end'], fallback: DateTime.now()),
+      startTime: _readDateTime(
+        json['startTime'] ?? json['start'],
+        fallback: DateTime.now(),
+      ),
+      endTime: _readDateTime(
+        json['endTime'] ?? json['end'],
+        fallback: DateTime.now(),
+      ),
       status: BookingStatus.fromString((json['status'] ?? '').toString()),
       createdAt: _readDateTime(json['createdAt'], fallback: DateTime.now()),
-      confirmedAt: json['confirmedAt'] != null ? _readDateTime(json['confirmedAt']) : null,
-      cancelledAt: json['cancelledAt'] != null ? _readDateTime(json['cancelledAt']) : null,
+      confirmedAt: json['confirmedAt'] != null
+          ? _readDateTime(json['confirmedAt'])
+          : null,
+      cancelledAt: json['cancelledAt'] != null
+          ? _readDateTime(json['cancelledAt'])
+          : null,
     );
   }
 
@@ -104,7 +122,17 @@ class Booking {
   }
 
   @override
-  int get hashCode => Object.hash(id, roomId, userId, startTime, endTime, status, createdAt, confirmedAt, cancelledAt);
+  int get hashCode => Object.hash(
+    id,
+    roomId,
+    userId,
+    startTime,
+    endTime,
+    status,
+    createdAt,
+    confirmedAt,
+    cancelledAt,
+  );
 
   @override
   String toString() =>
