@@ -330,6 +330,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
 
           return Column(
             children: [
+              const SizedBox(height: 16),
               // Date Navigation
               Center(
                 child: ConstrainedBox(
