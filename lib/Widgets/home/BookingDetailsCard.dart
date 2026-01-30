@@ -12,18 +12,20 @@ import '../../Models/Enums/equipment_type.dart';
 class BookingDetailsCard extends StatefulWidget {
   final bool isMobile;
   final DateTime selectedDate;
+  final Function(int?, String?) onBuildingChanged;
 
   const BookingDetailsCard({
     super.key,
     this.isMobile = false,
     required this.selectedDate,
+    required this.onBuildingChanged,
   });
 
   @override
-  State<BookingDetailsCard> createState() => _BookingDetailsCardState();
+  BookingDetailsCardState createState() => BookingDetailsCardState();
 }
 
-class _BookingDetailsCardState extends State<BookingDetailsCard> {
+class BookingDetailsCardState extends State<BookingDetailsCard> {
   final BuildingService _buildingService = BuildingService();
   final RoomService _roomService = RoomService();
 
@@ -111,6 +113,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
           if (_buildings.isNotEmpty) {
             _selectedBuildingId = _buildings.first.id;
             _selectedBuildingName = _buildings.first.name;
+            widget.onBuildingChanged(_selectedBuildingId, _selectedBuildingName);
             _loadEquipmentForBuilding(_buildings.first.id);
           }
         });
@@ -186,6 +189,31 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
   void dispose() {
     _attendeesController.dispose();
     super.dispose();
+  }
+
+  void findRooms() {
+    if (_selectedBuildingId == null) return;
+
+    List<String> selectedEquipment = _equipment.entries
+        .where((entry) => entry.value)
+        .map((entry) => entry.key.apiValue)
+        .toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingAvailabilityPage(
+          date: widget.selectedDate,
+          startTime: _selectedStartTime,
+          endTime: _selectedEndTime,
+          capacity: _attendees,
+          equipment: selectedEquipment,
+          isFromQuickCalendar: false,
+          buildingId: _selectedBuildingId,
+          buildingName: _selectedBuildingName,
+        ),
+      ),
+    );
   }
 
   @override
@@ -334,6 +362,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                       _selectedBuildingId = value;
                       _selectedBuildingName = selected.name;
                     });
+                    widget.onBuildingChanged(_selectedBuildingId, _selectedBuildingName);
                     _loadEquipmentForBuilding(value);
                   }
                 },
@@ -598,59 +627,7 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                   return _buildEquipmentCheckbox(entry.key, entry.value, isDark, primaryColor, textColor, mutedColor);
                 }).toList(),
               ),
-              const SizedBox(height: 20),
-
-              // Book Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _selectedBuildingId != null
-                      ? () {
-
-                    List<String> selectedEquipment = _equipment.entries
-                        .where((entry) => entry.value)
-                        .map((entry) => entry.key.apiValue)     // ✅ CORRECT: Sends "BEAMER"
-                        .toList();
-
-                    print('DEBUG: Selected equipment = $selectedEquipment');
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BookingAvailabilityPage(
-                            date: widget.selectedDate,
-                          startTime: _selectedStartTime,
-                          endTime: _selectedEndTime,
-                          capacity: _attendees,
-                          equipment: selectedEquipment,         // ✅ Now correct format!
-                          isFromQuickCalendar: false,
-                          buildingId: _selectedBuildingId,
-                          buildingName: _selectedBuildingName,
-                        ),
-                      ),
-                    );
-
-
-                  }
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.search, size: 18),
-                      const SizedBox(width: 8),
-                      const Text('Find Available Rooms', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  ),
-                ),
-              ],
+            ],
             ],
           ),
         ),

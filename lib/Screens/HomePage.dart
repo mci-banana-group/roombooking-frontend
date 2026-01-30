@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../Widgets/home/BookingDetailsCard.dart';
 import '../Widgets/home/QuickCalendarCard.dart';
+import '../Widgets/home/FindRoomButton.dart';
 
 import '../Services/auth_service.dart';
 import '../Services/booking_service.dart';
@@ -21,10 +22,12 @@ class _HomePageState extends State<HomePage> {
   final BookingService _bookingService = BookingService();
   final RoomService _roomService = RoomService();
 
+  final GlobalKey<BookingDetailsCardState> _cardKey = GlobalKey<BookingDetailsCardState>();
   Booking? _checkInBooking;
   String? _checkInRoomName;
   bool _isLoading = false;
   DateTime _selectedDate = DateTime.now();
+  bool _canSearch = false;
 
   @override
   void initState() {
@@ -302,8 +305,14 @@ class _HomePageState extends State<HomePage> {
                           return Column(
                             children: [
                               BookingDetailsCard(
+                                key: _cardKey,
                                 isMobile: true,
                                 selectedDate: _selectedDate,
+                                onBuildingChanged: (id, name) {
+                                  setState(() {
+                                    _canSearch = id != null;
+                                  });
+                                },
                               ),
                               const SizedBox(height: 24),
                               QuickCalendarCard(
@@ -314,29 +323,55 @@ class _HomePageState extends State<HomePage> {
                                   });
                                 },
                               ),
+                              const SizedBox(height: 24),
+                              FindRoomButton(
+                                onPressed: _canSearch
+                                    ? () => _cardKey.currentState?.findRooms()
+                                    : null,
+                              ),
                             ],
                           );
                         } else {
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Flexible(
-                                flex: 1,
-                                child: BookingDetailsCard(
-                                  isMobile: false,
-                                  selectedDate: _selectedDate,
-                                ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Flexible(
+                                    flex: 1,
+                                    child: BookingDetailsCard(
+                                      key: _cardKey,
+                                      isMobile: false,
+                                      selectedDate: _selectedDate,
+                                      onBuildingChanged: (id, name) {
+                                        setState(() {
+                                          _canSearch = id != null;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Flexible(
+                                    flex: 1,
+                                    child: QuickCalendarCard(
+                                      selectedDate: _selectedDate,
+                                      onDateSelected: (date) {
+                                        setState(() {
+                                          _selectedDate = date;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 16),
-                              Flexible(
-                                flex: 1,
-                                child: QuickCalendarCard(
-                                  selectedDate: _selectedDate,
-                                  onDateSelected: (date) {
-                                    setState(() {
-                                      _selectedDate = date;
-                                    });
-                                  },
+                              const SizedBox(height: 32),
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 400),
+                                child: FindRoomButton(
+                                  onPressed: _canSearch
+                                      ? () => _cardKey.currentState?.findRooms()
+                                      : null,
                                 ),
                               ),
                             ],
