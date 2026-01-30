@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../Widgets/home/BookingDetailsCard.dart';
 import '../Widgets/home/QuickCalendarCard.dart';
+import '../Widgets/home/FindRoomButton.dart';
 
 import '../Services/auth_service.dart';
 import '../Services/booking_service.dart';
@@ -21,9 +22,13 @@ class _HomePageState extends State<HomePage> {
   final BookingService _bookingService = BookingService();
   final RoomService _roomService = RoomService();
 
+  final GlobalKey<BookingDetailsCardState> _cardKey = GlobalKey<BookingDetailsCardState>();
   Booking? _checkInBooking;
   String? _checkInRoomName;
   bool _isLoading = false;
+  DateTime _selectedDate = DateTime.now();
+  bool _canSearch = false;
+  int? _matchingRoomCount;
 
   @override
   void initState() {
@@ -163,29 +168,6 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 24),
-              Text(
-                'Find Your Perfect Meeting Room',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'Select your meeting details to see available rooms',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 24),
-              
               if (_checkInBooking != null) ...[
                 Center(
                   child: ConstrainedBox(
@@ -323,9 +305,39 @@ class _HomePageState extends State<HomePage> {
                         if (isMobile) {
                           return Column(
                             children: [
-                              BookingDetailsCard(),
+                              BookingDetailsCard(
+                                key: _cardKey,
+                                isMobile: true,
+                                selectedDate: _selectedDate,
+                                onBuildingChanged: (id, name) {
+                                  setState(() {
+                                    _canSearch = id != null;
+                                  });
+                                },
+                                onRoomCountUpdated: (count) {
+                                  if (_matchingRoomCount != count) {
+                                    setState(() {
+                                      _matchingRoomCount = count;
+                                    });
+                                  }
+                                },
+                              ),
                               const SizedBox(height: 24),
-                              QuickCalendarCard(),
+                              QuickCalendarCard(
+                                selectedDate: _selectedDate,
+                                onDateSelected: (date) {
+                                  setState(() {
+                                    _selectedDate = date;
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              FindRoomButton(
+                                roomCount: _matchingRoomCount,
+                                onPressed: _canSearch
+                                    ? () => _cardKey.currentState?.findRooms()
+                                    : null,
+                              ),
                             ],
                           );
                         } else {
@@ -334,12 +346,46 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Flexible(
                                 flex: 1,
-                                child: BookingDetailsCard(),
+                                child: BookingDetailsCard(
+                                  key: _cardKey,
+                                  isMobile: false,
+                                  selectedDate: _selectedDate,
+                                  onBuildingChanged: (id, name) {
+                                    setState(() {
+                                      _canSearch = id != null;
+                                    });
+                                  },
+                                  onRoomCountUpdated: (count) {
+                                    if (_matchingRoomCount != count) {
+                                      setState(() {
+                                        _matchingRoomCount = count;
+                                      });
+                                    }
+                                  },
+                                ),
                               ),
                               const SizedBox(width: 16),
                               Flexible(
                                 flex: 1,
-                                child: QuickCalendarCard(),
+                                child: Column(
+                                  children: [
+                                    QuickCalendarCard(
+                                      selectedDate: _selectedDate,
+                                      onDateSelected: (date) {
+                                        setState(() {
+                                          _selectedDate = date;
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(height: 24),
+                                    FindRoomButton(
+                                      roomCount: _matchingRoomCount,
+                                      onPressed: _canSearch
+                                          ? () => _cardKey.currentState?.findRooms()
+                                          : null,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           );

@@ -34,11 +34,12 @@ class RoomService {
       // Build query parameters
       final Map<String, String> queryParams = {
         'date': date,
-        'startTime': startTime,
-        'endTime': endTime,
         'capacity': capacity.toString(),
-        'status': 'FREE',
       };
+
+      if (startTime.isNotEmpty) queryParams['startTime'] = startTime;
+      if (endTime.isNotEmpty) queryParams['endTime'] = endTime;
+      if (startTime.isNotEmpty && endTime.isNotEmpty) queryParams['status'] = 'FREE';
 
       if (buildingId != null) {
         queryParams['buildingId'] = buildingId.toString();
@@ -98,11 +99,12 @@ class RoomService {
     try {
       final Map<String, String> queryParams = {
         'date': date,
-        'startTime': startTime,
-        'endTime': endTime,
         'capacity': capacity.toString(),
-        'status': 'FREE',
       };
+
+      if (startTime.isNotEmpty) queryParams['startTime'] = startTime;
+      if (endTime.isNotEmpty) queryParams['endTime'] = endTime;
+      if (startTime.isNotEmpty && endTime.isNotEmpty) queryParams['status'] = 'FREE';
 
       if (buildingId != null) {
         queryParams['buildingId'] = buildingId.toString();

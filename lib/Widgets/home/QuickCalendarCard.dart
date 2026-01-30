@@ -1,23 +1,44 @@
 import 'package:flutter/material.dart';
 
-import '../../Screens/BookingAvailabilityPage.dart';
+
 
 class QuickCalendarCard extends StatefulWidget {
+  final DateTime selectedDate;
+  final Function(DateTime) onDateSelected;
+
+  const QuickCalendarCard({
+    super.key,
+    required this.selectedDate,
+    required this.onDateSelected,
+  });
+
   @override
-  State createState() => _QuickCalendarCardState();
+  State<QuickCalendarCard> createState() => _QuickCalendarCardState();
 }
 
 class _QuickCalendarCardState extends State<QuickCalendarCard> {
   late DateTime _currentMonth;
-  late DateTime _selectedDate;
 
   @override
   void initState() {
     super.initState();
-    // Initialize with today's date
-    final today = DateTime.now();
-    _selectedDate = DateTime(today.year, today.month, today.day);
-    _currentMonth = DateTime(today.year, today.month);
+    // Initialize calendar view to the selected date's month
+    _currentMonth = DateTime(
+      widget.selectedDate.year,
+      widget.selectedDate.month,
+    );
+  }
+
+  @override
+  void didUpdateWidget(QuickCalendarCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // creating a new DateTime from widget.selectedDate to compare year and month
+    if (widget.selectedDate.year != oldWidget.selectedDate.year ||
+        widget.selectedDate.month != oldWidget.selectedDate.month) {
+      setState(() {
+         _currentMonth = DateTime(widget.selectedDate.year, widget.selectedDate.month);
+      });
+    }
   }
 
   @override
@@ -67,7 +88,7 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
                     icon: Icon(Icons.chevron_left, color: primaryColor),
                     padding: EdgeInsets.zero,
                     constraints:
-                    const BoxConstraints(minWidth: 36, minHeight: 36),
+                        const BoxConstraints(minWidth: 36, minHeight: 36),
                   ),
                   Text(
                     _getMonthYear(_currentMonth),
@@ -87,7 +108,7 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
                     icon: Icon(Icons.chevron_right, color: primaryColor),
                     padding: EdgeInsets.zero,
                     constraints:
-                    const BoxConstraints(minWidth: 36, minHeight: 36),
+                        const BoxConstraints(minWidth: 36, minHeight: 36),
                   ),
                 ],
               ),
@@ -96,17 +117,17 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
                     .map((day) => Flexible(
-                  child: Center(
-                    child: Text(
-                      day,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: mutedColor,
-                      ),
-                    ),
-                  ),
-                ))
+                          child: Center(
+                            child: Text(
+                              day,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: mutedColor,
+                              ),
+                            ),
+                          ),
+                        ))
                     .toList(),
               ),
               const SizedBox(height: 12),
@@ -115,7 +136,7 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
               const SizedBox(height: 16),
               Center(
                 child: Text(
-                  'Click on any date to view its available rooms on the day',
+                  'Select a date to filter bookings',
                   style: TextStyle(
                     fontSize: 11,
                     color: mutedColor,
@@ -161,9 +182,9 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
         }
 
         final currentDate = DateTime(month.year, month.month, day);
-        final isSelected = day == _selectedDate.day &&
-            _selectedDate.month == month.month &&
-            _selectedDate.year == month.year;
+        final isSelected = day == widget.selectedDate.day &&
+            widget.selectedDate.month == month.month &&
+            widget.selectedDate.year == month.year;
 
         // Check if date is in the past (before today)
         final isPast = currentDate.isBefore(
@@ -174,48 +195,9 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
           onTap: isPast
               ? null
               : () {
-            final selectedDate = DateTime(month.year, month.month, day);
-            setState(() {
-              _selectedDate = selectedDate;
-            });
-
-            // Set default time to now/next hour if today, else 8:00-9:00
-            DateTime now = DateTime.now();
-            DateTime start;
-            DateTime end;
-            if (selectedDate.year == now.year && selectedDate.month == now.month && selectedDate.day == now.day) {
-              // Round up to next 15 min slot
-              int minute = ((now.minute + 14) ~/ 15) * 15;
-              int hour = now.hour + (minute >= 60 ? 1 : 0);
-              minute = minute % 60;
-              if (hour >= 24) hour = 23;
-              start = DateTime(now.year, now.month, now.day, hour, minute);
-              end = start.add(const Duration(hours: 1));
-              if (end.day != start.day) end = DateTime(start.year, start.month, start.day, 23, 59);
-            } else {
-              start = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 8, 0);
-              end = start.add(const Duration(hours: 1));
-            }
-
-            String startStr = start.hour.toString().padLeft(2, '0') + ':' + start.minute.toString().padLeft(2, '0');
-            String endStr = end.hour.toString().padLeft(2, '0') + ':' + end.minute.toString().padLeft(2, '0');
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => BookingAvailabilityPage(
-                  date: selectedDate,
-                  startTime: startStr,
-                  endTime: endStr,
-                  capacity: 1,
-                  equipment: const [],
-                  isFromQuickCalendar: true,
-                  buildingId: null,
-                  buildingName: null,
-                ),
-              ),
-            );
-          },
+                  final selectedDate = DateTime(month.year, month.month, day);
+                  widget.onDateSelected(selectedDate);
+                },
           child: Container(
             decoration: BoxDecoration(
               color: isSelected ? primaryColor : Colors.transparent,
@@ -223,8 +205,8 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
                 color: isSelected
                     ? primaryColor
                     : isPast
-                    ? mutedColor.withOpacity(0.1)
-                    : mutedColor.withOpacity(0.2),
+                        ? mutedColor.withOpacity(0.1)
+                        : mutedColor.withOpacity(0.2),
               ),
               borderRadius: BorderRadius.circular(6),
             ),
@@ -237,8 +219,8 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
                   color: isSelected
                       ? Colors.white
                       : isPast
-                      ? mutedColor.withOpacity(0.4)
-                      : textColor,
+                          ? mutedColor.withOpacity(0.4)
+                          : textColor,
                 ),
               ),
             ),

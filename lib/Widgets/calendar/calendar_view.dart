@@ -8,6 +8,7 @@ class CalendarView extends StatefulWidget {
   final List<CalendarBooking> bookings;
   final DateTime initialStartTime;
   final DateTime initialEndTime;
+  final bool showInitialSuggestion; // 👈 NEW
   final Function(RoomGridItem, DateTime, DateTime) onBookingSelected;
 
   const CalendarView({
@@ -17,6 +18,7 @@ class CalendarView extends StatefulWidget {
     required this.bookings,
     required this.initialStartTime,
     required this.initialEndTime,
+    this.showInitialSuggestion = true, // Default true for backward compat
     required this.onBookingSelected,
   });
 
@@ -499,7 +501,7 @@ class _CalendarViewState extends State<CalendarView> {
             widget.initialStartTime,
             widget.initialEndTime,
           );
-          final showSuggestion =
+          final showSuggestion = widget.showInitialSuggestion && // 👈 Check flag
               _draftBooking?.roomId != room.id && suggestionOverlaps.isEmpty;
 
           if (!_roomColumnKeys.containsKey(room.id)) {
