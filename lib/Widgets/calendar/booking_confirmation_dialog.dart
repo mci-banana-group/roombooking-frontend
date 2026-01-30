@@ -216,6 +216,9 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                       onPressed: _isSubmitting
                           ? null
                           : () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                      ),
                       child: const Text('Cancel'),
                     ),
                     const SizedBox(width: 8),
@@ -234,6 +237,7 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.room.color,
+                        foregroundColor: Colors.white,
                       ),
                       child: _isSubmitting
                           ? const SizedBox(

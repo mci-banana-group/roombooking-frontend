@@ -99,6 +99,45 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       );
     }
 
+    // Smart adjustment: If today and start time is in the past, set to now rounded up
+    final now = DateTime.now();
+    final isToday = widget.date.year == now.year && 
+                    widget.date.month == now.month && 
+                    widget.date.day == now.day;
+                    
+    if (isToday && _calendarStartTime.isBefore(now)) {
+      int minute = ((now.minute + 14) ~/ 15) * 15;
+      int hour = now.hour + (minute >= 60 ? 1 : 0);
+      minute = minute % 60;
+      if (hour >= 24) hour = 23;
+      
+      _calendarStartTime = DateTime(
+        widget.date.year, 
+        widget.date.month, 
+        widget.date.day, 
+        hour, 
+        minute
+      );
+      
+      // Keep original duration if possible, otherwise default to 1h
+      final originalDuration = _calendarEndTime.difference(_calendarStartTime);
+      final durationToUse = originalDuration.inMinutes > 0 
+          ? originalDuration 
+          : const Duration(hours: 1);
+          
+      _calendarEndTime = _calendarStartTime.add(durationToUse);
+      
+      // Clamp end of day
+      if (_calendarEndTime.day != _calendarStartTime.day) {
+        _calendarEndTime = DateTime(
+          _calendarStartTime.year, 
+          _calendarStartTime.month, 
+          _calendarStartTime.day, 
+          23, 
+          59
+        );
+      }
+    }
     _loadAvailability();
   }
 
@@ -163,7 +202,20 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       }
 
       setState(() {
-        _rooms = mappedRooms;
+        // Only show rooms available at wanted time
+        final wantedStart = _calendarStartTime;
+        final wantedEnd = _calendarEndTime;
+        final availableRoomIds = <int>{};
+        for (final room in mappedRooms) {
+          final roomBookings = allBookings.where((b) => b.roomId == room.id);
+          final hasOverlap = roomBookings.any((b) =>
+            b.endTime.isAfter(wantedStart) && b.startTime.isBefore(wantedEnd)
+          );
+          if (!hasOverlap) {
+            availableRoomIds.add(room.id);
+          }
+        }
+        _rooms = mappedRooms.where((room) => availableRoomIds.contains(room.id)).toList();
         _bookings = allBookings;
         _visibleRoomStart = 0;
         _updateVisibleRooms();

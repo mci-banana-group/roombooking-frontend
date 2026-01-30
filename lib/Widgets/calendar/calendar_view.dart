@@ -152,6 +152,15 @@ class _CalendarViewState extends State<CalendarView> {
         );
 
         final newStartTime = _getTimeFromPixel(newTopPixel);
+        final now = DateTime.now();
+        final isToday = widget.selectedDate.year == now.year &&
+            widget.selectedDate.month == now.month &&
+            widget.selectedDate.day == now.day;
+        // Prevent dragging the whole booking into the past
+        if (isToday && newStartTime.isBefore(now)) {
+          // Snap to now or block move
+          return;
+        }
         // duration is already calculated above
         final newEndTime = newStartTime.add(duration);
 
@@ -185,7 +194,18 @@ class _CalendarViewState extends State<CalendarView> {
   void _startDraftBooking(RoomGridItem room, Offset localPosition) {
     final startTime = _getTimeFromPixel(localPosition.dy);
 
-    final endTime = startTime.add(_preferredDuration);
+    // Clamp end time to not exceed the calendar's end boundary
+    DateTime endTime = startTime.add(_preferredDuration);
+    final calendarEnd = DateTime(
+      widget.selectedDate.year,
+      widget.selectedDate.month,
+      widget.selectedDate.day,
+      endHour - 1,
+      59,
+    );
+    if (endTime.isAfter(calendarEnd)) {
+      endTime = calendarEnd;
+    }
 
     setState(() {
       _draftBooking = DraftBooking(
@@ -196,7 +216,7 @@ class _CalendarViewState extends State<CalendarView> {
         startPixelOffset: localPosition.dy,
         endPixelOffset:
             localPosition.dy +
-            (hourHeight * (_preferredDuration.inMinutes / 60)),
+            (hourHeight * (endTime.difference(startTime).inMinutes / 60)),
         isPreselected: false,
       );
     });
@@ -215,8 +235,24 @@ class _CalendarViewState extends State<CalendarView> {
 
     setState(() {
       if (isStart) {
-        _draftBooking!.startPixelOffset = newPixelOffset;
-        _draftBooking!.startTime = _getTimeFromPixel(newPixelOffset);
+        // Prevent dragging start into the past (gray zone)
+        final now = DateTime.now();
+        final isToday = widget.selectedDate.year == now.year &&
+            widget.selectedDate.month == now.month &&
+            widget.selectedDate.day == now.day;
+        DateTime newStart = _getTimeFromPixel(newPixelOffset);
+        if (isToday && newStart.isBefore(now)) {
+          // Snap to next 15-min slot >= now
+          int minute = ((now.minute + 14) ~/ 15) * 15;
+          int hour = now.hour + (minute >= 60 ? 1 : 0);
+          minute = minute % 60;
+          if (hour >= 24) hour = 23;
+          newStart = DateTime(now.year, now.month, now.day, hour, minute);
+          _draftBooking!.startPixelOffset = _getPixelForTime(newStart);
+        } else {
+          _draftBooking!.startPixelOffset = newPixelOffset;
+        }
+        _draftBooking!.startTime = newStart;
       } else {
         _draftBooking!.endPixelOffset = newPixelOffset;
         _draftBooking!.endTime = _getTimeFromPixel(newPixelOffset);
@@ -339,11 +375,28 @@ class _CalendarViewState extends State<CalendarView> {
                   backgroundColor: Colors.grey,
                 ),
                 const SizedBox(width: 16),
-                FloatingActionButton.extended(
-                  onPressed: _confirmDraftBooking,
-                  label: const Text('Book'),
-                  icon: const Icon(Icons.check),
-                  backgroundColor: _draftBooking!.roomInfo.color,
+                Builder(
+                  builder: (context) {
+                    final overlappingBookings = _getOverlappingBookings(
+                      _draftBooking!.roomId,
+                      _draftBooking!.startTime,
+                      _draftBooking!.endTime,
+                    );
+                    final hasOverlap = overlappingBookings.isNotEmpty;
+                    return FloatingActionButton.extended(
+                      onPressed: hasOverlap ? null : _confirmDraftBooking,
+                      label: const Text('Book'),
+                      icon: const Icon(Icons.check),
+                      backgroundColor: hasOverlap
+                          ? Colors.grey.withOpacity(0.3)
+                          : _draftBooking!.roomInfo.color,
+                      foregroundColor: hasOverlap
+                          ? Colors.black.withOpacity(0.3)
+                          : Colors.white,
+                      elevation: hasOverlap ? 0 : null,
+                      disabledElevation: 0,
+                    );
+                  },
                 ),
               ],
             ),
@@ -455,9 +508,21 @@ class _CalendarViewState extends State<CalendarView> {
             _roomColumnKeys[room.id] = GlobalKey();
           }
 
+          // Determine if this is today
+          final now = DateTime.now();
+          final isToday = widget.selectedDate.year == now.year &&
+              widget.selectedDate.month == now.month &&
+              widget.selectedDate.day == now.day;
+
           return GestureDetector(
-            onTapDown: (details) =>
-                _startDraftBooking(room, details.localPosition),
+            onTapDown: (details) {
+              // Only allow booking if not in the past
+              if (isToday) {
+                final tapTime = _getTimeFromPixel(details.localPosition.dy);
+                if (tapTime.isBefore(now)) return;
+              }
+              _startDraftBooking(room, details.localPosition);
+            },
             child: Container(
               key: _roomColumnKeys[room.id],
               decoration: BoxDecoration(
@@ -471,24 +536,42 @@ class _CalendarViewState extends State<CalendarView> {
               ),
               child: Stack(
                 children: [
+                  // Render 15-min slots, graying out past intervals
                   Column(
                     children: List.generate(
                       endHour - startHour,
-                      (index) => Container(
-                        height: hourHeight,
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.outline.withOpacity(0.1),
+                      (index) {
+                        final hour = startHour + index;
+                        // Remove grayed out color for past slots
+                        return Container(
+                          height: hourHeight,
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outline.withOpacity(0.1),
+                              ),
                             ),
+                            color: room.color.withOpacity(0.02),
                           ),
-                          color: room.color.withOpacity(0.02),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
+                  if (isToday)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: _getPixelForTime(now).clamp(
+                        0.0,
+                        (endHour - startHour) * hourHeight,
+                      ),
+                      child: Container(
+                        color: Colors.grey.withOpacity(0.1),
+                      ),
+                    ),
                   ...bookingsForRoom.map((booking) {
                     final startPixel = _getPixelForTime(booking.startTime);
                     final endPixel = _getPixelForTime(booking.endTime);
@@ -510,6 +593,7 @@ class _CalendarViewState extends State<CalendarView> {
                       child: GestureDetector(
                         onTap: () {
                           // Click on suggestion -> Make it active for this room
+                          if (isToday && widget.initialStartTime.isBefore(now)) return;
                           setState(() {
                             _draftBooking = DraftBooking(
                               roomId: room.id,
@@ -654,7 +738,7 @@ class _CalendarViewState extends State<CalendarView> {
           _buildDragHandle(true),
           _buildDragHandle(false),
         ],
-      ),
+      )
     );
   }
 

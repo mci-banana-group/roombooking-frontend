@@ -40,10 +40,17 @@ class TimeDropdown extends StatelessWidget {
     // Add 24:00 manually
     allTimes.add('24:00');
 
+    // ⛔ Filter invalid start times that are smaller than now
+    final now = DateTime.now();
+    final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    var filteredTimes = allTimes
+        .where((t) => _toMinutes(t) >= _toMinutes(currentTime))
+        .toList();
+
     // ⛔ Filter invalid end times
     final times = minTime == null
-        ? allTimes
-        : allTimes
+        ? filteredTimes
+        : filteredTimes
         .where((t) => _toMinutes(t) > _toMinutes(minTime!))
         .toList();
 
