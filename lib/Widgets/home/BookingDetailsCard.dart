@@ -472,6 +472,9 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
                             child: TextField(
                               controller: _attendeesController,
                               keyboardType: TextInputType.number,
+                              inputFormatters: [
+    FilteringTextInputFormatter.digitsOnly,
+  ],
                               decoration: InputDecoration(
                                 filled: true,
                                 fillColor: isDark ? Color(0xFF333535) : Colors.white,
@@ -490,7 +493,7 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                               ),
                               style: TextStyle(color: textColor),
-                              readOnly: true,
+                              readOnly: false,
                             ),
                           ),
                           const SizedBox(width: 8),
