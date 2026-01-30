@@ -63,7 +63,10 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
     super.initState();
     _selectedDate = widget.date;
 
+    final now = DateTime.now();
+    final isToday = widget.date.year == now.year && widget.date.month == now.month && widget.date.day == now.day;
     final startParts = widget.startTime.split(':');
+    final endParts = widget.endTime.split(':');
     _calendarStartTime = DateTime(
       widget.date.year,
       widget.date.month,
@@ -71,8 +74,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       int.parse(startParts[0]),
       int.parse(startParts[1]),
     );
-
-    final endParts = widget.endTime.split(':');
     _calendarEndTime = DateTime(
       widget.date.year,
       widget.date.month,
@@ -80,7 +81,18 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       int.parse(endParts[0]),
       int.parse(endParts[1]),
     );
-
+    // If today and start time is in the past, set to now rounded up
+    if (isToday && _calendarStartTime.isBefore(now)) {
+      int minute = ((now.minute + 14) ~/ 15) * 15;
+      int hour = now.hour + (minute >= 60 ? 1 : 0);
+      minute = minute % 60;
+      if (hour >= 24) hour = 23;
+      _calendarStartTime = DateTime(now.year, now.month, now.day, hour, minute);
+      _calendarEndTime = _calendarStartTime.add(const Duration(hours: 1));
+      if (_calendarEndTime.day != _calendarStartTime.day) {
+        _calendarEndTime = DateTime(_calendarStartTime.year, _calendarStartTime.month, _calendarStartTime.day, 23, 59);
+      }
+    }
     _loadAvailability();
   }
 
