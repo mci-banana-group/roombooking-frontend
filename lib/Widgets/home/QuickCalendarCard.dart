@@ -179,23 +179,42 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
               _selectedDate = selectedDate;
             });
 
-            // Navigate to BookingAvailabilityPage with default values for time/capacity/equipment
+            // Set default time to now/next hour if today, else 8:00-9:00
+            DateTime now = DateTime.now();
+            DateTime start;
+            DateTime end;
+            if (selectedDate.year == now.year && selectedDate.month == now.month && selectedDate.day == now.day) {
+              // Round up to next 15 min slot
+              int minute = ((now.minute + 14) ~/ 15) * 15;
+              int hour = now.hour + (minute >= 60 ? 1 : 0);
+              minute = minute % 60;
+              if (hour >= 24) hour = 23;
+              start = DateTime(now.year, now.month, now.day, hour, minute);
+              end = start.add(const Duration(hours: 1));
+              if (end.day != start.day) end = DateTime(start.year, start.month, start.day, 23, 59);
+            } else {
+              start = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 8, 0);
+              end = start.add(const Duration(hours: 1));
+            }
+
+            String startStr = start.hour.toString().padLeft(2, '0') + ':' + start.minute.toString().padLeft(2, '0');
+            String endStr = end.hour.toString().padLeft(2, '0') + ':' + end.minute.toString().padLeft(2, '0');
+
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => BookingAvailabilityPage(
                   date: selectedDate,
-                  startTime: '06:00',                     // ✅ Full day
-                  endTime: '23:59',                       // ✅ Full day
+                  startTime: startStr,
+                  endTime: endStr,
                   capacity: 1,
                   equipment: const [],
-                  isFromQuickCalendar: true,              // ✅ Flag ignores time filter
-                  buildingId: null,                       // ✅ Show all buildings
+                  isFromQuickCalendar: true,
+                  buildingId: null,
                   buildingName: null,
                 ),
               ),
             );
-
           },
           child: Container(
             decoration: BoxDecoration(
