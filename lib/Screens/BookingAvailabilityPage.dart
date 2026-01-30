@@ -157,7 +157,20 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       }
 
       setState(() {
-        _rooms = mappedRooms;
+        // Only show rooms available at wanted time
+        final wantedStart = _calendarStartTime;
+        final wantedEnd = _calendarEndTime;
+        final availableRoomIds = <int>{};
+        for (final room in mappedRooms) {
+          final roomBookings = allBookings.where((b) => b.roomId == room.id);
+          final hasOverlap = roomBookings.any((b) =>
+            b.endTime.isAfter(wantedStart) && b.startTime.isBefore(wantedEnd)
+          );
+          if (!hasOverlap) {
+            availableRoomIds.add(room.id);
+          }
+        }
+        _rooms = mappedRooms.where((room) => availableRoomIds.contains(room.id)).toList();
         _bookings = allBookings;
         _visibleRoomStart = 0;
         _updateVisibleRooms();
