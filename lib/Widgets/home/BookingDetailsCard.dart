@@ -10,6 +10,10 @@ import '../../Models/building.dart';
 import '../../Models/Enums/equipment_type.dart';
 
 class BookingDetailsCard extends StatefulWidget {
+  final bool isMobile;
+
+  const BookingDetailsCard({super.key, this.isMobile = false});
+
   @override
   State<BookingDetailsCard> createState() => _BookingDetailsCardState();
 }
@@ -36,13 +40,31 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
   late final TextEditingController _attendeesController;
 
   Map<EquipmentType, bool> _equipment = {};
+  
+  // Collapsible state
+  late bool _isExpanded;
 
   @override
   void initState() {
     super.initState();
+    // Default to expanded on desktop, collapsed on mobile
+    _isExpanded = !widget.isMobile;
+    
     _attendeesController = TextEditingController(text: _attendees.toString());
     _initializeTimes();
     _loadBuildings();
+  }
+  
+  @override
+  void didUpdateWidget(BookingDetailsCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isMobile != oldWidget.isMobile) {
+      // If switching from desktop to mobile, collapse. 
+      // If switching from mobile to desktop, expand.
+      setState(() {
+        _isExpanded = !widget.isMobile;
+      });
+    }
   }
 
   void _initializeTimes() {
@@ -174,24 +196,47 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
       elevation: 2,
       color: cardBg,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.search, color: primaryColor, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Booking Details',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: Alignment.topCenter,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header Row
+                InkWell(
+                  onTap: widget.isMobile 
+                      ? () => setState(() => _isExpanded = !_isExpanded) 
+                      : null,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.search, color: primaryColor, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Booking Details',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
+                          ),
+                        ],
+                      ),
+                      if (widget.isMobile)
+                        Icon(
+                          _isExpanded ? Icons.expand_less : Icons.expand_more,
+                          color: mutedColor,
+                        ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
+                ),
+                
+                if (_isExpanded) ...[
+                const SizedBox(height: 20),
 
               // Building Dropdown
               FormLabel('Building / Office', primaryColor),
@@ -638,13 +683,14 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
                       const Text('Find Available Rooms', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                     ],
                   ),
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildEquipmentCheckbox(

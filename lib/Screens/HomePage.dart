@@ -163,29 +163,6 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 24),
-              Text(
-                'Find Your Perfect Meeting Room',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'Select your meeting details to see available rooms',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 24),
-              
               if (_checkInBooking != null) ...[
                 Center(
                   child: ConstrainedBox(
@@ -323,7 +300,7 @@ class _HomePageState extends State<HomePage> {
                         if (isMobile) {
                           return Column(
                             children: [
-                              BookingDetailsCard(),
+                              BookingDetailsCard(isMobile: true),
                               const SizedBox(height: 24),
                               QuickCalendarCard(),
                             ],
@@ -334,7 +311,7 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Flexible(
                                 flex: 1,
-                                child: BookingDetailsCard(),
+                                child: BookingDetailsCard(isMobile: false),
                               ),
                               const SizedBox(width: 16),
                               Flexible(
