@@ -65,7 +65,7 @@ class _QuickCalendarCardState extends State<QuickCalendarCard> {
                   Icon(Icons.calendar_month, color: primaryColor, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    'Quick Calendar',
+                    'Pick a date',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
