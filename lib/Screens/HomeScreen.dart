@@ -51,7 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ];
 
     /// Bottom-Navigation Items
-    final List<BottomNavigationBarItem> items = [
+    final List<BottomNavigationBarItem> bottomNavItems = [
       const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
       const BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Bookings'),
       const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
@@ -62,18 +62,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
     ];
 
+    /// NavigationRail Destinations
+    final List<NavigationRailDestination> railDestinations = [
+      const NavigationRailDestination(
+        icon: Icon(Icons.home),
+        label: Text('Home'),
+      ),
+      const NavigationRailDestination(
+        icon: Icon(Icons.book),
+        label: Text('Bookings'),
+      ),
+      const NavigationRailDestination(
+        icon: Icon(Icons.person),
+        label: Text('Profile'),
+      ),
+      if (isAdmin)
+        const NavigationRailDestination(
+          icon: Icon(Icons.admin_panel_settings),
+          label: Text('Admin'),
+        ),
+    ];
+
     /// Sicherheit: falls Admin → User wechselt
     if (_selectedIndex >= pages.length) {
       _selectedIndex = 0;
     }
 
     return Scaffold(
-      body: pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        items: items,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed, // wichtig bei 4 Tabs
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 640) {
+            // Mobile View
+            return Scaffold(
+              body: pages[_selectedIndex],
+              bottomNavigationBar: BottomNavigationBar(
+                items: bottomNavItems,
+                currentIndex: _selectedIndex,
+                onTap: _onItemTapped,
+                type: BottomNavigationBarType.fixed,
+              ),
+            );
+          } else {
+            // Desktop View
+            return Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: _selectedIndex,
+                  onDestinationSelected: _onItemTapped,
+                  labelType: NavigationRailLabelType.all,
+                  destinations: railDestinations,
+                ),
+                Expanded(
+                  child: pages[_selectedIndex],
+                ),
+              ],
+            );
+          }
+        },
       ),
     );
   }
