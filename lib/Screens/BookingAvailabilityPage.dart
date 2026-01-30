@@ -63,23 +63,41 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
     super.initState();
     _selectedDate = widget.date;
 
-    final startParts = widget.startTime.split(':');
-    _calendarStartTime = DateTime(
-      widget.date.year,
-      widget.date.month,
-      widget.date.day,
-      int.parse(startParts[0]),
-      int.parse(startParts[1]),
-    );
+    if (widget.startTime.isNotEmpty && widget.endTime.isNotEmpty) {
+      final startParts = widget.startTime.split(':');
+      _calendarStartTime = DateTime(
+        widget.date.year,
+        widget.date.month,
+        widget.date.day,
+        int.parse(startParts[0]),
+        int.parse(startParts[1]),
+      );
 
-    final endParts = widget.endTime.split(':');
-    _calendarEndTime = DateTime(
-      widget.date.year,
-      widget.date.month,
-      widget.date.day,
-      int.parse(endParts[0]),
-      int.parse(endParts[1]),
-    );
+      final endParts = widget.endTime.split(':');
+      _calendarEndTime = DateTime(
+        widget.date.year,
+        widget.date.month,
+        widget.date.day,
+        int.parse(endParts[0]),
+        int.parse(endParts[1]),
+      );
+    } else {
+      // Default view time if no specific time selected (e.g. 08:00 - 09:00 for scrolling target)
+      _calendarStartTime = DateTime(
+        widget.date.year,
+        widget.date.month,
+        widget.date.day,
+        8,
+        0,
+      );
+      _calendarEndTime = DateTime(
+        widget.date.year,
+        widget.date.month,
+        widget.date.day,
+        9,
+        0,
+      );
+    }
 
     _loadAvailability();
   }
@@ -484,6 +502,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                   bookings: _bookings,
                   initialStartTime: _calendarStartTime,
                   initialEndTime: _calendarEndTime,
+                  showInitialSuggestion: widget.startTime.isNotEmpty,
                   onBookingSelected: _showBookingConfirmation,
                 ),
               ),

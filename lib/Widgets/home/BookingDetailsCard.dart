@@ -41,8 +41,8 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
   bool _isLoadingEquipment = false;
   String? _equipmentError;
 
-  String _selectedStartTime = '09:00';
-  String _selectedEndTime = '10:00';
+  String? _selectedStartTime;
+  String? _selectedEndTime;
   int _attendees = 4;
   String _selectedDuration = '1 hour';
 
@@ -103,26 +103,10 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
   }
 
   void _initializeTimes() {
-    final now = DateTime.now();
-    int minutes = now.hour * 60 + now.minute;
-    
-    // Round to next 30 min
-    int remainder = minutes % 30;
-    int nextSlot = minutes + (30 - remainder);
-    
-
-    int startMinutes = nextSlot % (24 * 60 + 30); 
-    if (startMinutes >= 24 * 60) startMinutes = 0; 
-
-    _selectedStartTime = _minutesToTime(startMinutes);
-    
-    int endMinutes = startMinutes + 60;
-    if (endMinutes >= 24 * 60) { 
-       endMinutes = endMinutes % (24 * 60);
-    }
-    
-    _selectedEndTime = _minutesToTime(endMinutes);
-    _selectedDuration = '1 hour';
+    // Start with empty/null times
+    _selectedStartTime = null;
+    _selectedEndTime = null;
+    _selectedDuration = '';
   }
 
   Future<void> _loadBuildings() async {
@@ -231,8 +215,8 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
       MaterialPageRoute(
         builder: (context) => BookingAvailabilityPage(
           date: widget.selectedDate,
-          startTime: _selectedStartTime,
-          endTime: _selectedEndTime,
+          startTime: _selectedStartTime ?? '',
+          endTime: _selectedEndTime ?? '',
           capacity: _attendees,
           equipment: _getSelectedEquipment(),
           isFromQuickCalendar: false,
@@ -263,8 +247,8 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
       try {
         final rooms = await _roomService.getAvailableRooms(
           date: widget.selectedDate.toIso8601String().split('T')[0], 
-          startTime: _selectedStartTime, 
-          endTime: _selectedEndTime, 
+          startTime: _selectedStartTime ?? '', 
+          endTime: _selectedEndTime ?? '', 
           capacity: _attendees,
           buildingId: _selectedBuildingId,
           equipment: _getSelectedEquipment()
@@ -538,8 +522,8 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
                                       _selectedStartTime = value;
 
                                       // If a quick duration is selected, maintain it
-                                      if (_selectedDuration.isNotEmpty) {
-                                        final startMinutes = _timeToMinutes(_selectedStartTime);
+                                      if (_selectedDuration.isNotEmpty && _selectedStartTime != null) {
+                                        final startMinutes = _timeToMinutes(_selectedStartTime!);
                                         final durationMinutes = _parseDuration(_selectedDuration);
                                         final newEnd = startMinutes + durationMinutes;
 
@@ -553,8 +537,10 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
                                       // Clear duration and ensure end > start
                                       _selectedDuration = '';
 
-                                      final startMinutes = _timeToMinutes(_selectedStartTime);
-                                      final endMinutes = _timeToMinutes(_selectedEndTime);
+                                      if (_selectedStartTime == null) return;
+
+                                      final startMinutes = _timeToMinutes(_selectedStartTime!);
+                                      final endMinutes = _selectedEndTime != null ? _timeToMinutes(_selectedEndTime!) : 0;
 
                                       if (endMinutes <= startMinutes) {
                                         final newEnd = startMinutes + 30;
@@ -575,31 +561,31 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
                           const SizedBox(width: 12),
                           Flexible(
                             flex: 1,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                FormLabel('End Time', primaryColor),
-                                const SizedBox(height: 8),
-                                TimeDropdown(
-                                  selectedTime: _selectedEndTime,
-                                  minTime: _selectedStartTime, // 👈 magic line
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedEndTime = value;
-                                      _selectedDuration = '';
-                                    });
-                                    _fetchMatchingRoomsCount();
-                                  },
-                                  isDark: isDark,
-                                  primaryColor: primaryColor,
-                                  mutedColor: mutedColor,
-                                  textColor: textColor,
-                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    FormLabel('End Time', primaryColor),
+                                    const SizedBox(height: 8),
+                                    TimeDropdown(
+                                      selectedTime: _selectedEndTime,
+                                      minTime: _selectedStartTime,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _selectedEndTime = value;
+                                          _selectedDuration = '';
+                                        });
+                                        _fetchMatchingRoomsCount();
+                                      },
+                                      isDark: isDark,
+                                      primaryColor: primaryColor,
+                                      mutedColor: mutedColor,
+                                      textColor: textColor,
+                                    ),
 
-                              ],
-                            ),
-                          ),
+                                  ],
+                                ),
+                              ),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -654,7 +640,9 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
                             const SizedBox(height: 4),
                             Text('Time Slot', style: TextStyle(fontSize: 12, color: mutedColor)),
                             Text(
-                              '$_selectedStartTime - $_selectedEndTime',
+                              (_selectedStartTime != null && _selectedEndTime != null) 
+                                ? '$_selectedStartTime - $_selectedEndTime' 
+                                : 'Select time',
                               style: TextStyle(fontSize: 12, color: textColor, fontWeight: FontWeight.w500),
                             ),
                           ],
@@ -776,7 +764,9 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
   }
 
   void _calculateEndTime(String duration) {
-    final startMinutes = _timeToMinutes(_selectedStartTime);
+    if (_selectedStartTime == null) return;
+    
+    final startMinutes = _timeToMinutes(_selectedStartTime!);
     final durationMinutes = _parseDuration(duration);
 
     final endMinutes = startMinutes + durationMinutes;
