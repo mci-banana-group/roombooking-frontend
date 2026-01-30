@@ -11,8 +11,13 @@ import '../../Models/Enums/equipment_type.dart';
 
 class BookingDetailsCard extends StatefulWidget {
   final bool isMobile;
+  final DateTime selectedDate;
 
-  const BookingDetailsCard({super.key, this.isMobile = false});
+  const BookingDetailsCard({
+    super.key,
+    this.isMobile = false,
+    required this.selectedDate,
+  });
 
   @override
   State<BookingDetailsCard> createState() => _BookingDetailsCardState();
@@ -34,7 +39,6 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
   String _selectedStartTime = '09:00';
   String _selectedEndTime = '10:00';
   int _attendees = 4;
-  DateTime _selectedDate = DateTime.now();
   String _selectedDuration = '1 hour';
 
   late final TextEditingController _attendeesController;
@@ -336,45 +340,6 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
               ),
               const SizedBox(height: 16),
 
-              // Date
-              FormLabel('Meeting Date', primaryColor),
-              const SizedBox(height: 8),
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 90)),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _selectedDate = picked;
-                      });
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isDark ? Color(0xFF333535) : Colors.white,
-                      border: Border.all(color: mutedColor.withOpacity(0.3)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today, color: primaryColor, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${_selectedDate.day.toString().padLeft(2, '0')}.${_selectedDate.month.toString().padLeft(2, '0')}.${_selectedDate.year}',
-                          style: TextStyle(color: textColor),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
               const SizedBox(height: 16),
 
               // Attendees
@@ -649,11 +614,11 @@ class _BookingDetailsCardState extends State<BookingDetailsCard> {
 
                     print('DEBUG: Selected equipment = $selectedEquipment');
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BookingAvailabilityPage(
-                          date: _selectedDate,
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BookingAvailabilityPage(
+                            date: widget.selectedDate,
                           startTime: _selectedStartTime,
                           endTime: _selectedEndTime,
                           capacity: _attendees,

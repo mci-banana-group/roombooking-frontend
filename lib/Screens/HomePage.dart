@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   Booking? _checkInBooking;
   String? _checkInRoomName;
   bool _isLoading = false;
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
@@ -300,9 +301,19 @@ class _HomePageState extends State<HomePage> {
                         if (isMobile) {
                           return Column(
                             children: [
-                              BookingDetailsCard(isMobile: true),
+                              BookingDetailsCard(
+                                isMobile: true,
+                                selectedDate: _selectedDate,
+                              ),
                               const SizedBox(height: 24),
-                              QuickCalendarCard(),
+                              QuickCalendarCard(
+                                selectedDate: _selectedDate,
+                                onDateSelected: (date) {
+                                  setState(() {
+                                    _selectedDate = date;
+                                  });
+                                },
+                              ),
                             ],
                           );
                         } else {
@@ -311,12 +322,22 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Flexible(
                                 flex: 1,
-                                child: BookingDetailsCard(isMobile: false),
+                                child: BookingDetailsCard(
+                                  isMobile: false,
+                                  selectedDate: _selectedDate,
+                                ),
                               ),
                               const SizedBox(width: 16),
                               Flexible(
                                 flex: 1,
-                                child: QuickCalendarCard(),
+                                child: QuickCalendarCard(
+                                  selectedDate: _selectedDate,
+                                  onDateSelected: (date) {
+                                    setState(() {
+                                      _selectedDate = date;
+                                    });
+                                  },
+                                ),
                               ),
                             ],
                           );
