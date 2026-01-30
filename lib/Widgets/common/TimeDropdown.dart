@@ -41,11 +41,11 @@ class TimeDropdown extends StatelessWidget {
     allTimes.add('24:00');
 
     // ⛔ Filter invalid start times that are smaller than now
-    final now = DateTime.now();
-    final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    var filteredTimes = allTimes
-        .where((t) => _toMinutes(t) >= _toMinutes(currentTime))
-        .toList();
+    // final now = DateTime.now();
+    // final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    var filteredTimes = allTimes;
+        // .where((t) => _toMinutes(t) >= _toMinutes(currentTime))
+        // .toList();
 
     // ⛔ Filter invalid end times
     final times = minTime == null

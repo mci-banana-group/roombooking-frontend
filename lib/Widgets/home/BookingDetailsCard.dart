@@ -207,8 +207,22 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
 
   void findRooms() {
     if (_selectedBuildingId == null) return;
+
+    // Check if start time is in the past (only for today)
+    if (widget.selectedDate.year == DateTime.now().year &&
+        widget.selectedDate.month == DateTime.now().month &&
+        widget.selectedDate.day == DateTime.now().day &&
+        _selectedStartTime != null) {
+      
+      final now = DateTime.now();
+      final startMinutes = _timeToMinutes(_selectedStartTime!);
+      final currentMinutes = now.hour * 60 + now.minute;
+
+      if (startMinutes < currentMinutes) {
+         return;
+      }
+    }
     
-    // ... logic remains ...
 
     Navigator.push(
       context,
@@ -242,6 +256,22 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
       if (_selectedBuildingId == null) {
           widget.onRoomCountUpdated?.call(0);
           return;
+      }
+
+      // Check if start time is in the past (only for today)
+      if (widget.selectedDate.year == DateTime.now().year &&
+          widget.selectedDate.month == DateTime.now().month &&
+          widget.selectedDate.day == DateTime.now().day &&
+          _selectedStartTime != null) {
+        
+        final now = DateTime.now();
+        final startMinutes = _timeToMinutes(_selectedStartTime!);
+        final currentMinutes = now.hour * 60 + now.minute;
+
+        if (startMinutes < currentMinutes) {
+           widget.onRoomCountUpdated?.call(0);
+           return;
+        }
       }
 
       try {
