@@ -315,6 +315,21 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
     return result;
   }
 
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+      _loadAvailability();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -385,13 +400,23 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                                 : null,
                             icon: const Icon(Icons.arrow_back),
                           ),
-                          Text(
-                            DateFormat(
-                              'EEEE, d. MMMM yyyy',
-                            ).format(_selectedDate),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                          InkWell(
+                            onTap: _selectDate,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                                vertical: 8.0,
+                              ),
+                              child: Text(
+                                DateFormat(
+                                  'EEEE, d. MMMM yyyy',
+                                ).format(_selectedDate),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                           IconButton(
