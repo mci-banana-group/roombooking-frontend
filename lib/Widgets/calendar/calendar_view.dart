@@ -557,6 +557,19 @@ class _CalendarViewState extends State<CalendarView> {
                       },
                     ),
                   ),
+                  if (isToday)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: _getPixelForTime(now).clamp(
+                        0.0,
+                        (endHour - startHour) * hourHeight,
+                      ),
+                      child: Container(
+                        color: Colors.grey.withOpacity(0.1),
+                      ),
+                    ),
                   ...bookingsForRoom.map((booking) {
                     final startPixel = _getPixelForTime(booking.startTime);
                     final endPixel = _getPixelForTime(booking.endTime);
