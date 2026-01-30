@@ -160,19 +160,14 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
         equipment: widget.equipment,
       );
 
-      final roomColors = [
-        const Color(0xFF42A5F5), // Blue
-        const Color(0xFFEF5350), // Red
-        const Color(0xFF66BB6A), // Green
-        const Color(0xFFAB47BC), // Purple
-        const Color(0xFFFFA726), // Orange
-        const Color(0xFF26C6DA), // Cyan
-      ];
+      if (!mounted) return;
 
+      final primaryColor = Theme.of(context).colorScheme.primary;
+
+      // Remove the rainbow colors list and use mciBlue for all
       final mappedRooms = availableRooms.asMap().entries.map((entry) {
-        final index = entry.key;
         final ar = entry.value;
-        final color = roomColors[index % roomColors.length];
+        final color = primaryColor;
 
         return RoomGridItem(
           id: int.parse(ar.room.id),
@@ -187,15 +182,18 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
         );
       }).toList();
 
+      final currentUserId = AuthService().currentUser?.id;
       final allBookings = <CalendarBooking>[];
       for (final ar in availableRooms) {
         for (final b in ar.bookings) {
+          final isMyBooking = b.userId == currentUserId.toString();
           allBookings.add(
             CalendarBooking(
               roomId: int.parse(b.roomId),
               title: b.description,
               startTime: b.startTime,
               endTime: b.endTime,
+              isMyBooking: isMyBooking,
             ),
           );
         }
@@ -222,6 +220,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _loadError = e.toString();
         _isLoading = false;

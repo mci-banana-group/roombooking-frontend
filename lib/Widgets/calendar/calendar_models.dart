@@ -29,12 +29,14 @@ class CalendarBooking {
   final String title;
   final DateTime startTime;
   final DateTime endTime;
+  final bool isMyBooking;
 
   const CalendarBooking({
     required this.roomId,
     required this.title,
     required this.startTime,
     required this.endTime,
+    this.isMyBooking = false,
   });
 }
 
