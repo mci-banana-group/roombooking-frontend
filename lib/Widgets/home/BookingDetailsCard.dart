@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../common/FormLabel.dart';
@@ -13,12 +14,14 @@ class BookingDetailsCard extends StatefulWidget {
   final bool isMobile;
   final DateTime selectedDate;
   final Function(int?, String?) onBuildingChanged;
+  final Function(int)? onRoomCountUpdated; // Callback for room count
 
   const BookingDetailsCard({
     super.key,
     this.isMobile = false,
     required this.selectedDate,
     required this.onBuildingChanged,
+    this.onRoomCountUpdated,
   });
 
   @override
@@ -50,6 +53,8 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
   // Collapsible state
   late bool _isExpanded;
 
+  Timer? _debounceTimer;
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +64,10 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
     _attendeesController = TextEditingController(text: _attendees.toString());
     _initializeTimes();
     _loadBuildings();
+    // Allow initial build to settle before fetching counts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+       _fetchMatchingRoomsCount();
+    });
   }
   
   @override
@@ -70,6 +79,9 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
       setState(() {
         _isExpanded = !widget.isMobile;
       });
+    }
+    if (widget.selectedDate != oldWidget.selectedDate) {
+       _fetchMatchingRoomsCount();
     }
   }
 
@@ -193,11 +205,8 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
 
   void findRooms() {
     if (_selectedBuildingId == null) return;
-
-    List<String> selectedEquipment = _equipment.entries
-        .where((entry) => entry.value)
-        .map((entry) => entry.key.apiValue)
-        .toList();
+    
+    // ... logic remains ...
 
     Navigator.push(
       context,
@@ -207,7 +216,7 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
           startTime: _selectedStartTime,
           endTime: _selectedEndTime,
           capacity: _attendees,
-          equipment: selectedEquipment,
+          equipment: _getSelectedEquipment(),
           isFromQuickCalendar: false,
           buildingId: _selectedBuildingId,
           buildingName: _selectedBuildingName,
@@ -216,7 +225,46 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
     );
   }
 
-  @override
+  List<String> _getSelectedEquipment() {
+     return _equipment.entries
+        .where((entry) => entry.value)
+        .map((entry) => entry.key.apiValue)
+        .toList();
+  }
+
+  void _fetchMatchingRoomsCount() {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      if (!mounted) return;
+      if (_selectedBuildingId == null) {
+          widget.onRoomCountUpdated?.call(0);
+          return;
+      }
+
+      try {
+        final rooms = await _roomService.getAvailableRooms(
+          date: widget.selectedDate.toIso8601String().split('T')[0], 
+          startTime: _selectedStartTime, 
+          endTime: _selectedEndTime, 
+          capacity: _attendees,
+          buildingId: _selectedBuildingId,
+          equipment: _getSelectedEquipment()
+        );
+
+        if (mounted) {
+          widget.onRoomCountUpdated?.call(rooms.length);
+        }
+      } catch (e) {
+        print('Error counting rooms: $e');
+        if (mounted) {
+           widget.onRoomCountUpdated?.call(0);
+        }
+      }
+    });
+  }
+
+
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = Theme.of(context).colorScheme.primary;
@@ -364,6 +412,7 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
                     });
                     widget.onBuildingChanged(_selectedBuildingId, _selectedBuildingName);
                     _loadEquipmentForBuilding(value);
+                    _fetchMatchingRoomsCount();
                   }
                 },
               ),
@@ -416,6 +465,7 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
                               _attendees--;
                               _attendeesController.text = _attendees.toString();
                             });
+                            _fetchMatchingRoomsCount();
                           }
                               : null,
                           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -429,6 +479,7 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
                               _attendees++;
                               _attendeesController.text = _attendees.toString();
                             });
+                            _fetchMatchingRoomsCount();
                           },
                           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                           padding: EdgeInsets.zero,
@@ -481,6 +532,7 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
                                 _selectedEndTime = _minutesToTime(newEnd);
                               }
                             });
+                            _fetchMatchingRoomsCount();
                           },
 
                           isDark: isDark,
@@ -508,6 +560,7 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
                               _selectedEndTime = value;
                               _selectedDuration = '';
                             });
+                            _fetchMatchingRoomsCount();
                           },
                           isDark: isDark,
                           primaryColor: primaryColor,
@@ -648,6 +701,7 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
         setState(() {
           _equipment[equipmentType] = !isSelected;
         });
+        _fetchMatchingRoomsCount();
       },
       child: Container(
         decoration: BoxDecoration(
@@ -668,6 +722,7 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
                   setState(() {
                     _equipment[equipmentType] = value ?? false;
                   });
+                  _fetchMatchingRoomsCount();
                 },
                 activeColor: primaryColor,
               ),
@@ -702,6 +757,7 @@ class BookingDetailsCardState extends State<BookingDetailsCard> {
       _selectedEndTime = _minutesToTime(endMinutes);
       _selectedDuration = duration;
     });
+    _fetchMatchingRoomsCount();
   }
 
 
