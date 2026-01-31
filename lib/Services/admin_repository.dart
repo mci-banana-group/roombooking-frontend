@@ -6,6 +6,7 @@ import '../Models/room.dart';
 import '../Session.dart';
 import '../Resources/API.dart'; 
 import '../main.dart';
+import '../Models/admin_stats.dart';
 
 
 final adminRepositoryProvider = Provider((ref) => AdminRepository(ref));
@@ -154,4 +155,50 @@ class AdminRepository {
       return [];
     }
   }
+
+  // 5. GET ADMIN STATS
+  Future<AdminStats?> getStats({DateTime? start, DateTime? end}) async {
+    String query = "";
+    if (start != null && end != null) {
+      //  Formatierung (ISO 8601)
+      final s = start.toIso8601String().split('.').first;
+      final e = end.toIso8601String().split('.').first;
+      query = "?start=$s&end=$e";
+    }
+
+    final url = Uri.parse('${API.base_url}${API.adminStats}$query');
+    
+    final session = _ref.read(sessionProvider);
+    final token = session.token;
+
+    if (token == null) return null;
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return AdminStats.fromJson(data);
+      }
+      print("Stats Error: ${response.statusCode} - ${response.body}");
+      return null;
+    } catch (e) {
+      print("CRASH Stats: $e");
+      return null;
+    }
+  }
+
+
+
+
+
+
+
+
 }
