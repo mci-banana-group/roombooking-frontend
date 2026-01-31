@@ -629,7 +629,7 @@ class _CalendarViewState extends State<CalendarView> {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: room.color.withOpacity(0.8),
+        color: Theme.of(context).colorScheme.secondary.withOpacity(0.8),
         borderRadius: BorderRadius.circular(4),
       ),
       padding: const EdgeInsets.all(4),
@@ -639,7 +639,7 @@ class _CalendarViewState extends State<CalendarView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              booking.title,
+              booking.isMyBooking ? booking.title : 'Occupied',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
