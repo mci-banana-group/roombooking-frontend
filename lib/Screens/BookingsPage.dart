@@ -329,119 +329,120 @@ class _BookingsPageState extends State<BookingsPage> {
         )
         .length;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    // Return body directly to avoid nested Scaffold rounding issues
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _loadError != null
-          ? Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 48),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Failed to load bookings',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _loadError!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: _loadBookings,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
-                    ),
-                  ],
+    if (_loadError != null) {
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48),
+              const SizedBox(height: 16),
+              const Text(
+                'Failed to load bookings',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            )
-          : CustomScrollView(
-              slivers: [
+              const SizedBox(height: 8),
+              Text(
+                _loadError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _loadBookings,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return CustomScrollView(
+      slivers: [
 
 
-          // Statistics cards with max width
+        // Statistics cards with max width
+        SliverToBoxAdapter(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: BookingStats(
+                  totalBookings: totalBookings,
+                  upcomingBookings: upcomingBookings,
+                  pastBookings: pastBookings,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+        // Tab filter with max width
+        SliverToBoxAdapter(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _buildTabBar(context)),
+            ),
+          ),
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+        // Bookings list with max width
+        if (filteredBookings.isEmpty)
+          SliverFillRemaining(child: _buildEmptyState(context))
+        else
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1200),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: BookingStats(
-                    totalBookings: totalBookings,
-                    upcomingBookings: upcomingBookings,
-                    pastBookings: pastBookings,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredBookings.length,
+                    itemBuilder: (context, index) {
+                      final booking = filteredBookings[index];
+                      final isCheckInAvailable = _isCheckInAvailable(booking);
+                      final isPast = _isBookingPast(booking);
+
+                      return BookingCard(
+                        booking: booking,
+                        roomName: _getRoomName(booking),
+                        buildingName: _getBuildingName(booking),
+                        onCheckIn: isCheckInAvailable && !isPast ? () => _showCheckInDialog(booking) : null,
+                        onDelete: !isPast ? () => _confirmDelete(booking) : null,
+                      );
+                    },
                   ),
                 ),
               ),
             ),
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-          // Tab filter with max width
-          SliverToBoxAdapter(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1200),
-                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _buildTabBar(context)),
-              ),
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-          // Bookings list with max width
-          if (filteredBookings.isEmpty)
-            SliverFillRemaining(child: _buildEmptyState(context))
-          else
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: filteredBookings.length,
-                      itemBuilder: (context, index) {
-                        final booking = filteredBookings[index];
-                        final isCheckInAvailable = _isCheckInAvailable(booking);
-                        final isPast = _isBookingPast(booking);
-
-                        return BookingCard(
-                          booking: booking,
-                          roomName: _getRoomName(booking),
-                          buildingName: _getBuildingName(booking),
-                          onCheckIn: isCheckInAvailable && !isPast ? () => _showCheckInDialog(booking) : null,
-                          onDelete: !isPast ? () => _confirmDelete(booking) : null,
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
-        ],
-      ),
+        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+      ],
     );
   }
 
