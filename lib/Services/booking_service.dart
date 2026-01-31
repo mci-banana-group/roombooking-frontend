@@ -24,25 +24,11 @@ class BookingService {
     print('   New Description: $newDescription');
 
     try {
-      // ✅ Send the full booking object with updated description
+
       final body = jsonEncode({
-        'start': {
-          'epochSeconds': booking.startTime.millisecondsSinceEpoch ~/ 1000,
-          'nanosecondsOfSecond': (booking.startTime.millisecondsSinceEpoch % 1000) * 1000000,
-          'value': {
-            'seconds': booking.startTime.millisecondsSinceEpoch ~/ 1000,
-            'nanos': (booking.startTime.millisecondsSinceEpoch % 1000) * 1000000,
-          }
-        },
-        'end': {
-          'epochSeconds': booking.endTime.millisecondsSinceEpoch ~/ 1000,
-          'nanosecondsOfSecond': (booking.endTime.millisecondsSinceEpoch % 1000) * 1000000,
-          'value': {
-            'seconds': booking.endTime.millisecondsSinceEpoch ~/ 1000,
-            'nanos': (booking.endTime.millisecondsSinceEpoch % 1000) * 1000000,
-          }
-        },
-        'description': newDescription,  // ✅ Updated description
+        'start': booking.startTime.toUtc().toIso8601String(),
+        'end': booking.endTime.toUtc().toIso8601String(),
+        'description': newDescription,
       });
 
       print('   Request Body: $body');

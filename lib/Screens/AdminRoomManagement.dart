@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../Models/room.dart';
 import '../Models/Enums/room_status.dart';
+import '../Models/building.dart';
 import '../Services/admin_repository.dart';
 
 
@@ -339,7 +340,7 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
     _nameController = TextEditingController(text: widget.room.name);
     _numberController = TextEditingController(text: widget.room.roomNumber);
     _capacityController = TextEditingController(text: widget.room.capacity.toString());
-    _buildingIdController = TextEditingController(text: widget.room.rawBuildingId?.toString() ?? "1");
+    _buildingIdController = TextEditingController(text: widget.room.building?.id.toString() ?? "1");
     _descriptionController = TextEditingController(text: widget.room.description);
     _confirmationCodeController = TextEditingController(text: widget.room.confirmationCode);
   }
@@ -403,7 +404,10 @@ class _EditRoomDialogState extends State<_EditRoomDialog> {
                 equipment: widget.room.equipment, 
                 currentStatus: widget.room.currentStatus,
                 estimatedWalkingTime: widget.room.estimatedWalkingTime,
-                rawBuildingId: int.tryParse(_buildingIdController.text),
+                building: Building(
+                  id: int.tryParse(_buildingIdController.text) ?? 1,
+                  name: "Building ${int.tryParse(_buildingIdController.text)}",
+                ),
                 description: _descriptionController.text,
                 confirmationCode: _confirmationCodeController.text,
               );

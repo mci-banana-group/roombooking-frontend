@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 class TimeDropdown extends StatelessWidget {
-  final String selectedTime;
-  final Function(String) onChanged;
+  final String? selectedTime;
+  final Function(String?) onChanged;
   final bool isDark;
   final Color primaryColor;
   final Color mutedColor;
   final Color textColor;
-  final String? minTime; // 👈 NEW
+  final String? minTime;
 
   const TimeDropdown({
     required this.selectedTime,
@@ -40,15 +40,26 @@ class TimeDropdown extends StatelessWidget {
     // Add 24:00 manually
     allTimes.add('24:00');
 
+    // ⛔ Filter invalid start times that are smaller than now
+    // final now = DateTime.now();
+    // final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    var filteredTimes = allTimes;
+        // .where((t) => _toMinutes(t) >= _toMinutes(currentTime))
+        // .toList();
+
     // ⛔ Filter invalid end times
     final times = minTime == null
-        ? allTimes
-        : allTimes
+        ? filteredTimes
+        : filteredTimes
         .where((t) => _toMinutes(t) > _toMinutes(minTime!))
         .toList();
 
     return DropdownButtonFormField<String>(
-      value: times.contains(selectedTime) ? selectedTime : times.first,
+      value: selectedTime != null && times.contains(selectedTime) ? selectedTime : null,
+      hint: Text(
+        'Select',
+        style: TextStyle(color: mutedColor, fontSize: 13),
+      ),
       decoration: InputDecoration(
         filled: true,
         fillColor: isDark ? const Color(0xFF333535) : Colors.white,
@@ -74,11 +85,7 @@ class TimeDropdown extends StatelessWidget {
         ),
       )
           .toList(),
-      onChanged: (value) {
-        if (value != null) {
-          onChanged(value);
-        }
-      },
+      onChanged: onChanged,
     );
   }
 }

@@ -10,10 +10,7 @@ import 'package:mci_booking_app/main.dart';
 class HomeScreen extends ConsumerStatefulWidget {
   final int initialIndex;
 
-  const HomeScreen({
-    super.key,
-    this.initialIndex = 0,
-  });
+  const HomeScreen({super.key, this.initialIndex = 0});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -55,18 +52,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     /// Bottom-Navigation Items
     final List<BottomNavigationBarItem> items = [
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.home),
-        label: 'Home',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.book),
-        label: 'Bookings',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.person),
-        label: 'Profile',
-      ),
+      const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+      const BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Bookings'),
+      const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       if (isAdmin)
         const BottomNavigationBarItem(
           icon: Icon(Icons.admin_panel_settings),
@@ -80,19 +68,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isAdmin ? 'Room Booking (Admin)' : 'Room Booking'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              ref.read(sessionProvider).logout();
-              Navigator.of(context).pushReplacementNamed('/login');
-            },
-          ),
-        ],
-      ),
-
       body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: items,

@@ -13,10 +13,7 @@ class ProfilePage extends StatelessWidget {
         children: [
           Icon(Icons.person, size: 80, color: Theme.of(context).primaryColor),
           const SizedBox(height: 16),
-          Text(
-            'Profile',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          Text('Profile', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 8),
           const Text('Your profile information'),
           const SizedBox(height: 32),
@@ -26,12 +23,29 @@ class ProfilePage extends StatelessWidget {
             builder: (context, ref, _) {
               final session = ref.watch(sessionProvider);
 
-              if (!session.isAdmin) return const SizedBox.shrink();
-
-              return ElevatedButton.icon(
-                icon: const Icon(Icons.admin_panel_settings),
-                label: const Text('Admin Panel'),
-                onPressed: () => Navigator.pushNamed(context, '/admin'),
+              return Column(
+                children: [
+                  if (session.isAdmin) ...[
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.admin_panel_settings),
+                      label: const Text('Admin Panel'),
+                      onPressed: () => Navigator.pushNamed(context, '/admin'),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                      foregroundColor: Theme.of(context).colorScheme.onError,
+                    ),
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Logout'),
+                    onPressed: () {
+                      ref.read(sessionProvider).logout();
+                      Navigator.of(context).pushReplacementNamed('/login');
+                    },
+                  ),
+                ],
               );
             },
           ),
