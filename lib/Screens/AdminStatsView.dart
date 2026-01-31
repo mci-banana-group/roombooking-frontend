@@ -49,11 +49,6 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
             const Divider(),
             const Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text(
-                "Hier könnte wir eine Liste der Buchungen anzeigen, die zu dieser Kategorie gehören.)",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
             ),
           ],
         ),
@@ -197,24 +192,6 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                 );
               },
             ),
-            
-            // --- HINWEIS ---
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.shade200),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.orange),
-                  SizedBox(width: 12),
-                  Expanded(child: Text("Room Utilization (Most/Least Used) will be added.", style: TextStyle(color: Colors.brown))),
-                ],
-              ),
-            )
         ],
       ),
     );
