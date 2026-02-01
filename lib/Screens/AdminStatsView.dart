@@ -166,16 +166,6 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
             color2: Colors.teal.shade700,
             onTap: () => _onCardTap("Checked In", _stats!.checkedInMeetings),
           ),
-          const SizedBox(height: 12),
-
-          _FancyStatRow(
-            title: "Problematic",
-            value: _stats!.problematicMeetings.toString(),
-            icon: Icons.warning_amber,
-            color1: Colors.deepOrange.shade400,
-            color2: Colors.deepOrange.shade700,
-            onTap: () => _onCardTap("Problematic (Cancelled + No-Show)", _stats!.problematicMeetings),
-          ),
 
           const SizedBox(height: 30),
 
@@ -302,7 +292,7 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                     subtitle: Text("${room.building?.name ?? 'Unknown Building'} - Room ${room.roomNumber}"),
                     trailing: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.blue.shade100, borderRadius: BorderRadius.circular(20)),
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
                       child: Text(timeDisplay, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                   ),
