@@ -11,34 +11,29 @@ class AdminDashboardPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
       length: 2,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [         
-          // TabBar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TabBar(
-              labelColor: Theme.of(context).colorScheme.primary,
-              unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              indicatorColor: Theme.of(context).colorScheme.primary,
-              dividerColor: Colors.transparent,
-              tabs: const [
-                Tab(icon: Icon(Icons.meeting_room), text: 'Buildings/Rooms'),
-                Tab(icon: Icon(Icons.bar_chart), text: 'Statistics'),
-              ],
+      child: Scaffold(
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // TabBar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TabBar(
+                labelColor: Theme.of(context).colorScheme.primary,
+                unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                indicatorColor: Theme.of(context).colorScheme.primary,
+                dividerColor: Colors.transparent,
+                tabs: const [
+                  Tab(icon: Icon(Icons.meeting_room), text: 'Buildings/Rooms'),
+                  Tab(icon: Icon(Icons.bar_chart), text: 'Statistics'),
+                ],
+              ),
             ),
-          ),
-          
-          // Tab Content
-          const Expanded(
-            child: TabBarView(
-              children: [
-                AdminRoomManagement(),
-                AdminStatsView(),
-              ],
-            ),
-          ),
-        ],
+
+            // Tab Content
+            const Expanded(child: TabBarView(children: [AdminRoomManagement(), AdminStatsView()])),
+          ],
+        ),
       ),
     );
   }
