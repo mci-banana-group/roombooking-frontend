@@ -207,7 +207,6 @@ class AdminRepository {
       query += "&limit=$limit";
     }
 
-    // New Endpoint: /admin/rooms/{roomId}/bookings
     final url = Uri.parse('${API.base_url}${API.adminRooms}/$roomId/bookings$query');
     final session = _ref.read(sessionProvider);
     final token = session.token;
