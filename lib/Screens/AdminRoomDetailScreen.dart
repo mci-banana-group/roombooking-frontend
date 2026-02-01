@@ -188,7 +188,12 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
           ? const Center(child: CircularProgressIndicator()) 
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
-              child: _isEditing ? _buildEditForm(colorScheme) : _buildDetailView(colorScheme),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: _isEditing ? _buildEditForm(colorScheme) : _buildDetailView(colorScheme),
+                ),
+              ),
             ),
     );
   }
@@ -210,12 +215,12 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                room.roomNumber,
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onPrimaryContainer),
+                "Room Name",
+                style: TextStyle(fontSize: 14, color: colorScheme.onPrimaryContainer.withOpacity(0.6)),
               ),
               Text(
                 room.name,
-                style: TextStyle(fontSize: 20, color: colorScheme.onPrimaryContainer.withOpacity(0.8)),
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onPrimaryContainer),
               ),
             ],
           ),

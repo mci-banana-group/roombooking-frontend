@@ -220,14 +220,12 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openCreateRoom,
-        backgroundColor: colorScheme.primary, // dynamic
-        child: Icon(Icons.add, color: colorScheme.onPrimary),
-      ),
-      body: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: Column(
         children: [
-          // Filter Button
+          // Filter & Add Toolbar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: Row(
@@ -242,6 +240,15 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                     ),
                   ),
                   style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  ),
+                ),
+                const Spacer(),
+                OutlinedButton.icon(
+                  onPressed: _openCreateRoom,
+                  icon: const Icon(Icons.add, size: 20),
+                  label: const Text("Add Room"),
+                  style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                   ),
                 ),
@@ -292,6 +299,8 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                       ),
           ),
         ],
+          ),
+        ),
       ),
     );
   }
@@ -309,13 +318,12 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
         title: Row(
           children: [
             Text(
-              room.roomNumber,
-              style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.onSurface, fontSize: 16),
+              "Name: ",
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
             ),
-            const SizedBox(width: 12),
             Text(
               room.name,
-              style: TextStyle(fontWeight: FontWeight.normal, color: colorScheme.onSurfaceVariant, fontSize: 16),
+              style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.onSurface, fontSize: 16),
             ),
           ],
         ),
@@ -355,35 +363,21 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
             ],
           ),
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-             Container(
-               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-               margin: const EdgeInsets.only(right: 8),
-               decoration: BoxDecoration(
-                 color: room.currentStatus.name == 'free' ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-                 borderRadius: BorderRadius.circular(4)
-               ),
-               child: Text(
-                 room.currentStatus.name.toUpperCase(),
-                 style: TextStyle(
-                   fontSize: 10, 
-                   fontWeight: FontWeight.bold,
-                   color: room.currentStatus.name == 'free' ? Colors.green : Colors.orange,
-                 ),
-               ),
+        trailing: Container(
+           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+           decoration: BoxDecoration(
+             color: room.currentStatus.name == 'free' ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+             borderRadius: BorderRadius.circular(4)
+           ),
+           child: Text(
+             room.currentStatus.name.toUpperCase(),
+             style: TextStyle(
+               fontSize: 10, 
+               fontWeight: FontWeight.bold,
+               color: room.currentStatus.name == 'free' ? Colors.green : Colors.orange,
              ),
-             // Edit button removed, tap list item to edit
-             const SizedBox(width: 4),
-             IconButton(
-               icon: Icon(Icons.delete, size: 20, color: colorScheme.error),
-               onPressed: () => _confirmDelete(room),
-               padding: EdgeInsets.zero,
-               constraints: const BoxConstraints(),
-             ),
-          ],
-        ),
+           ),
+         ),
       ),
     );
   }
