@@ -5,6 +5,7 @@ import '../Models/building.dart';
 import '../Models/Enums/room_status.dart';
 import '../Models/Enums/equipment_type.dart';
 import '../Models/room_equipment.dart';
+import '../Models/booking.dart';
 import '../Services/building_service.dart';
 import '../Services/admin_repository.dart';
 
@@ -34,6 +35,7 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
   int? _selectedBuildingId;
   List<RoomEquipment> _equipmentList = [];
   bool _isSaving = false;
+  Future<List<Booking>>? _bookingsFuture;
 
   @override
   void initState() {
@@ -54,6 +56,13 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
     
     _equipmentList = widget.room != null ? List.from(widget.room!.equipment) : [];
     
+    if (widget.room != null) {
+      _bookingsFuture = ref.read(adminRepositoryProvider).getRoomBookings(
+        widget.room!.id,
+        limit: 50,
+      );
+    }
+
     _loadBuildings();
   }
 
@@ -258,6 +267,45 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
             ),
           ),
         )),
+        const SizedBox(height: 32),
+        Text("Upcoming Bookings", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.primary)),
+        const SizedBox(height: 12),
+        if (_bookingsFuture != null)
+          FutureBuilder<List<Booking>>(
+            future: _bookingsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()));
+              }
+              if (snapshot.hasError) {
+                return Text("Error loading bookings.", style: TextStyle(color: colorScheme.error));
+              }
+              final bookings = snapshot.data ?? [];
+              bookings.sort((a, b) => a.startTime.compareTo(b.startTime));
+              
+              if (bookings.isEmpty) {
+                 return Text("No upcoming bookings.", style: TextStyle(color: colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic));
+              }
+
+              return Column(
+                children: bookings.map((b) {
+                  final dateStr = "${b.startTime.day.toString().padLeft(2, '0')}.${b.startTime.month.toString().padLeft(2, '0')}.${b.startTime.year}";
+                  final timeStr = "${b.startTime.hour.toString().padLeft(2, '0')}:${b.startTime.minute.toString().padLeft(2, '0')} - ${b.endTime.hour.toString().padLeft(2, '0')}:${b.endTime.minute.toString().padLeft(2, '0')}";
+                  return Card( // Fixed elevation to remove shadow if needed or keep default
+                    margin: const EdgeInsets.only(bottom: 8),
+                    elevation: 0,
+                    color: colorScheme.surfaceContainerHighest,
+                    child: ListTile(
+                      leading: Icon(Icons.event, color: colorScheme.primary),
+                      title: Text("$dateStr   $timeStr", style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: b.description.isNotEmpty ? Text(b.description, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
+                    ),
+                  );
+                }).toList(),
+              );
+            }
+          ),
+
         const SizedBox(height: 80), // Space for FAB
       ],
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:mci_booking_app/Helper/http_client.dart';
 import '../Models/room.dart';
+import '../Models/booking.dart';
 import '../Session.dart';
 import '../Resources/API.dart'; 
 import '../main.dart';
@@ -195,6 +196,42 @@ class AdminRepository {
     } catch (e) {
       print("CRASH Stats: $e");
       return null;
+    }
+  }
+
+  // 6. GET ROOM BOOKINGS
+  Future<List<Booking>> getRoomBookings(String roomId, {DateTime? start, int? limit}) async {
+    final startParam = (start ?? DateTime.now()).toUtc().toIso8601String();
+    String query = "?from=$startParam";
+    if (limit != null) {
+      query += "&limit=$limit";
+    }
+
+    // New Endpoint: /admin/rooms/{roomId}/bookings
+    final url = Uri.parse('${API.base_url}${API.adminRooms}/$roomId/bookings$query');
+    final session = _ref.read(sessionProvider);
+    final token = session.token;
+
+    if (token == null) return [];
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((b) => Booking.fromJson(b)).toList();
+      }
+      print("Error fetching bookings: ${response.statusCode} ${response.body}");
+      return [];
+    } catch (e) {
+      print("Error fetching bookings for room $roomId: $e");
+      return [];
     }
   }
 
