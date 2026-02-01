@@ -41,7 +41,11 @@ class AdminStats {
   static Map<String, int> _parseIntMap(dynamic value) {
     if (value == null) return {};
     if (value is Map) {
-      return value.map((key, val) => MapEntry(key.toString(), _toInt(val)));
+      final result = <String, int>{};
+      value.forEach((key, val) {
+        result[key.toString()] = _toInt(val);
+      });
+      return result;
     }
     return {};
   }
