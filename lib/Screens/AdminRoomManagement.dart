@@ -84,7 +84,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
             if (mounted) Navigator.pop(ctx);
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Room created!")));
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error creating room"), backgroundColor: Colors.red));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text("Error creating room"), backgroundColor: Theme.of(context).colorScheme.error));
           }
         },
       ),
@@ -105,7 +105,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Room updated!")));
             }
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error updating room"), backgroundColor: Colors.red));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text("Error updating room"), backgroundColor: Theme.of(context).colorScheme.error));
           }
         },
       ),
@@ -128,10 +128,10 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                 await _loadRooms();
                 if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Room deleted!")));
               } else {
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error deleting room"), backgroundColor: Colors.red));
+                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text("Error deleting room"), backgroundColor: Theme.of(context).colorScheme.error));
               }
             },
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            child: Text("Delete", style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),
@@ -142,6 +142,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
     showDialog(
       context: context,
       builder: (context) {
+        final colorScheme = Theme.of(context).colorScheme;
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
@@ -158,15 +159,15 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
 
                     if (state == true) {
                       icon = Icons.check_circle;
-                      color = Colors.green;
+                      color = colorScheme.primary; // Green -> Primary
                       statusText = "Must Have";
                     } else if (state == false) {
                       icon = Icons.cancel;
-                      color = Colors.red;
+                      color = colorScheme.error; // Red -> Error
                       statusText = "Must Not Have";
                     } else {
                       icon = Icons.circle_outlined;
-                      color = Colors.grey;
+                      color = colorScheme.outline; // Grey -> Outline
                       statusText = "Ignore";
                     }
 
@@ -180,7 +181,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                           EquipmentType.hdmiCable => Icons.cable,
                           EquipmentType.other => Icons.devices,
                         },
-                        color: Colors.teal,
+                        color: colorScheme.secondary, // Teal -> Secondary
                       ),
                       title: Text(type.displayName),
                       subtitle: Text(statusText, style: TextStyle(color: color, fontSize: 12)),
@@ -228,11 +229,13 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
       groupedRooms[buildingKey]!.add(room);
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _openCreateDialog,
-        backgroundColor: Colors.teal,
-        child: const Icon(Icons.add),
+        backgroundColor: colorScheme.primary, // dynamic
+        child: Icon(Icons.add, color: colorScheme.onPrimary),
       ),
       body: Column(
         children: [
@@ -244,16 +247,16 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _openFilterDialog,
-                    icon: Icon(Icons.filter_list, color: activeFiltersCount > 0 ? Colors.teal : Colors.grey),
+                    icon: Icon(Icons.filter_list, color: activeFiltersCount > 0 ? colorScheme.primary : colorScheme.onSurfaceVariant),
                     label: Text(
                       activeFiltersCount > 0 ? "Filter ($activeFiltersCount active)" : "Filter Equipment",
                       style: TextStyle(
-                        color: activeFiltersCount > 0 ? Colors.teal : Colors.black87,
+                        color: activeFiltersCount > 0 ? colorScheme.primary : colorScheme.onSurface,
                         fontWeight: activeFiltersCount > 0 ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: activeFiltersCount > 0 ? Colors.teal : Colors.grey.shade400),
+                      side: BorderSide(color: activeFiltersCount > 0 ? colorScheme.primary : colorScheme.outline),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
@@ -263,9 +266,9 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
           ),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator(color: colorScheme.primary))
                 : filteredRooms.isEmpty
-                    ? Center(child: Text("No rooms match your filter.", style: TextStyle(color: Colors.grey[400])))
+                    ? Center(child: Text("No rooms match your filter.", style: TextStyle(color: colorScheme.onSurfaceVariant))) // grey[400] replacement
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: groupedRooms.keys.length,
@@ -280,21 +283,21 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                             child: ExpansionTile(
                               leading: Container(
                                 padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(color: Colors.teal.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                                child: const Icon(Icons.business, color: Colors.teal),
+                                decoration: BoxDecoration(color: colorScheme.primaryContainer, borderRadius: BorderRadius.circular(8)),
+                                child: Icon(Icons.business, color: colorScheme.onPrimaryContainer), // was teal
                               ),
                               title: Text(
                                 buildingName,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: colorScheme.onSurface),
                               ),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Chip(
-                                    label: Text("${buildingRooms.length} Rooms", style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
-                                    backgroundColor: Colors.teal.withOpacity(0.1),
+                                    label: Text("${buildingRooms.length} Rooms", style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold)),
+                                    backgroundColor: colorScheme.primary.withOpacity(0.1),
                                   ),
-                                  const Icon(Icons.keyboard_arrow_down),
+                                  Icon(Icons.keyboard_arrow_down, color: colorScheme.onSurfaceVariant),
                                 ],
                               ),
                               childrenPadding: const EdgeInsets.symmetric(vertical: 8),
@@ -310,31 +313,31 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
   }
 
   Widget _buildRoomItem(Room room) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Container(
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+        border: Border(bottom: BorderSide(color: colorScheme.outlineVariant)), // grey.shade200
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
         leading: CircleAvatar(
-          backgroundColor: Colors.grey.shade100,
+          backgroundColor: colorScheme.surfaceContainerHighest, // grey.shade100
           child: Text(
             room.roomNumber,
-            style: const TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.bold),
+            style: TextStyle(color: colorScheme.onSurface, fontSize: 12, fontWeight: FontWeight.bold),
           ),
         ),
-        title: Text(room.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(room.name, style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Capacity: ${room.capacity}"),
+            Text("Capacity: ${room.capacity}", style: TextStyle(color: colorScheme.onSurfaceVariant)),
             if (room.equipment.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Row(
                   children: [
-                    Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
                     ...room.equipment.map((e) => Padding(
                       padding: const EdgeInsets.only(right: 4.0),
                       child: Icon(
@@ -347,7 +350,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                           EquipmentType.other => Icons.devices,
                         },
                         size: 16,
-                        color: Colors.teal[700],
+                        color: colorScheme.secondary, // was teal[700]
                       ),
                     )),
                   ],
@@ -375,14 +378,14 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                ),
              ),
              IconButton(
-               icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
+               icon: Icon(Icons.edit, size: 20, color: colorScheme.primary), // blue -> primary
                onPressed: () => _openEditDialog(room),
                padding: EdgeInsets.zero,
                constraints: const BoxConstraints(),
              ),
              const SizedBox(width: 12),
              IconButton(
-               icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+               icon: Icon(Icons.delete, size: 20, color: colorScheme.error), // red -> error
                onPressed: () => _confirmDelete(room),
                padding: EdgeInsets.zero,
                constraints: const BoxConstraints(),
@@ -689,6 +692,7 @@ class _EquipmentEditorState extends State<_EquipmentEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -721,7 +725,7 @@ class _EquipmentEditorState extends State<_EquipmentEditor> {
                               value: type,
                               child: Row(
                                 children: [
-                                  Icon(_getIconForType(type), size: 16, color: Colors.teal),
+                                  Icon(_getIconForType(type), size: 16, color: colorScheme.secondary),
                                   const SizedBox(width: 8),
                                   Text(type.displayName, style: const TextStyle(fontSize: 13)),
                                 ],
@@ -749,7 +753,7 @@ class _EquipmentEditorState extends State<_EquipmentEditor> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
+                        icon: Icon(Icons.delete, color: colorScheme.error),
                         onPressed: () => _removeEquipment(index),
                       ),
                     ],
