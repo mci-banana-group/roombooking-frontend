@@ -40,6 +40,11 @@ class _CalendarViewState extends State<CalendarView> {
   bool _hasScrolledToInitial = false;
   final Map<int, GlobalKey> _roomColumnKeys = {};
   double _dragDyOffset = 0;
+  
+  late ScrollController _horizontalGridController;
+  late ScrollController _horizontalHeaderController;
+  bool _isHeaderScrolling = false;
+  bool _isGridScrolling = false;
 
   @override
   void initState() {
@@ -51,12 +56,32 @@ class _CalendarViewState extends State<CalendarView> {
     }
 
     _scrollController = ScrollController();
+    _horizontalGridController = ScrollController();
+    _horizontalHeaderController = ScrollController();
+
+    _horizontalGridController.addListener(_handleHorizontalScroll);
+    _horizontalHeaderController.addListener(_handleHeaderScroll);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_hasScrolledToInitial) {
         _scrollToInitialTime();
         _hasScrolledToInitial = true;
       }
     });
+  }
+
+  void _handleHorizontalScroll() {
+    if (_isHeaderScrolling) return;
+    _isGridScrolling = true;
+    _horizontalHeaderController.jumpTo(_horizontalGridController.offset);
+    _isGridScrolling = false;
+  }
+
+  void _handleHeaderScroll() {
+    if (_isGridScrolling) return;
+    _isHeaderScrolling = true;
+    _horizontalGridController.jumpTo(_horizontalHeaderController.offset);
+    _isHeaderScrolling = false;
   }
 
   void _scrollToInitialTime() {
@@ -72,6 +97,8 @@ class _CalendarViewState extends State<CalendarView> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _horizontalGridController.dispose();
+    _horizontalHeaderController.dispose();
     super.dispose();
   }
 
@@ -283,18 +310,31 @@ class _CalendarViewState extends State<CalendarView> {
                         Expanded(
                           child: LayoutBuilder(
                             builder: (context, constraints) {
-                              // Calculate room column width for overlay positioning
-                              final roomWidth = constraints.maxWidth / widget.visibleRooms.length;
+                              final maxColumns = _getColumnsCount(constraints.maxWidth);
+                              final columnCount = widget.visibleRooms.length < maxColumns
+                                  ? (widget.visibleRooms.isNotEmpty ? widget.visibleRooms.length : 1)
+                                  : maxColumns;
+                              final roomWidth = constraints.maxWidth / columnCount;
+                              final totalWidth = roomWidth * widget.visibleRooms.length;
 
-                              return Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Row(children: widget.visibleRooms.map((room) => _buildRoomColumn(room)).toList()),
+                              return SingleChildScrollView(
+                                controller: _horizontalGridController,
+                                scrollDirection: Axis.horizontal,
+                                child: SizedBox(
+                                  width: totalWidth,
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Row(
+                                        children: widget.visibleRooms.map((room) => _buildRoomColumn(room, roomWidth)).toList(),
+                                      ),
 
-                                  // OVERLAY DRAGGABLE DRAFT
-                                  if (_draftBooking != null && !_draftBooking!.isPreselected)
-                                    _buildOverlayDraft(roomWidth),
-                                ],
+                                      // OVERLAY DRAGGABLE DRAFT
+                                      if (_draftBooking != null && !_draftBooking!.isPreselected)
+                                        _buildOverlayDraft(roomWidth),
+                                    ],
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -348,42 +388,72 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
+  int _getColumnsCount(double width) {
+    if (width > 1200) return 5;
+    if (width > 900) return 4;
+    if (width > 600) return 3;
+    return 2;
+  }
+
   Widget _buildRoomHeaders() {
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      padding: const EdgeInsets.only(left: 60, right: 8),
-      child: Row(
-        children: widget.visibleRooms
-            .map(
-              (room) => Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                  child: Column(
-                    children: [
-                      Icon(room.icon, color: room.color, size: 20),
-                      const SizedBox(height: 4),
-                      Text(
-                        room.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: room.color),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth - 60; // Adjust for time column
+        final maxColumns = _getColumnsCount(width);
+        final columnCount = widget.visibleRooms.length < maxColumns
+            ? (widget.visibleRooms.isNotEmpty ? widget.visibleRooms.length : 1)
+            : maxColumns;
+        final roomWidth = width / columnCount;
+        final totalWidth = roomWidth * widget.visibleRooms.length;
+
+        return Container(
+          color: Theme.of(context).colorScheme.surface,
+          padding: const EdgeInsets.only(left: 60, right: 8),
+          child: SingleChildScrollView(
+            controller: _horizontalHeaderController,
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: totalWidth,
+              child: Row(
+                children: widget.visibleRooms
+                    .map(
+                      (room) => SizedBox(
+                        width: roomWidth,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                          child: Column(
+                            children: [
+                              Icon(room.icon, color: room.color, size: 20),
+                              const SizedBox(height: 4),
+                              Text(
+                                room.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: room.color),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                room.building,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        room.building,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 8, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-                      ),
-                    ],
-                  ),
-                ),
+                    )
+                    .toList(),
               ),
-            )
-            .toList(),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -411,8 +481,9 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  Widget _buildRoomColumn(RoomGridItem room) {
-    return Expanded(
+  Widget _buildRoomColumn(RoomGridItem room, double width) {
+    return SizedBox(
+      width: width,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final roomBox = context.findRenderObject() as RenderBox?;

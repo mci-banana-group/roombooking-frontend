@@ -47,8 +47,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   List<RoomGridItem> _rooms = [];
   List<CalendarBooking> _bookings = [];
 
-  List<RoomGridItem> _visibleRooms = [];
-  int _visibleRoomStart = 0;
   bool _isLoading = true;
   String? _loadError;
   int _activeRequests = 0;
@@ -184,8 +182,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
         }
         _rooms = mappedRooms.where((room) => availableRoomIds.contains(room.id)).toList();
         _bookings = allBookings;
-        _visibleRoomStart = 0;
-        _updateVisibleRooms();
         _isLoading = false;
       });
     } catch (e) {
@@ -193,38 +189,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       setState(() {
         _loadError = e.toString();
         _isLoading = false;
-      });
-    }
-  }
-
-  void _updateVisibleRooms() {
-    final count = _getColumnsCount();
-    final end = (_visibleRoomStart + count).clamp(0, _rooms.length);
-    _visibleRooms = _rooms.sublist(_visibleRoomStart, end);
-  }
-
-  int _getColumnsCount() {
-    final width = MediaQuery.of(context).size.width;
-    if (width > 1200) return 5;
-    if (width > 900) return 4;
-    if (width > 600) return 3;
-    return 2;
-  }
-
-  void _nextRooms() {
-    if (_visibleRoomStart + _getColumnsCount() < _rooms.length) {
-      setState(() {
-        _visibleRoomStart += 1;
-        _updateVisibleRooms();
-      });
-    }
-  }
-
-  void _previousRooms() {
-    if (_visibleRoomStart > 0) {
-      setState(() {
-        _visibleRoomStart -= 1;
-        _updateVisibleRooms();
       });
     }
   }
@@ -351,10 +315,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _updateVisibleRooms();
-          });
-
           if (_isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -423,44 +383,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                               ),
                             ),
 
-                            // Pagination controls (if needed)
-                            if (_rooms.length > _getColumnsCount()) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      onPressed: _previousRooms,
-                                      icon: const Icon(Icons.chevron_left, size: 20),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                                      child: Text(
-                                        '${_visibleRoomStart + 1}-${(_visibleRoomStart + _visibleRooms.length).clamp(0, _rooms.length)} of ${_rooms.length}',
-                                        style: const TextStyle(fontSize: 11),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed: _nextRooms,
-                                      icon: const Icon(Icons.chevron_right, size: 20),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+
                           ],
                         ),
 
@@ -533,7 +456,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
               Expanded(
                 child: CalendarView(
                   selectedDate: _selectedDate,
-                  visibleRooms: _visibleRooms,
+                  visibleRooms: _rooms,
                   bookings: _bookings,
                   initialStartTime: _calendarStartTime,
                   initialEndTime: _calendarEndTime,
