@@ -32,7 +32,11 @@ class AdminRepository {
       "description": "room created via app",
       "status": "FREE",         
       "confirmationCode": room.confirmationCode,   
-      "equipment": []
+      "equipment": room.equipment.map((e) => {
+        "type": e.type.apiValue, 
+        "quantity": e.quantity,
+        "description": e.description ?? ""
+      }).toList(),
     };
 
     try {
