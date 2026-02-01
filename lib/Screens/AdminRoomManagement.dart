@@ -4,6 +4,7 @@ import '../Models/room.dart';
 import '../Models/Enums/room_status.dart';
 import '../Models/building.dart';
 import '../Services/admin_repository.dart';
+import '../Services/building_service.dart';
 
 
 class AdminRoomManagement extends ConsumerStatefulWidget {
@@ -234,8 +235,35 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
   final _nameController = TextEditingController();
   final _numberController = TextEditingController();
   final _capacityController = TextEditingController();
-  final _confirmationCodeController = TextEditingController(); 
-  final _buildingIdController = TextEditingController(text: "1"); 
+  final _confirmationCodeController = TextEditingController();
+  
+  List<Building> _buildings = [];
+  bool _isLoadingBuildings = true;
+  int? _selectedBuildingId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBuildings();
+  }
+
+  Future<void> _loadBuildings() async {
+    try {
+      final buildings = await BuildingService().getBuildings();
+      if (mounted) {
+        setState(() {
+          _buildings = buildings;
+          _isLoadingBuildings = false;
+          if (_buildings.isNotEmpty) {
+            _selectedBuildingId = _buildings.first.id;
+          }
+        });
+      }
+    } catch (e) {
+      print("Error loading buildings: $e");
+      if (mounted) setState(() => _isLoadingBuildings = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -280,12 +308,25 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _buildingIdController,
-                decoration: const InputDecoration(labelText: "Building ID (Int)"),
-                keyboardType: TextInputType.number,
-                validator: (v) => v!.isEmpty ? "Required field" : null,
-              ),
+              const SizedBox(height: 16),
+              _isLoadingBuildings
+                  ? const Center(child: CircularProgressIndicator())
+                  : DropdownButtonFormField<int>(
+                      value: _selectedBuildingId,
+                      decoration: const InputDecoration(labelText: "Building"),
+                      items: _buildings.map((building) {
+                        return DropdownMenuItem<int>(
+                          value: building.id,
+                          child: Text(building.name),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedBuildingId = value;
+                        });
+                      },
+                      validator: (value) => value == null ? "Please select a building" : null,
+                    ),
             ],
           ),
         ),
@@ -295,19 +336,24 @@ class _CreateRoomDialogState extends State<_CreateRoomDialog> {
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
+              // Find the building name for location string
+              final buildingName = _buildings
+                  .firstWhere((b) => b.id == _selectedBuildingId, orElse: () => Building(id: -1, name: "Unknown"))
+                  .name;
+                  
               final newRoom = Room(
                 id: "", 
                 name: _nameController.text,
                 roomNumber: _numberController.text,
                 capacity: int.parse(_capacityController.text),
                 floor: 0, 
-                location: "Building ${_buildingIdController.text}",
+                location: buildingName,
                 equipment: [], 
                 currentStatus: RoomStatus.free, 
                 estimatedWalkingTime: Duration.zero,
                 confirmationCode: _confirmationCodeController.text,
               );
-              widget.onSave(newRoom, int.parse(_buildingIdController.text));
+              widget.onSave(newRoom, _selectedBuildingId!);
             }
           },
           child: const Text("Create"),
