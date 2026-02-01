@@ -119,41 +119,41 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
           //Statistic Karten
           _FancyStatRow(
             title: "Total Bookings",
-            value: _stats!.totalMeetings.toString(),
+            value: _stats!.totalMeetingsCount.toString(),
             icon: Icons.bar_chart,
             color1: Colors.blue.shade400,
             color2: Colors.blue.shade700,
-            onTap: () => _onCardTap("Total Bookings", _stats!.totalMeetings),
+            onTap: () => _onCardTap("Total Bookings", _stats!.totalMeetingsCount),
           ),
           const SizedBox(height: 12),
 
           _FancyStatRow(
             title: "Reservations",
-            value: _stats!.reservedMeetings.toString(),
+            value: _stats!.reservedMeetingsCount.toString(),
             icon: Icons.bookmark_added,
             color1: Colors.green.shade400,
             color2: Colors.green.shade700,
-            onTap: () => _onCardTap("Reservations", _stats!.reservedMeetings),
+            onTap: () => _onCardTap("Reservations", _stats!.reservedMeetingsCount),
           ),
           const SizedBox(height: 12),
 
           _FancyStatRow(
             title: "Cancelled Meetings",
-            value: _stats!.cancelledMeetings.toString(),
+            value: _stats!.cancelledMeetingsCount.toString(),
             icon: Icons.cancel_presentation,
             color1: Colors.orange.shade400,
             color2: Colors.orange.shade700,
-            onTap: () => _onCardTap("Cancelled Meetings", _stats!.cancelledMeetings),
+            onTap: () => _onCardTap("Cancelled Meetings", _stats!.cancelledMeetingsCount),
           ),
           const SizedBox(height: 12),
 
           _FancyStatRow(
             title: "No-Shows",
-            value: _stats!.noShowMeetings.toString(),
+            value: _stats!.noShowMeetingsCount.toString(),
             icon: Icons.person_off,
             color1: Colors.red.shade400,
             color2: Colors.red.shade700,
-            onTap: () => _onCardTap("No-Shows", _stats!.noShowMeetings),
+            onTap: () => _onCardTap("No-Shows", _stats!.noShowMeetingsCount),
           ),
           const SizedBox(height: 12),
 
@@ -229,7 +229,7 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
           const SizedBox(height: 10),
 
           if (_stats!.mostSearchedItems.isEmpty)
-            _buildEmptyState()
+            _buildEmptyState("No search data.")
           else
             ListView.builder(
               shrinkWrap: true,
@@ -259,12 +259,62 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                 );
               },
             ),
+
+          const SizedBox(height: 30),
+
+          // Most Used Rooms Section
+          Text("Most Used Rooms", style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 10),
+
+          if (_stats!.mostUsedRooms.isEmpty)
+            _buildEmptyState("No room usage data.")
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _stats!.mostUsedRooms.length,
+              itemBuilder: (ctx, index) {
+                final roomUsage = _stats!.mostUsedRooms[index];
+                final room = roomUsage.room;
+                final hours = roomUsage.occupiedMinutes ~/ 60;
+                final minutes = roomUsage.occupiedMinutes % 60;
+                String timeDisplay;
+                if (hours > 0 && minutes > 0) {
+                  timeDisplay = "${hours}h ${minutes}m";
+                } else if (hours > 0) {
+                  timeDisplay = "${hours}h";
+                } else {
+                  timeDisplay = "${minutes}m";
+                }
+                return Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                      child: Text(
+                        "${index + 1}",
+                        style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    title: Text(room.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text("${room.building?.name ?? 'Unknown Building'} - Room ${room.roomNumber}"),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(color: Colors.blue.shade100, borderRadius: BorderRadius.circular(20)),
+                      child: Text(timeDisplay, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(String message) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -273,11 +323,11 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade300),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.search_off, size: 40, color: Colors.grey),
-          SizedBox(height: 8),
-          Text("No search data.", style: TextStyle(color: Colors.grey)),
+          const Icon(Icons.search_off, size: 40, color: Colors.grey),
+          const SizedBox(height: 8),
+          Text(message, style: const TextStyle(color: Colors.grey)),
         ],
       ),
     );
