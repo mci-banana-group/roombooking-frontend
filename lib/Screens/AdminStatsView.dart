@@ -50,12 +50,12 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            datePickerTheme: const DatePickerThemeData(
+            datePickerTheme: DatePickerThemeData(
               headerHeadlineStyle: TextStyle(
-                fontSize: 16.0,
+                fontSize: _fontSize(context, 16),
                 fontWeight: FontWeight.bold,
               ),
-              headerHelpStyle: TextStyle(fontSize: 12.0),
+              headerHelpStyle: TextStyle(fontSize: _fontSize(context, 12)),
             ),
           ),
           child: child!,
@@ -70,6 +70,16 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
       });
       _loadStats();
     }
+  }
+
+  double _scaleFactor(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return (width / 1200).clamp(0.85, 1.15);
+  }
+
+  double _fontSize(BuildContext context, double size) {
+    final scale = _scaleFactor(context);
+    return MediaQuery.textScalerOf(context).scale(size * scale);
   }
 
   @override
@@ -257,7 +267,7 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                       ),
                       child: Text(
                         "${item.count} searched",
-                        style: const TextStyle(fontSize: 12),
+                        style: TextStyle(fontSize: _fontSize(context, 12)),
                       ),
                     ),
                   ),
@@ -330,8 +340,8 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                       ),
                       child: Text(
                         timeDisplay,
-                        style: const TextStyle(
-                          fontSize: 12,
+                        style: TextStyle(
+                          fontSize: _fontSize(context, 12),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -379,6 +389,16 @@ class _PercentageStatCard extends StatelessWidget {
     required this.color,
   });
 
+  double _scaleFactor(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return (width / 1200).clamp(0.85, 1.15);
+  }
+
+  double _fontSize(BuildContext context, double size) {
+    final scale = _scaleFactor(context);
+    return MediaQuery.textScalerOf(context).scale(size * scale);
+  }
+
   @override
   Widget build(BuildContext context) {
     final clampedPercentage = percentage.clamp(0.0, 100.0);
@@ -397,8 +417,8 @@ class _PercentageStatCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: _fontSize(context, 16),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -416,7 +436,7 @@ class _PercentageStatCard extends StatelessWidget {
                     style: TextStyle(
                       color: color,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: _fontSize(context, 16),
                     ),
                   ),
                 ),
@@ -425,7 +445,10 @@ class _PercentageStatCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               description,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: _fontSize(context, 12),
+                color: Colors.grey.shade600,
+              ),
             ),
             const SizedBox(height: 12),
             // Progress bar

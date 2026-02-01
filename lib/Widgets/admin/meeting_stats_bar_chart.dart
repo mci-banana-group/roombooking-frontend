@@ -1,5 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:intl/intl.dart';
 import '../../Models/admin_stats.dart';
 import '../../Resources/AppColors.dart';
@@ -15,6 +18,29 @@ class MeetingStatsBarChart extends StatelessWidget {
     required this.startDate,
     required this.endDate,
   });
+
+  double _scaleFactor(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return (width / 1200).clamp(0.95, 1.2);
+  }
+
+  double _fontSize(
+    BuildContext context,
+    double size, {
+    double? min,
+    double? max,
+  }) {
+    final scale = _scaleFactor(context);
+    final scaled = MediaQuery.textScalerOf(context).scale(size * scale);
+    final lower = min ?? 0;
+    final upper = max ?? double.infinity;
+    return scaled.clamp(lower, upper);
+  }
+
+  double _chartHeightForWidth(double width) {
+    final raw = width / 1.6;
+    return raw.clamp(220, 380);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,22 +84,14 @@ class MeetingStatsBarChart extends StatelessWidget {
     // 4: User Cancelled
     // 5: Admin Cancelled
     // 6: No-Show
-    final barGroups = [
-      _makeGroupData(0, totalMeetingsCount.toDouble(), AppColors.chartTotal),
-      _makeGroupData(1, reservedCount.toDouble(), AppColors.chartReserved),
-      _makeGroupData(2, checkedInCount.toDouble(), AppColors.chartCheckedIn),
-      _makeGroupData(3, completedCount.toDouble(), AppColors.chartCompleted),
-      _makeGroupData(
-        4,
-        userCancelledCount.toDouble(),
-        AppColors.chartUserCancelled,
-      ),
-      _makeGroupData(
-        5,
-        adminCancelledCount.toDouble(),
-        AppColors.chartAdminCancelled,
-      ),
-      _makeGroupData(6, noShowCount.toDouble(), AppColors.chartNoShowRed),
+    final barSpecs = [
+      _BarSpec(0, totalMeetingsCount.toDouble(), AppColors.chartTotal),
+      _BarSpec(1, reservedCount.toDouble(), AppColors.chartReserved),
+      _BarSpec(2, checkedInCount.toDouble(), AppColors.chartCheckedIn),
+      _BarSpec(3, completedCount.toDouble(), AppColors.chartCompleted),
+      _BarSpec(4, userCancelledCount.toDouble(), AppColors.chartUserCancelled),
+      _BarSpec(5, adminCancelledCount.toDouble(), AppColors.chartAdminCancelled),
+      _BarSpec(6, noShowCount.toDouble(), AppColors.chartNoShowRed),
     ];
 
     // Find Max Y
@@ -106,149 +124,241 @@ class MeetingStatsBarChart extends StatelessWidget {
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            AspectRatio(
-              aspectRatio: 1.5,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: BarChart(
-                  BarChartData(
-                    maxY: maxY,
-                    barTouchData: BarTouchData(
-                      enabled: true,
-                      touchTooltipData: BarTouchTooltipData(
-                        fitInsideHorizontally: true,
-                        fitInsideVertically: true,
-                        getTooltipColor: (_) => Colors.blueGrey.shade900,
-                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                          String status = "";
-                          switch (group.x) {
-                            case 0:
-                              status = "Total";
-                              break;
-                            case 1:
-                              status = "Reserved";
-                              break;
-                            case 2:
-                              status = "Checked-In";
-                              break;
-                            case 3:
-                              status = "Completed";
-                              break;
-                            case 4:
-                              status = "User Cancelled";
-                              break;
-                            case 5:
-                              status = "Admin Cancelled";
-                              break;
-                            case 6:
-                              status = "No-Shows";
-                              break;
-                          }
-                          return BarTooltipItem(
-                            '$status\n',
-                            const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: rod.toY.toInt().toString(),
-                                style: const TextStyle(
-                                  color: Colors.white, // Or specific color
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final scale = _scaleFactor(context);
+                final chartHeight = _chartHeightForWidth(constraints.maxWidth);
+                final isCompact = constraints.maxWidth < 520;
+                final barCount = barSpecs.length;
+                final slotMinWidth = isCompact ? 84.0 : 120.0;
+                final minChartWidth = math.max(
+                  constraints.maxWidth,
+                  barCount * slotMinWidth,
+                );
+                final perBarSlot = minChartWidth / barCount;
+                final barWidth =
+                    (perBarSlot * 0.45).clamp(6, 28).toDouble();
+                final sizedBarGroups = barSpecs
+                    .map(
+                      (spec) =>
+                          _makeGroupData(spec.x, spec.y, spec.color, barWidth),
+                    )
+                    .toList();
+                return SizedBox(
+                  height: chartHeight,
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(
+                      dragDevices: {
+                        PointerDeviceKind.mouse,
+                        PointerDeviceKind.touch,
+                        PointerDeviceKind.trackpad,
+                      },
+                    ),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: minChartWidth,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 16.0),
+                          child: BarChart(
+                            BarChartData(
+                              maxY: maxY,
+                              barTouchData: BarTouchData(
+                                enabled: true,
+                                touchTooltipData: BarTouchTooltipData(
+                                  fitInsideHorizontally: true,
+                                  fitInsideVertically: true,
+                                  getTooltipColor: (_) =>
+                                      Colors.blueGrey.shade900,
+                                  getTooltipItem:
+                                      (group, groupIndex, rod, rodIndex) {
+                                    String status = "";
+                                    switch (group.x) {
+                                      case 0:
+                                        status = "Total";
+                                        break;
+                                      case 1:
+                                        status = "Reserved";
+                                        break;
+                                      case 2:
+                                        status = "Checked-In";
+                                        break;
+                                      case 3:
+                                        status = "Completed";
+                                        break;
+                                      case 4:
+                                        status = "User Cancelled";
+                                        break;
+                                      case 5:
+                                        status = "Admin Cancelled";
+                                        break;
+                                      case 6:
+                                        status = "No-Shows";
+                                        break;
+                                    }
+                                    return BarTooltipItem(
+                                      '$status\n',
+                                      TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: _fontSize(context, 14),
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: rod.toY.toInt().toString(),
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: _fontSize(context, 12),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
                               ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (double value, TitleMeta meta) {
-                            const style = TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10, // Smaller font to fit
-                            );
-                            Widget text;
-                            switch (value.toInt()) {
-                              case 0:
-                                text = const Text('Total', style: style);
-                                break;
-                              case 1:
-                                text = const Text('Reserved', style: style);
-                                break;
-                              case 2:
-                                text = const Text('Checked-In', style: style);
-                                break;
-                              case 3:
-                                text = const Text('Completed', style: style);
-                                break;
-                              case 4:
-                                text = const Text(
-                                  'User Cancelled',
-                                  style: style,
-                                );
-                                break;
-                              case 5:
-                                text = const Text(
-                                  'Admin Cancelled',
-                                  style: style,
-                                );
-                                break;
-                              case 6:
-                                text = const Text('No-Show', style: style);
-                                break;
-                              default:
-                                text = const Text('', style: style);
-                                break;
-                            }
-                            return SideTitleWidget(
-                              meta: meta,
-                              space: 4,
-                              child: text,
-                            );
-                          },
-                          reservedSize: 30,
+                              titlesData: FlTitlesData(
+                                show: true,
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget:
+                                        (double value, TitleMeta meta) {
+                                      final style = TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: _fontSize(
+                                          context,
+                                          13,
+                                          min: 14,
+                                        ),
+                                      );
+                                      Widget label(String text) {
+                                        final child = Text(text, style: style);
+                                        if (!isCompact) return child;
+                                        return Transform.rotate(
+                                          angle: -math.pi / 4,
+                                          alignment: Alignment.topLeft,
+                                          child: child,
+                                        );
+                                      }
+
+                                      Widget text;
+                                      final index = value.toInt();
+                                      switch (value.toInt()) {
+                                        case 0:
+                                          text = label('Total');
+                                          break;
+                                        case 1:
+                                          text = label(
+                                            isCompact ? 'Resv' : 'Reserved',
+                                          );
+                                          break;
+                                        case 2:
+                                          text = label(
+                                            isCompact
+                                                ? 'Check-In'
+                                                : 'Checked-In',
+                                          );
+                                          break;
+                                        case 3:
+                                          text = label(
+                                            isCompact ? 'Compl' : 'Completed',
+                                          );
+                                          break;
+                                        case 4:
+                                          text = label(
+                                            isCompact
+                                                ? 'U-Cxl'
+                                                : 'User Cancelled',
+                                          );
+                                          break;
+                                        case 5:
+                                          text = label(
+                                            isCompact
+                                                ? 'A-Cxl'
+                                                : 'Admin Cancelled',
+                                          );
+                                          break;
+                                        case 6:
+                                          text = label(
+                                            isCompact ? 'No-Show' : 'No-Show',
+                                          );
+                                          break;
+                                        default:
+                                          text = const SizedBox.shrink();
+                                          break;
+                                      }
+                                      if (index == 4 || index == 5) {
+                                        final shift = 6.0 * scale;
+                                        text = Transform.translate(
+                                          offset: Offset(
+                                            index == 4 ? -shift : shift,
+                                            0,
+                                          ),
+                                          child: text,
+                                        );
+                                      }
+                                      return SideTitleWidget(
+                                        meta: meta,
+                                        space: isCompact ? 16 : 10,
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 10),
+                                          child: Transform.translate(
+                                            offset: const Offset(0, 6),
+                                            child: text,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    reservedSize: (isCompact ? 120 : 72) * scale,
+                                  ),
+                                ),
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 40 * scale,
+                                    getTitlesWidget: (value, meta) {
+                                      if (value % 1 == 0) {
+                                        return Text(
+                                          value.toInt().toString(),
+                                          style: TextStyle(
+                                            fontSize: _fontSize(
+                                              context,
+                                              12,
+                                              min: 13,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                    interval: maxY > 10
+                                        ? (maxY / 5).ceilToDouble()
+                                        : 1,
+                                  ),
+                                ),
+                                topTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                rightTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                              ),
+                              borderData: FlBorderData(show: false),
+                              barGroups: sizedBarGroups,
+                              gridData: const FlGridData(
+                                show: true,
+                                drawVerticalLine: false,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 40,
-                          getTitlesWidget: (value, meta) {
-                            if (value % 1 == 0) {
-                              return Text(
-                                value.toInt().toString(),
-                                style: const TextStyle(fontSize: 10),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                          interval: maxY > 10 ? (maxY / 5).ceilToDouble() : 1,
-                        ),
-                      ),
-                      topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    barGroups: barGroups,
-                    gridData: const FlGridData(
-                      show: true,
-                      drawVerticalLine: false,
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -256,14 +366,19 @@ class MeetingStatsBarChart extends StatelessWidget {
     );
   }
 
-  BarChartGroupData _makeGroupData(int x, double y, Color color) {
+  BarChartGroupData _makeGroupData(
+    int x,
+    double y,
+    Color color,
+    double barWidth,
+  ) {
     return BarChartGroupData(
       x: x,
       barRods: [
         BarChartRodData(
           toY: y,
           color: color,
-          width: 40,
+          width: barWidth,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(6),
             topRight: Radius.circular(6),
@@ -277,4 +392,12 @@ class MeetingStatsBarChart extends StatelessWidget {
       ],
     );
   }
+}
+
+class _BarSpec {
+  final int x;
+  final double y;
+  final Color color;
+
+  const _BarSpec(this.x, this.y, this.color);
 }
