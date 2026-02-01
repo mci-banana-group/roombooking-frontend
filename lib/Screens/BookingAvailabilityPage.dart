@@ -37,8 +37,7 @@ class BookingAvailabilityPage extends StatefulWidget {
   });
 
   @override
-  State<BookingAvailabilityPage> createState() =>
-      _BookingAvailabilityPageState();
+  State<BookingAvailabilityPage> createState() => _BookingAvailabilityPageState();
 }
 
 class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
@@ -83,59 +82,31 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       );
     } else {
       // Default view time if no specific time selected (e.g. 08:00 - 09:00 for scrolling target)
-      _calendarStartTime = DateTime(
-        widget.date.year,
-        widget.date.month,
-        widget.date.day,
-        8,
-        0,
-      );
-      _calendarEndTime = DateTime(
-        widget.date.year,
-        widget.date.month,
-        widget.date.day,
-        9,
-        0,
-      );
+      _calendarStartTime = DateTime(widget.date.year, widget.date.month, widget.date.day, 8, 0);
+      _calendarEndTime = DateTime(widget.date.year, widget.date.month, widget.date.day, 9, 0);
     }
 
     // Smart adjustment: If today and start time is in the past, set to now rounded up
     final now = DateTime.now();
-    final isToday = widget.date.year == now.year && 
-                    widget.date.month == now.month && 
-                    widget.date.day == now.day;
-                    
+    final isToday = widget.date.year == now.year && widget.date.month == now.month && widget.date.day == now.day;
+
     if (isToday && _calendarStartTime.isBefore(now)) {
       int minute = ((now.minute + 14) ~/ 15) * 15;
       int hour = now.hour + (minute >= 60 ? 1 : 0);
       minute = minute % 60;
       if (hour >= 24) hour = 23;
-      
-      _calendarStartTime = DateTime(
-        widget.date.year, 
-        widget.date.month, 
-        widget.date.day, 
-        hour, 
-        minute
-      );
-      
+
+      _calendarStartTime = DateTime(widget.date.year, widget.date.month, widget.date.day, hour, minute);
+
       // Keep original duration if possible, otherwise default to 1h
       final originalDuration = _calendarEndTime.difference(_calendarStartTime);
-      final durationToUse = originalDuration.inMinutes > 0 
-          ? originalDuration 
-          : const Duration(hours: 1);
-          
+      final durationToUse = originalDuration.inMinutes > 0 ? originalDuration : const Duration(hours: 1);
+
       _calendarEndTime = _calendarStartTime.add(durationToUse);
-      
+
       // Clamp end of day
       if (_calendarEndTime.day != _calendarStartTime.day) {
-        _calendarEndTime = DateTime(
-          _calendarStartTime.year, 
-          _calendarStartTime.month, 
-          _calendarStartTime.day, 
-          23, 
-          59
-        );
+        _calendarEndTime = DateTime(_calendarStartTime.year, _calendarStartTime.month, _calendarStartTime.day, 23, 59);
       }
     }
     _loadAvailability();
@@ -206,9 +177,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
         final availableRoomIds = <int>{};
         for (final room in mappedRooms) {
           final roomBookings = allBookings.where((b) => b.roomId == room.id);
-          final hasOverlap = roomBookings.any((b) =>
-            b.endTime.isAfter(wantedStart) && b.startTime.isBefore(wantedEnd)
-          );
+          final hasOverlap = roomBookings.any((b) => b.endTime.isAfter(wantedStart) && b.startTime.isBefore(wantedEnd));
           if (!hasOverlap) {
             availableRoomIds.add(room.id);
           }
@@ -260,11 +229,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
     }
   }
 
-  void _showBookingConfirmation(
-    RoomGridItem room,
-    DateTime start,
-    DateTime end,
-  ) {
+  void _showBookingConfirmation(RoomGridItem room, DateTime start, DateTime end) {
     showDialog(
       context: context,
       builder: (context) => BookingConfirmationDialog(
@@ -283,22 +248,18 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
           if (success) {
             if (context.mounted) {
               Navigator.pop(context); // Close dialog
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Booking created successfully!')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Booking created successfully!')));
 
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const HomeScreen(initialIndex: 1),
-                ),
+                MaterialPageRoute(builder: (context) => const HomeScreen(initialIndex: 1)),
                 (route) => false,
               );
             }
           } else {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Failed to create booking.')),
-              );
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to create booking.')));
             }
           }
         },
@@ -308,11 +269,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
 
   bool _canGoPreviousDay() {
     final today = DateTime.now();
-    final selected = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-    );
+    final selected = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
     final todayOnly = DateTime(today.year, today.month, today.day);
     return selected.isAfter(todayOnly);
   }
@@ -386,9 +343,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
               Navigator.of(context).pop();
             } else {
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => const HomeScreen(),
-                ), // Navigate back to Home
+                MaterialPageRoute(builder: (context) => const HomeScreen()), // Navigate back to Home
               );
             }
           },
@@ -414,163 +369,167 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
 
           return Column(
             children: [
-              const SizedBox(height: 16),
-              // Date Navigation
+              // Compact Header with Date Navigation, Info Badge, and Pagination
               Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.outline.withOpacity(0.2),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            onPressed: _canGoPreviousDay()
-                                ? _goToPreviousDay
-                                : null,
-                            icon: const Icon(Icons.arrow_back),
-                          ),
-                          InkWell(
-                            onTap: _selectDate,
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12.0,
-                                vertical: 8.0,
-                              ),
-                              child: Text(
-                                DateFormat(
-                                  'EEEE, d. MMMM yyyy',
-                                ).format(_selectedDate),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Row 1: Date Navigation and Pagination
+                        Row(
+                          children: [
+                            // Date Navigation
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      onPressed: _canGoPreviousDay() ? _goToPreviousDay : null,
+                                      icon: const Icon(Icons.arrow_back_ios, size: 18),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                    ),
+                                    InkWell(
+                                      onTap: _selectDate,
+                                      borderRadius: BorderRadius.circular(6),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                        child: Text(
+                                          DateFormat('EEE, d. MMM yyyy').format(_selectedDate),
+                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: _goToNextDay,
+                                      icon: const Icon(Icons.arrow_forward_ios, size: 18),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          ),
-                          IconButton(
-                            onPressed: _goToNextDay,
-                            icon: const Icon(Icons.arrow_forward),
+
+                            // Pagination controls (if needed)
+                            if (_rooms.length > _getColumnsCount()) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      onPressed: _previousRooms,
+                                      icon: const Icon(Icons.chevron_left, size: 20),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                                      child: Text(
+                                        '${_visibleRoomStart + 1}-${(_visibleRoomStart + _visibleRooms.length).clamp(0, _rooms.length)} of ${_rooms.length}',
+                                        style: const TextStyle(fontSize: 11),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: _nextRooms,
+                                      icon: const Icon(Icons.chevron_right, size: 20),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+
+                        // Row 2: Compact Info Badge (if needed)
+                        if (!widget.isFromQuickCalendar &&
+                            (widget.startTime.isNotEmpty || widget.capacity > 1 || widget.equipment.isNotEmpty)) ...[
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary, size: 14),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Wrap(
+                                    spacing: 12,
+                                    runSpacing: 2,
+                                    alignment: WrapAlignment.center,
+                                    children: [
+                                      if (widget.startTime.isNotEmpty)
+                                        Text(
+                                          '${widget.startTime}–${widget.endTime}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Theme.of(context).colorScheme.onSurface,
+                                          ),
+                                        ),
+                                      if (widget.capacity > 1)
+                                        Text(
+                                          '${widget.capacity} people',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Theme.of(context).colorScheme.onSurface,
+                                          ),
+                                        ),
+                                      if (widget.equipment.isNotEmpty)
+                                        Builder(
+                                          builder: (context) {
+                                            final displayNames = _getEquipmentDisplayNames(widget.equipment);
+                                            return Text(
+                                              displayNames.join(", "),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Theme.of(context).colorScheme.onSurface,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            );
+                                          },
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 16),
-
-              // Info Badge
-              if (!widget.isFromQuickCalendar &&
-                  (widget.startTime.isNotEmpty ||
-                      widget.capacity > 1 ||
-                      widget.equipment.isNotEmpty))
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1200),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Wrap(
-                                spacing: 16,
-                                runSpacing: 8,
-                                children: [
-                                  if (widget.startTime.isNotEmpty)
-                                    Text(
-                                      'Requested: ${widget.startTime}–${widget.endTime}',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  if (widget.capacity > 1)
-                                    Text(
-                                      'For ${widget.capacity} attendees',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  if (widget.equipment.isNotEmpty) ...[
-                                    Builder(
-                                      builder: (context) {
-                                        final displayNames =
-                                            _getEquipmentDisplayNames(
-                                              widget.equipment,
-                                            );
-                                        return Text(
-                                          'Equipment: ${displayNames.join(", ")}',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodySmall,
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-              const SizedBox(height: 16),
-
-              // Pagination / Navigation controls if needed
-              if (_rooms.length > _getColumnsCount())
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        onPressed: _previousRooms,
-                        icon: const Icon(Icons.chevron_left),
-                      ),
-                      Text(
-                        'Showing ${_visibleRoomStart + 1}-${(_visibleRoomStart + _visibleRooms.length).clamp(0, _rooms.length)} of ${_rooms.length}',
-                      ),
-                      IconButton(
-                        onPressed: _nextRooms,
-                        icon: const Icon(Icons.chevron_right),
-                      ),
-                    ],
-                  ),
-                ),
-
+              // Calendar takes remaining space
               Expanded(
                 child: CalendarView(
                   selectedDate: _selectedDate,
