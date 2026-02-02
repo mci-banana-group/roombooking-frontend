@@ -40,19 +40,28 @@ class _CalendarViewState extends State<CalendarView> {
   bool _hasScrolledToInitial = false;
   final Map<int, GlobalKey> _roomColumnKeys = {};
   double _dragDyOffset = 0;
+  
+  late ScrollController _horizontalGridController;
+  late ScrollController _horizontalHeaderController;
+  bool _isHeaderScrolling = false;
+  bool _isGridScrolling = false;
 
   @override
   void initState() {
     super.initState();
 
-    final initialDiff = widget.initialEndTime.difference(
-      widget.initialStartTime,
-    );
+    final initialDiff = widget.initialEndTime.difference(widget.initialStartTime);
     if (initialDiff > Duration.zero) {
       _preferredDuration = initialDiff;
     }
 
     _scrollController = ScrollController();
+    _horizontalGridController = ScrollController();
+    _horizontalHeaderController = ScrollController();
+
+    _horizontalGridController.addListener(_handleHorizontalScroll);
+    _horizontalHeaderController.addListener(_handleHeaderScroll);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_hasScrolledToInitial) {
         _scrollToInitialTime();
@@ -61,13 +70,24 @@ class _CalendarViewState extends State<CalendarView> {
     });
   }
 
+  void _handleHorizontalScroll() {
+    if (_isHeaderScrolling) return;
+    _isGridScrolling = true;
+    _horizontalHeaderController.jumpTo(_horizontalGridController.offset);
+    _isGridScrolling = false;
+  }
+
+  void _handleHeaderScroll() {
+    if (_isGridScrolling) return;
+    _isHeaderScrolling = true;
+    _horizontalGridController.jumpTo(_horizontalHeaderController.offset);
+    _isHeaderScrolling = false;
+  }
+
   void _scrollToInitialTime() {
     try {
       final initialPixel = _getPixelForTime(widget.initialStartTime);
-      final offset = (initialPixel - (hourHeight * 2)).clamp(
-        0.0,
-        double.infinity,
-      );
+      final offset = (initialPixel - (hourHeight * 2)).clamp(0.0, double.infinity);
       _scrollController.jumpTo(offset);
     } catch (e) {
       print('DEBUG: Error scrolling to initial time: $e');
@@ -77,6 +97,8 @@ class _CalendarViewState extends State<CalendarView> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _horizontalGridController.dispose();
+    _horizontalHeaderController.dispose();
     super.dispose();
   }
 
@@ -97,28 +119,13 @@ class _CalendarViewState extends State<CalendarView> {
     // end of the day clamp to 23:59
     final maxMinutes = (endHour - startHour) * 60;
     if (snappedMinutes >= maxMinutes) {
-      return DateTime(
-        widget.selectedDate.year,
-        widget.selectedDate.month,
-        widget.selectedDate.day,
-        23,
-        59,
-      );
+      return DateTime(widget.selectedDate.year, widget.selectedDate.month, widget.selectedDate.day, 23, 59);
     }
 
-    final hours = (startHour + snappedMinutes ~/ 60).clamp(
-      startHour,
-      endHour - 1,
-    );
+    final hours = (startHour + snappedMinutes ~/ 60).clamp(startHour, endHour - 1);
     final minutes = (snappedMinutes % 60).clamp(0, 59);
 
-    return DateTime(
-      widget.selectedDate.year,
-      widget.selectedDate.month,
-      widget.selectedDate.day,
-      hours,
-      minutes,
-    );
+    return DateTime(widget.selectedDate.year, widget.selectedDate.month, widget.selectedDate.day, hours, minutes);
   }
 
   void _moveDraftBooking(Offset globalPosition) {
@@ -139,21 +146,16 @@ class _CalendarViewState extends State<CalendarView> {
         // Calculate new start time based on pointer position - offset
         // We clamp the Y coordinate to be within valid hours, ensuring
         // the bottom of the booking doesn't go below the end hour (24:00).
-        final duration = _draftBooking!.endTime.difference(
-          _draftBooking!.startTime,
-        );
+        final duration = _draftBooking!.endTime.difference(_draftBooking!.startTime);
         final bookingPixelHeight = hourHeight * (duration.inMinutes / 60);
-        final maxTopPixel =
-            (endHour - startHour) * hourHeight - bookingPixelHeight;
+        final maxTopPixel = (endHour - startHour) * hourHeight - bookingPixelHeight;
 
-        final newTopPixel = (localPosition.dy - _dragDyOffset).clamp(
-          0.0,
-          maxTopPixel > 0 ? maxTopPixel : 0.0,
-        );
+        final newTopPixel = (localPosition.dy - _dragDyOffset).clamp(0.0, maxTopPixel > 0 ? maxTopPixel : 0.0);
 
         final newStartTime = _getTimeFromPixel(newTopPixel);
         final now = DateTime.now();
-        final isToday = widget.selectedDate.year == now.year &&
+        final isToday =
+            widget.selectedDate.year == now.year &&
             widget.selectedDate.month == now.month &&
             widget.selectedDate.day == now.day;
         // Prevent dragging the whole booking into the past
@@ -214,30 +216,22 @@ class _CalendarViewState extends State<CalendarView> {
         startTime: startTime,
         endTime: endTime,
         startPixelOffset: localPosition.dy,
-        endPixelOffset:
-            localPosition.dy +
-            (hourHeight * (endTime.difference(startTime).inMinutes / 60)),
+        endPixelOffset: localPosition.dy + (hourHeight * (endTime.difference(startTime).inMinutes / 60)),
         isPreselected: false,
       );
     });
   }
 
-  void _updateDraftBookingEdge(
-    Offset globalPosition,
-    RenderBox roomBox,
-    bool isStart,
-  ) {
+  void _updateDraftBookingEdge(Offset globalPosition, RenderBox roomBox, bool isStart) {
     final local = roomBox.globalToLocal(globalPosition);
-    final newPixelOffset = local.dy.clamp(
-      0.0,
-      (endHour - startHour) * hourHeight,
-    );
+    final newPixelOffset = local.dy.clamp(0.0, (endHour - startHour) * hourHeight);
 
     setState(() {
       if (isStart) {
         // Prevent dragging start into the past (gray zone)
         final now = DateTime.now();
-        final isToday = widget.selectedDate.year == now.year &&
+        final isToday =
+            widget.selectedDate.year == now.year &&
             widget.selectedDate.month == now.month &&
             widget.selectedDate.day == now.day;
         DateTime newStart = _getTimeFromPixel(newPixelOffset);
@@ -259,26 +253,17 @@ class _CalendarViewState extends State<CalendarView> {
       }
 
       if (_draftBooking!.endTime.isBefore(_draftBooking!.startTime)) {
-        _draftBooking!.endTime = _draftBooking!.startTime.add(
-          const Duration(minutes: 30),
-        );
-        _draftBooking!.endPixelOffset =
-            _draftBooking!.startPixelOffset + hourHeight / 2;
+        _draftBooking!.endTime = _draftBooking!.startTime.add(const Duration(minutes: 30));
+        _draftBooking!.endPixelOffset = _draftBooking!.startPixelOffset + hourHeight / 2;
       }
 
-      _preferredDuration = _draftBooking!.endTime.difference(
-        _draftBooking!.startTime,
-      );
+      _preferredDuration = _draftBooking!.endTime.difference(_draftBooking!.startTime);
     });
   }
 
   void _confirmDraftBooking() {
     if (_draftBooking != null && !_draftBooking!.isPreselected) {
-      widget.onBookingSelected(
-        _draftBooking!.roomInfo,
-        _draftBooking!.startTime,
-        _draftBooking!.endTime,
-      );
+      widget.onBookingSelected(_draftBooking!.roomInfo, _draftBooking!.startTime, _draftBooking!.endTime);
       setState(() => _draftBooking = null);
     }
   }
@@ -296,11 +281,7 @@ class _CalendarViewState extends State<CalendarView> {
     }).toList();
   }
 
-  List<CalendarBooking> _getOverlappingBookings(
-    int roomId,
-    DateTime start,
-    DateTime end,
-  ) {
+  List<CalendarBooking> _getOverlappingBookings(int roomId, DateTime start, DateTime end) {
     return widget.bookings.where((booking) {
       if (booking.roomId != roomId) return false;
       return booking.endTime.isAfter(start) && booking.startTime.isBefore(end);
@@ -329,25 +310,31 @@ class _CalendarViewState extends State<CalendarView> {
                         Expanded(
                           child: LayoutBuilder(
                             builder: (context, constraints) {
-                              // Calculate room column width for overlay positioning
-                              final roomWidth =
-                                  constraints.maxWidth /
-                                  widget.visibleRooms.length;
+                              final maxColumns = _getColumnsCount(constraints.maxWidth);
+                              final columnCount = widget.visibleRooms.length < maxColumns
+                                  ? (widget.visibleRooms.isNotEmpty ? widget.visibleRooms.length : 1)
+                                  : maxColumns;
+                              final roomWidth = constraints.maxWidth / columnCount;
+                              final totalWidth = roomWidth * widget.visibleRooms.length;
 
-                              return Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Row(
-                                    children: widget.visibleRooms
-                                        .map((room) => _buildRoomColumn(room))
-                                        .toList(),
+                              return SingleChildScrollView(
+                                controller: _horizontalGridController,
+                                scrollDirection: Axis.horizontal,
+                                child: SizedBox(
+                                  width: totalWidth,
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Row(
+                                        children: widget.visibleRooms.map((room) => _buildRoomColumn(room, roomWidth)).toList(),
+                                      ),
+
+                                      // OVERLAY DRAGGABLE DRAFT
+                                      if (_draftBooking != null && !_draftBooking!.isPreselected)
+                                        _buildOverlayDraft(roomWidth),
+                                    ],
                                   ),
-
-                                  // OVERLAY DRAGGABLE DRAFT
-                                  if (_draftBooking != null &&
-                                      !_draftBooking!.isPreselected)
-                                    _buildOverlayDraft(roomWidth),
-                                ],
+                                ),
                               );
                             },
                           ),
@@ -387,12 +374,8 @@ class _CalendarViewState extends State<CalendarView> {
                       onPressed: hasOverlap ? null : _confirmDraftBooking,
                       label: const Text('Book'),
                       icon: const Icon(Icons.check),
-                      backgroundColor: hasOverlap
-                          ? Colors.grey.withOpacity(0.3)
-                          : _draftBooking!.roomInfo.color,
-                      foregroundColor: hasOverlap
-                          ? Colors.black.withOpacity(0.3)
-                          : Colors.white,
+                      backgroundColor: hasOverlap ? Colors.grey.withOpacity(0.3) : _draftBooking!.roomInfo.color,
+                      foregroundColor: hasOverlap ? Colors.black.withOpacity(0.3) : Colors.white,
                       elevation: hasOverlap ? 0 : null,
                       disabledElevation: 0,
                     );
@@ -405,54 +388,72 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
+  int _getColumnsCount(double width) {
+    if (width > 1200) return 5;
+    if (width > 900) return 4;
+    if (width > 600) return 3;
+    return 2;
+  }
+
   Widget _buildRoomHeaders() {
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      padding: const EdgeInsets.only(left: 60, right: 8),
-      child: Row(
-        children: widget.visibleRooms
-            .map(
-              (room) => Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 8,
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(room.icon, color: room.color, size: 20),
-                      const SizedBox(height: 4),
-                      Text(
-                        room.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: room.color,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth - 60; // Adjust for time column
+        final maxColumns = _getColumnsCount(width);
+        final columnCount = widget.visibleRooms.length < maxColumns
+            ? (widget.visibleRooms.isNotEmpty ? widget.visibleRooms.length : 1)
+            : maxColumns;
+        final roomWidth = width / columnCount;
+        final totalWidth = roomWidth * widget.visibleRooms.length;
+
+        return Container(
+          color: Theme.of(context).colorScheme.surface,
+          padding: const EdgeInsets.only(left: 60, right: 8),
+          child: SingleChildScrollView(
+            controller: _horizontalHeaderController,
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: totalWidth,
+              child: Row(
+                children: widget.visibleRooms
+                    .map(
+                      (room) => SizedBox(
+                        width: roomWidth,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                          child: Column(
+                            children: [
+                              Icon(room.icon, color: room.color, size: 20),
+                              const SizedBox(height: 4),
+                              Text(
+                                room.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: room.color),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                room.building,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        room.building,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 8,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    )
+                    .toList(),
               ),
-            )
-            .toList(),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -470,12 +471,7 @@ class _CalendarViewState extends State<CalendarView> {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   '${hour.toString().padLeft(2, '0')}:00',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
-                  ),
+                  style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                 ),
               ),
             ),
@@ -485,8 +481,9 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  Widget _buildRoomColumn(RoomGridItem room) {
-    return Expanded(
+  Widget _buildRoomColumn(RoomGridItem room, double width) {
+    return SizedBox(
+      width: width,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final roomBox = context.findRenderObject() as RenderBox?;
@@ -496,13 +493,11 @@ class _CalendarViewState extends State<CalendarView> {
           final suggestionStart = _getPixelForTime(widget.initialStartTime);
           final suggestionEnd = _getPixelForTime(widget.initialEndTime);
           // suggestion if room doesn't have the active draft and no overlap
-          final suggestionOverlaps = _getOverlappingBookings(
-            room.id,
-            widget.initialStartTime,
-            widget.initialEndTime,
-          );
-          final showSuggestion = widget.showInitialSuggestion && // 👈 Check flag
-              _draftBooking?.roomId != room.id && suggestionOverlaps.isEmpty;
+          final suggestionOverlaps = _getOverlappingBookings(room.id, widget.initialStartTime, widget.initialEndTime);
+          final showSuggestion =
+              widget.showInitialSuggestion && // 👈 Check flag
+              _draftBooking?.roomId != room.id &&
+              suggestionOverlaps.isEmpty;
 
           if (!_roomColumnKeys.containsKey(room.id)) {
             _roomColumnKeys[room.id] = GlobalKey();
@@ -510,7 +505,8 @@ class _CalendarViewState extends State<CalendarView> {
 
           // Determine if this is today
           final now = DateTime.now();
-          final isToday = widget.selectedDate.year == now.year &&
+          final isToday =
+              widget.selectedDate.year == now.year &&
               widget.selectedDate.month == now.month &&
               widget.selectedDate.day == now.day;
 
@@ -526,51 +522,33 @@ class _CalendarViewState extends State<CalendarView> {
             child: Container(
               key: _roomColumnKeys[room.id],
               decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withOpacity(0.2),
-                  ),
-                ),
+                border: Border(left: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.2))),
               ),
               child: Stack(
                 children: [
                   // Render 15-min slots, graying out past intervals
                   Column(
-                    children: List.generate(
-                      endHour - startHour,
-                      (index) {
-                        final hour = startHour + index;
-                        // Remove grayed out color for past slots
-                        return Container(
-                          height: hourHeight,
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.outline.withOpacity(0.1),
-                              ),
-                            ),
-                            color: room.color.withOpacity(0.02),
+                    children: List.generate(endHour - startHour, (index) {
+                      final hour = startHour + index;
+                      // Remove grayed out color for past slots
+                      return Container(
+                        height: hourHeight,
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Theme.of(context).colorScheme.outline.withOpacity(0.1)),
                           ),
-                        );
-                      },
-                    ),
+                          color: room.color.withOpacity(0.02),
+                        ),
+                      );
+                    }),
                   ),
                   if (isToday)
                     Positioned(
                       top: 0,
                       left: 0,
                       right: 0,
-                      height: _getPixelForTime(now).clamp(
-                        0.0,
-                        (endHour - startHour) * hourHeight,
-                      ),
-                      child: Container(
-                        color: Colors.grey.withOpacity(0.1),
-                      ),
+                      height: _getPixelForTime(now).clamp(0.0, (endHour - startHour) * hourHeight),
+                      child: Container(color: Colors.grey.withOpacity(0.1)),
                     ),
                   ...bookingsForRoom.map((booking) {
                     final startPixel = _getPixelForTime(booking.startTime);
@@ -606,10 +584,7 @@ class _CalendarViewState extends State<CalendarView> {
                             );
                           });
                         },
-                        child: _buildSuggestionBlock(
-                          room,
-                          suggestionEnd - suggestionStart,
-                        ),
+                        child: _buildSuggestionBlock(room, suggestionEnd - suggestionStart),
                       ),
                     ),
                 ],
@@ -621,11 +596,7 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  Widget _buildBookingBlock(
-    CalendarBooking booking,
-    RoomGridItem room,
-    double height,
-  ) {
+  Widget _buildBookingBlock(CalendarBooking booking, RoomGridItem room, double height) {
     return Container(
       height: height,
       decoration: BoxDecoration(
@@ -642,11 +613,7 @@ class _CalendarViewState extends State<CalendarView> {
               booking.isMyBooking ? booking.title : 'Occupied',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
+              style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w600, color: Colors.white),
             ),
           ],
         ),
@@ -656,9 +623,7 @@ class _CalendarViewState extends State<CalendarView> {
 
   Widget _buildOverlayDraft(double roomWidth) {
     // Find index of current draft room in visible rooms
-    final roomIndex = widget.visibleRooms.indexWhere(
-      (r) => r.id == _draftBooking!.roomId,
-    );
+    final roomIndex = widget.visibleRooms.indexWhere((r) => r.id == _draftBooking!.roomId);
 
     // If room is not visible (e.g. scrolled away horizontally), don't show or handle gracefully
     // For now we assume visible since we snap to visible rooms
@@ -684,8 +649,7 @@ class _CalendarViewState extends State<CalendarView> {
   }
 
   Widget _buildDraftBookingBlock(RoomGridItem room) {
-    final height =
-        (_draftBooking!.endPixelOffset - _draftBooking!.startPixelOffset).abs();
+    final height = (_draftBooking!.endPixelOffset - _draftBooking!.startPixelOffset).abs();
     final overlappingBookings = _getOverlappingBookings(
       _draftBooking!.roomId,
       _draftBooking!.startTime,
@@ -694,20 +658,14 @@ class _CalendarViewState extends State<CalendarView> {
     final hasOverlap = overlappingBookings.isNotEmpty;
 
     final borderColor = hasOverlap ? Colors.red : room.color;
-    final bgColor = hasOverlap
-        ? Colors.red.withOpacity(0.1)
-        : room.color.withOpacity(0.5);
+    final bgColor = hasOverlap ? Colors.red.withOpacity(0.1) : room.color.withOpacity(0.5);
 
     return Container(
       height: height,
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: borderColor,
-          width: 2,
-          strokeAlign: BorderSide.strokeAlignOutside,
-        ),
+        border: Border.all(color: borderColor, width: 2, strokeAlign: BorderSide.strokeAlignOutside),
       ),
       child: Stack(
         children: [
@@ -717,20 +675,12 @@ class _CalendarViewState extends State<CalendarView> {
               children: [
                 Text(
                   '${DateFormat('HH:mm').format(_draftBooking!.startTime)} - ${DateFormat('HH:mm').format(_draftBooking!.endTime)}',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white),
                 ),
                 if (hasOverlap)
                   Text(
                     'Overlaps booking!',
-                    style: TextStyle(
-                      fontSize: 8,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.red.shade700,
-                    ),
+                    style: TextStyle(fontSize: 8, fontStyle: FontStyle.italic, color: Colors.red.shade700),
                   ),
               ],
             ),
@@ -738,7 +688,7 @@ class _CalendarViewState extends State<CalendarView> {
           _buildDragHandle(true),
           _buildDragHandle(false),
         ],
-      )
+      ),
     );
   }
 
@@ -748,15 +698,9 @@ class _CalendarViewState extends State<CalendarView> {
       decoration: BoxDecoration(
         color: room.color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: room.color.withOpacity(0.5),
-          width: 1,
-          style: BorderStyle.solid,
-        ),
+        border: Border.all(color: room.color.withOpacity(0.5), width: 1, style: BorderStyle.solid),
       ),
-      child: Center(
-        child: Icon(Icons.add, color: room.color.withOpacity(0.5), size: 16),
-      ),
+      child: Center(child: Icon(Icons.add, color: room.color.withOpacity(0.5), size: 16)),
     );
   }
 
@@ -769,19 +713,40 @@ class _CalendarViewState extends State<CalendarView> {
       child: MouseRegion(
         cursor: SystemMouseCursors.resizeRow,
         child: GestureDetector(
-          onPanUpdate: (details) {
+          behavior: HitTestBehavior.translucent,
+          onVerticalDragStart: (details) {
+            // Store initial position for smooth drag experience
+          },
+          onVerticalDragUpdate: (details) {
             final key = _roomColumnKeys[_draftBooking!.roomId];
-            final renderBox =
-                key?.currentContext?.findRenderObject() as RenderBox?;
+            final renderBox = key?.currentContext?.findRenderObject() as RenderBox?;
+            if (renderBox != null) {
+              // Calculate the global position based on the drag update
+              final localPosition = renderBox.globalToLocal(details.globalPosition);
+              // Adjust for the handle position (top or bottom)
+              final adjustedGlobalPosition = isTop
+                  ? details.globalPosition
+                  : Offset(details.globalPosition.dx, details.globalPosition.dy);
+              _updateDraftBookingEdge(adjustedGlobalPosition, renderBox, isTop);
+            }
+          },
+          onPanUpdate: (details) {
+            // Fallback for desktop mouse support
+            final key = _roomColumnKeys[_draftBooking!.roomId];
+            final renderBox = key?.currentContext?.findRenderObject() as RenderBox?;
             if (renderBox != null) {
               _updateDraftBookingEdge(details.globalPosition, renderBox, isTop);
             }
           },
           child: Container(
-            height: 12,
-            decoration: BoxDecoration(
-              color: _draftBooking!.roomInfo.color,
-              borderRadius: BorderRadius.circular(4),
+            height: 24, // Increased height for better touch target
+            decoration: BoxDecoration(color: _draftBooking!.roomInfo.color, borderRadius: BorderRadius.circular(4)),
+            child: Center(
+              child: Container(
+                width: 24,
+                height: 4,
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.7), borderRadius: BorderRadius.circular(2)),
+              ),
             ),
           ),
         ),
