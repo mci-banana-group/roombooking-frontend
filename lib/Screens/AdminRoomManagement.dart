@@ -312,7 +312,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
         ListTile(
           onTap: () => _openRoomDetails(room),
           contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          title: Text(room.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+          title: Text("Room: ${room.name}", style: const TextStyle(fontWeight: FontWeight.w600)),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4.0),
             child: Row(
