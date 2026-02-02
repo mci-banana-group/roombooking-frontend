@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -107,6 +109,12 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
 
   bool _twoColumnLists(double width) => width >= 1000;
 
+  double _listCardFixedHeight(double width) {
+    if (width >= 1200) return 620;
+    if (width >= 900) return 560;
+    return 520;
+  }
+
   Widget _sectionHeader(BuildContext context, String title, String? subtitle) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
@@ -147,6 +155,8 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
         final sectionGap = width >= 1200 ? 28.0 : 20.0;
         final canShowBothCharts = width >= 1200;
         final showBothCharts = canShowBothCharts && _chartMode == 2;
+        final listCardHeight = _listCardFixedHeight(width);
+        final metricCardHeight = width >= 1200 ? 132.0 : 140.0;
 
         return SingleChildScrollView(
           padding: EdgeInsets.all(padding),
@@ -311,45 +321,57 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                 "Key rates across booking outcomes.",
               ),
               const SizedBox(height: 12),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: metricsColumns,
-                childAspectRatio: width >= 1200 ? 2.4 : 2.1,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  _PercentageStatCard(
-                    title: "Success Rate",
-                    percentage: _stats!.successRate,
-                    description: "Checked-in vs non-cancelled bookings",
-                    color: Colors.green,
-                  ),
-                  _PercentageStatCard(
-                    title: "Attendance Rate",
-                    percentage: _stats!.attendanceRate,
-                    description: "Checked-in vs total bookings",
-                    color: Colors.blue,
-                  ),
-                  _PercentageStatCard(
-                    title: "Cancellation Rate",
-                    percentage: _stats!.cancellationRate,
-                    description: "Cancelled vs total bookings",
-                    color: Colors.orange,
-                  ),
-                  _PercentageStatCard(
-                    title: "No-Show Rate",
-                    percentage: _stats!.noShowRate,
-                    description: "No-shows vs non-cancelled bookings",
-                    color: Colors.red,
-                  ),
-                  _PercentageStatCard(
-                    title: "Efficiency Rate",
-                    percentage: _stats!.efficiencyRate,
-                    description: "Successful meetings vs total bookings",
-                    color: Colors.purple,
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, gridConstraints) {
+                  final availableWidth = gridConstraints.maxWidth;
+                  final spacing = 16.0;
+                  final columns = metricsColumns;
+                  final totalSpacing = spacing * (columns - 1);
+                  final tileWidth =
+                      (availableWidth - totalSpacing) / columns;
+                  final tileHeight = metricCardHeight;
+                  final childAspectRatio = tileWidth / tileHeight;
+                  return GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: columns,
+                    childAspectRatio: childAspectRatio,
+                    crossAxisSpacing: spacing,
+                    mainAxisSpacing: spacing,
+                    children: [
+                      _PercentageStatCard(
+                        title: "Success Rate",
+                        percentage: _stats!.successRate,
+                        description: "Checked-in vs non-cancelled bookings",
+                        color: Colors.green,
+                      ),
+                      _PercentageStatCard(
+                        title: "Attendance Rate",
+                        percentage: _stats!.attendanceRate,
+                        description: "Checked-in vs total bookings",
+                        color: Colors.blue,
+                      ),
+                      _PercentageStatCard(
+                        title: "Cancellation Rate",
+                        percentage: _stats!.cancellationRate,
+                        description: "Cancelled vs total bookings",
+                        color: Colors.orange,
+                      ),
+                      _PercentageStatCard(
+                        title: "No-Show Rate",
+                        percentage: _stats!.noShowRate,
+                        description: "No-shows vs non-cancelled bookings",
+                        color: Colors.red,
+                      ),
+                      _PercentageStatCard(
+                        title: "Efficiency Rate",
+                        percentage: _stats!.efficiencyRate,
+                        description: "Successful meetings vs total bookings",
+                        color: Colors.purple,
+                      ),
+                    ],
+                  );
+                },
               ),
 
               SizedBox(height: sectionGap),
@@ -358,15 +380,31 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: _buildEquipmentTrends(context, listGap)),
+                    Expanded(
+                      child: SizedBox(
+                        height: listCardHeight,
+                        child: _buildEquipmentTrends(context, listGap),
+                      ),
+                    ),
                     SizedBox(width: listGap),
-                    Expanded(child: _buildMostUsedRooms(context, listGap)),
+                    Expanded(
+                      child: SizedBox(
+                        height: listCardHeight,
+                        child: _buildMostUsedRooms(context, listGap),
+                      ),
+                    ),
                   ],
                 )
               else ...[
-                _buildEquipmentTrends(context, listGap),
+                SizedBox(
+                  height: listCardHeight,
+                  child: _buildEquipmentTrends(context, listGap),
+                ),
                 SizedBox(height: listGap),
-                _buildMostUsedRooms(context, listGap),
+                SizedBox(
+                  height: listCardHeight,
+                  child: _buildMostUsedRooms(context, listGap),
+                ),
               ],
             ],
           ),
@@ -377,14 +415,18 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
 
   Widget _buildEquipmentTrends(BuildContext context, double listGap) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isEmpty = _stats!.mostSearchedItems.isEmpty;
     return _SectionCard(
       title: "Equipment Trends",
       subtitle: "Most searched equipment in the selected period.",
-      child: _stats!.mostSearchedItems.isEmpty
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      headerGap: 12,
+      scrollBody: true,
+      child: isEmpty
           ? _buildEmptyState("No search data.")
           : ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              physics: const AlwaysScrollableScrollPhysics(),
               itemCount: _stats!.mostSearchedItems.length,
               separatorBuilder: (_, __) => Divider(
                 height: 16,
@@ -410,14 +452,18 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
 
   Widget _buildMostUsedRooms(BuildContext context, double listGap) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isEmpty = _stats!.mostUsedRooms.isEmpty;
     return _SectionCard(
       title: "Most Used Rooms",
       subtitle: "Top rooms by total occupied time.",
-      child: _stats!.mostUsedRooms.isEmpty
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      headerGap: 12,
+      scrollBody: true,
+      child: isEmpty
           ? _buildEmptyState("No room usage data.")
           : ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              physics: const AlwaysScrollableScrollPhysics(),
               itemCount: _stats!.mostUsedRooms.length,
               separatorBuilder: (_, __) => Divider(
                 height: 16,
@@ -457,21 +503,29 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colorScheme.surfaceVariant,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outlineVariant),
       ),
-      child: Column(
-        children: [
-          Icon(Icons.search_off, size: 40, color: colorScheme.onSurfaceVariant),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: TextStyle(color: colorScheme.onSurfaceVariant),
-          ),
-        ],
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 48,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -481,41 +535,49 @@ class _SectionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget child;
+  final bool expandChild;
+  final bool scrollBody;
+  final EdgeInsetsGeometry padding;
+  final double headerGap;
 
   const _SectionCard({
     required this.title,
     required this.subtitle,
     required this.child,
+    this.expandChild = false,
+    this.scrollBody = false,
+    this.padding = const EdgeInsets.all(16),
+    this.headerGap = 16,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: padding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style:
+                  textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-          ),
-          const SizedBox(height: 16),
-          child,
-        ],
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            SizedBox(height: headerGap),
+            if (scrollBody || expandChild) Expanded(child: child) else child,
+          ],
+        ),
       ),
     );
   }
