@@ -826,8 +826,8 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
               icon: const Icon(Icons.calendar_today, size: 18),
               label: const Text("Choose another period"),
               style: FilledButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
+                backgroundColor: AppColors.mciBlue,
+                foregroundColor: Colors.white,
                 minimumSize: const Size(0, 44),
               ),
             ),
