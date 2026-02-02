@@ -47,7 +47,9 @@ class RoomListTile extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       title: Text(
         "Room: $roomName",
-        style: const TextStyle(fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+        ),
       ),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 4.0),
@@ -61,7 +63,9 @@ class RoomListTile extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               "$capacity",
-              style: TextStyle(color: colorScheme.secondary),
+              style: TextStyle(
+                color: colorScheme.secondary,
+              ),
             ),
             const SizedBox(width: 16),
             if (equipmentTypes.isNotEmpty)

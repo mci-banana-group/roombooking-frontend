@@ -71,7 +71,7 @@ class AppColors {
   static final ThemeData lightTheme =
       ThemeData.from(
         colorScheme: lightColorScheme,
-        textTheme: Typography.blackMountainView.apply(fontFamily: 'PPFormula'),
+        textTheme: Typography.blackMountainView.apply(fontFamily: 'Roboto'),
       ).copyWith(
         scaffoldBackgroundColor: lightColorScheme.background,
         appBarTheme: AppBarTheme(
@@ -92,7 +92,7 @@ class AppColors {
   static final ThemeData darkTheme =
       ThemeData.from(
         colorScheme: darkColorScheme,
-        textTheme: Typography.whiteMountainView.apply(fontFamily: 'PPFormula'),
+        textTheme: Typography.whiteMountainView.apply(fontFamily: 'Roboto'),
       ).copyWith(
         scaffoldBackgroundColor: darkColorScheme.background,
         appBarTheme: AppBarTheme(

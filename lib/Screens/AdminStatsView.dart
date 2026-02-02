@@ -8,6 +8,7 @@ import '../Widgets/admin/meeting_stats_bar_chart.dart';
 import '../Widgets/admin/meeting_stats_chart.dart';
 import '../Widgets/admin/room_list_tile.dart';
 
+
 class AdminStatsView extends ConsumerStatefulWidget {
   const AdminStatsView({super.key});
 
@@ -186,7 +187,9 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
       children: [
         Text(
           title,
-          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         if (subtitle != null) ...[
           const SizedBox(height: 4),
@@ -241,7 +244,9 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                     icon: const Icon(Icons.calendar_today, size: 18),
                     label: Text(
                       "${_start.day}.${_start.month} - ${_end.day}.${_end.month}",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     style: TextButton.styleFrom(
                       backgroundColor: colorScheme.primaryContainer,
@@ -644,8 +649,9 @@ class _SectionCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style:
-                  textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
