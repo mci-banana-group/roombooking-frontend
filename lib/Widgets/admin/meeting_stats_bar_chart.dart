@@ -11,12 +11,14 @@ class MeetingStatsBarChart extends StatelessWidget {
   final AdminStats stats;
   final DateTime startDate;
   final DateTime endDate;
+  final double? forcedHeight;
 
   const MeetingStatsBarChart({
     super.key,
     required this.stats,
     required this.startDate,
     required this.endDate,
+    this.forcedHeight,
   });
 
   double _scaleFactor(BuildContext context) {
@@ -127,7 +129,8 @@ class MeetingStatsBarChart extends StatelessWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 final scale = _scaleFactor(context);
-                final chartHeight = _chartHeightForWidth(constraints.maxWidth);
+                final chartHeight =
+                    forcedHeight ?? _chartHeightForWidth(constraints.maxWidth);
                 final isCompact = constraints.maxWidth < 520;
                 final barCount = barSpecs.length;
                 final slotMinWidth = isCompact ? 84.0 : 120.0;

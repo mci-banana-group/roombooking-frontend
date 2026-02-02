@@ -10,12 +10,14 @@ class MeetingStatsChart extends StatefulWidget {
   final AdminStats stats;
   final DateTime startDate;
   final DateTime endDate;
+  final double? forcedHeight;
 
   const MeetingStatsChart({
     super.key,
     required this.stats,
     required this.startDate,
     required this.endDate,
+    this.forcedHeight,
   });
 
   @override
@@ -144,7 +146,8 @@ class _MeetingStatsChartState extends State<MeetingStatsChart> {
             LayoutBuilder(
               builder: (context, constraints) {
                 final scale = _scaleFactor(context);
-                final chartHeight = _chartHeightForWidth(constraints.maxWidth);
+                final chartHeight =
+                    widget.forcedHeight ?? _chartHeightForWidth(constraints.maxWidth);
                 final dayCount = sortedDates.length;
                 final perPointWidth = (constraints.maxWidth / dayCount)
                     .clamp(24, 56)
