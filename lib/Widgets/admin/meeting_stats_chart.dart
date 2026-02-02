@@ -450,11 +450,9 @@ class _MeetingStatsChartState extends State<MeetingStatsChart> {
                   return chartContent;
                 }
                 return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
+                  behavior: HitTestBehavior.translucent,
                   onTapUp: (_) => _clearTouchedSpots(),
                   onTapCancel: _clearTouchedSpots,
-                  onPanEnd: (_) => _clearTouchedSpots(),
-                  onPanCancel: _clearTouchedSpots,
                   onLongPressEnd: (_) => _clearTouchedSpots(),
                   child: chartContent,
                 );
