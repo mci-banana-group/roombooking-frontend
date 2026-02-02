@@ -229,88 +229,185 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                runAlignment: WrapAlignment.center,
-                spacing: 16,
-                runSpacing: 12,
-                children: [
-                  _sectionHeader(
-                    context,
-                    "Stats Period",
-                    "Overview of bookings and usage trends.",
-                  ),
-                  TextButton.icon(
-                    icon: const Icon(Icons.calendar_today, size: 18),
-                    label: Text(
-                      "${_start.day}.${_start.month} - ${_end.day}.${_end.month}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+              if (width >= 1100)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Wrap(
+                        alignment: WrapAlignment.start,
+                        runAlignment: WrapAlignment.center,
+                        spacing: 16,
+                        runSpacing: 12,
+                        children: [
+                          _sectionHeader(
+                            context,
+                            "Stats Period",
+                            "Overview of bookings and usage trends.",
+                          ),
+                          TextButton.icon(
+                            icon: const Icon(Icons.calendar_today, size: 18),
+                            label: Text(
+                              "${_start.day}.${_start.month} - ${_end.day}.${_end.month}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              backgroundColor: colorScheme.primaryContainer,
+                              foregroundColor: colorScheme.onPrimaryContainer,
+                            ),
+                            onPressed: _pickDateRange,
+                          ),
+                        ],
                       ),
                     ),
-                    style: TextButton.styleFrom(
-                      backgroundColor: colorScheme.primaryContainer,
-                      foregroundColor: colorScheme.onPrimaryContainer,
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16.0),
+                      child: canShowBothCharts
+                          ? ToggleButtons(
+                              borderRadius: BorderRadius.circular(10),
+                              isSelected: [
+                                _chartMode == 0,
+                                _chartMode == 1,
+                                _chartMode == 2,
+                              ],
+                              onPressed: (index) {
+                                setState(() {
+                                  _chartMode = index;
+                                });
+                              },
+                              children: const [
+                                Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 12.0),
+                                  child: Icon(Icons.show_chart), // Line Chart
+                                ),
+                                Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 12.0),
+                                  child: Icon(Icons.bar_chart), // Bar Chart
+                                ),
+                                Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 12.0),
+                                  child: Icon(Icons.dashboard), // Both
+                                ),
+                              ],
+                            )
+                          : ToggleButtons(
+                              borderRadius: BorderRadius.circular(10),
+                              isSelected: [_chartMode == 0, _chartMode == 1],
+                              onPressed: (index) {
+                                setState(() {
+                                  _chartMode = index;
+                                });
+                              },
+                              children: const [
+                                Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 12.0),
+                                  child: Icon(Icons.show_chart), // Line Chart
+                                ),
+                                Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 12.0),
+                                  child: Icon(Icons.bar_chart), // Bar Chart
+                                ),
+                              ],
+                            ),
                     ),
-                    onPressed: _pickDateRange,
-                  ),
-                ],
-              ),
+                  ],
+                )
+              else
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  runAlignment: WrapAlignment.center,
+                  spacing: 16,
+                  runSpacing: 12,
+                  children: [
+                    _sectionHeader(
+                      context,
+                      "Stats Period",
+                      "Overview of bookings and usage trends.",
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.calendar_today, size: 18),
+                      label: Text(
+                        "${_start.day}.${_start.month} - ${_end.day}.${_end.month}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        backgroundColor: colorScheme.primaryContainer,
+                        foregroundColor: colorScheme.onPrimaryContainer,
+                      ),
+                      onPressed: _pickDateRange,
+                    ),
+                  ],
+                ),
               const SizedBox(height: 16),
 
-              Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: canShowBothCharts
-                      ? ToggleButtons(
-                          borderRadius: BorderRadius.circular(10),
-                          isSelected: [
-                            _chartMode == 0,
-                            _chartMode == 1,
-                            _chartMode == 2,
-                          ],
-                          onPressed: (index) {
-                            setState(() {
-                              _chartMode = index;
-                            });
-                          },
-                          children: const [
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0),
-                              child: Icon(Icons.show_chart), // Line Chart
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0),
-                              child: Icon(Icons.bar_chart), // Bar Chart
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0),
-                              child: Icon(Icons.dashboard), // Both
-                            ),
-                          ],
-                        )
-                      : ToggleButtons(
-                          borderRadius: BorderRadius.circular(10),
-                          isSelected: [_chartMode == 0, _chartMode == 1],
-                          onPressed: (index) {
-                            setState(() {
-                              _chartMode = index;
-                            });
-                          },
-                          children: const [
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0),
-                              child: Icon(Icons.show_chart), // Line Chart
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0),
-                              child: Icon(Icons.bar_chart), // Bar Chart
-                            ),
-                          ],
-                        ),
+              if (width < 1100)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: canShowBothCharts
+                        ? ToggleButtons(
+                            borderRadius: BorderRadius.circular(10),
+                            isSelected: [
+                              _chartMode == 0,
+                              _chartMode == 1,
+                              _chartMode == 2,
+                            ],
+                            onPressed: (index) {
+                              setState(() {
+                                _chartMode = index;
+                              });
+                            },
+                            children: const [
+                              Padding(
+                                padding:
+                                    EdgeInsets.symmetric(horizontal: 12.0),
+                                child: Icon(Icons.show_chart), // Line Chart
+                              ),
+                              Padding(
+                                padding:
+                                    EdgeInsets.symmetric(horizontal: 12.0),
+                                child: Icon(Icons.bar_chart), // Bar Chart
+                              ),
+                              Padding(
+                                padding:
+                                    EdgeInsets.symmetric(horizontal: 12.0),
+                                child: Icon(Icons.dashboard), // Both
+                              ),
+                            ],
+                          )
+                        : ToggleButtons(
+                            borderRadius: BorderRadius.circular(10),
+                            isSelected: [_chartMode == 0, _chartMode == 1],
+                            onPressed: (index) {
+                              setState(() {
+                                _chartMode = index;
+                              });
+                            },
+                            children: const [
+                              Padding(
+                                padding:
+                                    EdgeInsets.symmetric(horizontal: 12.0),
+                                child: Icon(Icons.show_chart), // Line Chart
+                              ),
+                              Padding(
+                                padding:
+                                    EdgeInsets.symmetric(horizontal: 12.0),
+                                child: Icon(Icons.bar_chart), // Bar Chart
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
-              ),
               if (showBothCharts)
                 LayoutBuilder(
                   builder: (context, chartConstraints) {
