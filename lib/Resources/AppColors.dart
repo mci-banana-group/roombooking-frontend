@@ -16,7 +16,7 @@ class AppColors {
   ); // Deep dark for dark mode
 
   /// Chart Colors
-  static const Color chartTotal = mciBlue;
+  static Color chartTotal(BuildContext context) => Theme.of(context).colorScheme.primary;
   static const Color chartReserved = mciOrange;
   static const Color chartCompleted = Color(0xFF43A047);
   static const Color chartCheckedIn = Color(0xFF00ACC1);

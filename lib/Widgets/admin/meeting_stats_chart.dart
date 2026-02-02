@@ -116,7 +116,7 @@ class _MeetingStatsChartState extends State<MeetingStatsChart> {
       _buildLine(userCancelledSpots, AppColors.chartUserCancelled),
       _buildLine(adminCancelledSpots, AppColors.chartAdminCancelled),
       _buildLine(noShowSpots, AppColors.chartNoShowRed),
-      _buildLine(totalSpots, AppColors.chartTotal),
+      _buildLine(totalSpots, AppColors.chartTotal(context)),
     ];
 
     // Find Max Y for scaling
@@ -347,7 +347,7 @@ class _MeetingStatsChartState extends State<MeetingStatsChart> {
                                   getTooltipItems: (touchedSpots) {
                                     // Define Priority based on Legend Order
                                     final priority = {
-                                      AppColors.chartTotal: 0,
+                                      AppColors.chartTotal(context): 0,
                                       AppColors.chartReserved: 1,
                                       AppColors.chartCheckedIn: 2,
                                       AppColors.chartCompleted: 3,
@@ -375,7 +375,7 @@ class _MeetingStatsChartState extends State<MeetingStatsChart> {
                                       );
                                       String label = "";
                                       if (touchedSpot.bar.color ==
-                                          AppColors.chartTotal)
+                                          AppColors.chartTotal(context))
                                         label = "Total";
                                       else if (touchedSpot.bar.color ==
                                           AppColors.chartReserved)
@@ -464,7 +464,7 @@ class _MeetingStatsChartState extends State<MeetingStatsChart> {
               runSpacing: 8,
               alignment: WrapAlignment.center,
               children: [
-                _buildLegendItem(context, "Total", AppColors.chartTotal),
+                 _buildLegendItem(context, "Total", AppColors.chartTotal(context)),
                 _buildLegendItem(context, "Reservations", AppColors.chartReserved),
                 _buildLegendItem(context, "Checked In", AppColors.chartCheckedIn),
                 _buildLegendItem(context, "Completed", AppColors.chartCompleted),

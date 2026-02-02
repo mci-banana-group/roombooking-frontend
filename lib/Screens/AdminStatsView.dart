@@ -537,7 +537,7 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                       title: "Total bookings",
                       value: _stats!.totalMeetingsCount,
                       description: "All meetings in the period",
-                      color: AppColors.chartTotal,
+                      color: AppColors.chartTotal(context),
                     ),
                     _CountStatCard(
                       title: "Upcoming (reserved)",

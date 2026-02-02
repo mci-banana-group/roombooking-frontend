@@ -89,7 +89,7 @@ class MeetingStatsBarChart extends StatelessWidget {
     // 5: Admin Cancelled
     // 6: No-Show
     final barSpecs = [
-      _BarSpec(0, totalMeetingsCount.toDouble(), AppColors.chartTotal),
+      _BarSpec(0, totalMeetingsCount.toDouble(), AppColors.chartTotal(context)),
       _BarSpec(1, reservedCount.toDouble(), AppColors.chartReserved),
       _BarSpec(2, checkedInCount.toDouble(), AppColors.chartCheckedIn),
       _BarSpec(3, completedCount.toDouble(), AppColors.chartCompleted),
@@ -380,7 +380,7 @@ class MeetingStatsBarChart extends StatelessWidget {
                     runSpacing: 8,
                     alignment: WrapAlignment.center,
                     children: [
-                      _buildLegendItem(context, "Total", AppColors.chartTotal),
+                       _buildLegendItem(context, "Total", AppColors.chartTotal(context)),
                       _buildLegendItem(
                         context,
                         "Reservations",
