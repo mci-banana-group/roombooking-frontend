@@ -1,6 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
+import '../Resources/AppColors.dart';
 import '../Models/Enums/equipment_type.dart';
 import '../Models/admin_stats.dart';
 import '../Services/admin_repository.dart';
@@ -60,23 +64,14 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
   }
 
   Future<void> _pickDateRange() async {
-    final picked = await showDateRangePicker(
+    final picked = await showDialog<DateTimeRange>(
       context: context,
-      firstDate: DateTime(2023),
-      lastDate: DateTime(2030),
-      initialDateRange: DateTimeRange(start: _start, end: _end),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            datePickerTheme: DatePickerThemeData(
-              headerHeadlineStyle: TextStyle(
-                fontSize: _fontSize(context, 16),
-                fontWeight: FontWeight.bold,
-              ),
-              headerHelpStyle: TextStyle(fontSize: _fontSize(context, 12)),
-            ),
-          ),
-          child: child!,
+      barrierDismissible: true,
+      builder: (context) {
+        return _RangePickerDialog(
+          initialRange: DateTimeRange(start: _start, end: _end),
+          firstDate: DateTime(2023),
+          lastDate: DateTime(2030),
         );
       },
     );
@@ -745,6 +740,339 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _RangePickerDialog extends StatefulWidget {
+  final DateTimeRange initialRange;
+  final DateTime firstDate;
+  final DateTime lastDate;
+
+  const _RangePickerDialog({
+    required this.initialRange,
+    required this.firstDate,
+    required this.lastDate,
+  });
+
+  @override
+  State<_RangePickerDialog> createState() => _RangePickerDialogState();
+}
+
+class _RangePickerDialogState extends State<_RangePickerDialog> {
+  static const Color _mciBlue = AppColors.mciBlue;
+
+  late DateTime _start;
+  late DateTime _end;
+  late DateTime _baseMonth;
+  bool _selectingStart = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _start = _stripTime(widget.initialRange.start);
+    _end = _stripTime(widget.initialRange.end);
+    _baseMonth = DateTime(_start.year, _start.month, 1);
+  }
+
+  DateTime _stripTime(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
+  }
+
+  DateTime _addMonths(DateTime date, int months) {
+    return DateTime(date.year, date.month + months, 1);
+  }
+
+  int _daysInMonth(DateTime date) {
+    final nextMonth = DateTime(date.year, date.month + 1, 1);
+    return nextMonth.subtract(const Duration(days: 1)).day;
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  bool _isSelectable(DateTime day) {
+    return !day.isBefore(_stripTime(widget.firstDate)) &&
+        !day.isAfter(_stripTime(widget.lastDate));
+  }
+
+  void _handleDateTap(DateTime day) {
+    if (!_isSelectable(day)) return;
+    setState(() {
+      if (_selectingStart) {
+        _start = day;
+        _end = day;
+        _selectingStart = false;
+      } else {
+        if (day.isBefore(_start)) {
+          _end = _start;
+          _start = day;
+        } else {
+          _end = day;
+        }
+        _selectingStart = true;
+      }
+    });
+  }
+
+  Widget _buildMonth(
+    BuildContext context,
+    DateTime month,
+    List<String> weekdayLabels,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final locale = Localizations.localeOf(context);
+    final title = DateFormat('MMMM', locale.toString()).format(month);
+    final daysInMonth = _daysInMonth(month);
+    final firstWeekday = DateTime(month.year, month.month, 1).weekday;
+    final leadingEmpty = firstWeekday - 1;
+    final items = <DateTime?>[];
+    for (int i = 0; i < leadingEmpty; i++) {
+      items.add(null);
+    }
+    for (int day = 1; day <= daysInMonth; day++) {
+      items.add(DateTime(month.year, month.month, day));
+    }
+
+    return Column(
+      children: [
+        Text(
+          title,
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: weekdayLabels
+              .map(
+                (label) => Expanded(
+                  child: Center(
+                    child: Text(
+                      label,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 8),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 7,
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 4,
+          ),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final day = items[index];
+            if (day == null) return const SizedBox.shrink();
+            final isStart = _isSameDay(day, _start);
+            final isEnd = _isSameDay(day, _end);
+            final inRange = day.isAfter(_start) && day.isBefore(_end);
+            final isSame = isStart && isEnd;
+            final isToday = _isSameDay(day, _stripTime(DateTime.now()));
+            final enabled = _isSelectable(day);
+
+            Color textColor = colorScheme.onSurface;
+            if (!enabled) {
+              textColor = colorScheme.onSurfaceVariant.withOpacity(0.4);
+            } else if (isStart || isEnd) {
+              textColor = Colors.white;
+            } else if (inRange) {
+              textColor = colorScheme.onSurface;
+            }
+
+            Color? background;
+            if (inRange) {
+              background = _mciBlue.withOpacity(0.12);
+            }
+            if (isStart || isEnd) {
+              background = _mciBlue;
+            }
+
+            return InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: enabled ? () => _handleDateTap(day) : null,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: background,
+                  borderRadius: BorderRadius.circular(20),
+                  border: isToday && !isStart && !isEnd
+                      ? Border.all(color: _mciBlue, width: 1)
+                      : null,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${day.day}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: textColor,
+                        fontWeight:
+                            isStart || isEnd || isSame ? FontWeight.bold : null,
+                      ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final locale = Localizations.localeOf(context);
+    final weekdayLabels = List.generate(7, (index) {
+      final date = DateTime(2020, 6, 1 + index);
+      final label = DateFormat.E(locale.toString()).format(date);
+      return label.substring(0, 1).toUpperCase();
+    });
+
+    final minBaseMonth = DateTime(widget.firstDate.year, widget.firstDate.month);
+    final lastMonth = DateTime(widget.lastDate.year, widget.lastDate.month);
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final twoColumns = constraints.maxWidth >= 700;
+          final maxBaseMonth =
+              twoColumns ? _addMonths(lastMonth, -1) : lastMonth;
+          final canPrev = _baseMonth.isAfter(minBaseMonth);
+          final canNext = _baseMonth.isBefore(maxBaseMonth);
+          final monthB = _addMonths(_baseMonth, 1);
+
+          return ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: math.min(860, MediaQuery.sizeOf(context).width - 32),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "Select dates",
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: TextButton.styleFrom(
+                          foregroundColor: _mciBlue,
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ],
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${_start.day}.${_start.month}.${_start.year} → ${_end.day}.${_end.month}.${_end.year}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: canPrev
+                            ? () {
+                                setState(() {
+                                  _baseMonth = _addMonths(_baseMonth, -1);
+                                });
+                              }
+                            : null,
+                        color: _mciBlue,
+                        icon: const Icon(Icons.chevron_left),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: canNext
+                            ? () {
+                                setState(() {
+                                  _baseMonth = _addMonths(_baseMonth, 1);
+                                });
+                              }
+                            : null,
+                        color: _mciBlue,
+                        icon: const Icon(Icons.chevron_right),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (twoColumns)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _buildMonth(context, _baseMonth, weekdayLabels),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildMonth(context, monthB, weekdayLabels),
+                        ),
+                      ],
+                    )
+                  else
+                    _buildMonth(context, _baseMonth, weekdayLabels),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _start = _stripTime(DateTime.now());
+                            _end = _start;
+                            _baseMonth = DateTime(_start.year, _start.month, 1);
+                            _selectingStart = false;
+                          });
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: _mciBlue,
+                        ),
+                        child: const Text('Today'),
+                      ),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(
+                            DateTimeRange(start: _start, end: _end),
+                          );
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _mciBlue,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(0, 40),
+                        ),
+                        child: const Text('Apply'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
