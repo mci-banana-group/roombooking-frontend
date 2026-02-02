@@ -83,7 +83,15 @@ class _AdminUserManagementState extends ConsumerState<AdminUserManagement> {
                     
                     final userRole = user.role.trim().toUpperCase();
                     final filterRole = _selectedRole.toUpperCase();
-                    final matchesRole = filterRole == "ALL" || userRole == filterRole;
+                    
+                    bool matchesRole;
+                    if (filterRole == "ALL") {
+                      matchesRole = true;
+                    } else if (filterRole == "ADMIN") {
+                      matchesRole = user.isAdmin;
+                    } else {
+                      matchesRole = userRole == filterRole;
+                    }
                     
                     return matchesSearch && matchesRole;
                   }).toList();
@@ -183,6 +191,9 @@ class _AdminUserManagementState extends ConsumerState<AdminUserManagement> {
   }
 
   Widget _buildUserCard(UserResponse user, ColorScheme colorScheme, TextTheme textTheme) {
+    final displayRole = user.isAdmin ? "ADMIN" : user.role.toUpperCase();
+    final roleColor = _getRoleColor(displayRole, colorScheme);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
@@ -218,16 +229,16 @@ class _AdminUserManagementState extends ConsumerState<AdminUserManagement> {
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: _getRoleColor(user.role, colorScheme).withOpacity(0.2),
+              color: roleColor.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _getRoleColor(user.role, colorScheme).withOpacity(0.5)),
+              border: Border.all(color: roleColor.withOpacity(0.5)),
             ),
             child: Text(
-              user.role.toUpperCase(),
+              displayRole,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: _getRoleColor(user.role, colorScheme),
+                color: roleColor,
               ),
             ),
           ),
