@@ -101,7 +101,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.meeting_room, size: 80, color: Theme.of(context).colorScheme.primary),
+                    Image.asset(
+                      Theme.of(context).brightness == Brightness.dark
+                          ? 'assets/images/MCI-negative-white-Web.png'
+                          : 'assets/images/MCI-positive-Web.png',
+                      height: 80,
+                      fit: BoxFit.contain,
+                    ),
                     const SizedBox(height: 24),
                     const Text(
                       'Welcome Back',
