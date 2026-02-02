@@ -1,12 +1,12 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../Models/Enums/equipment_type.dart';
 import '../Models/admin_stats.dart';
 import '../Services/admin_repository.dart';
 import '../Widgets/admin/meeting_stats_bar_chart.dart';
 import '../Widgets/admin/meeting_stats_chart.dart';
+import '../Widgets/admin/room_list_tile.dart';
 
 class AdminStatsView extends ConsumerStatefulWidget {
   const AdminStatsView({super.key});
@@ -113,6 +113,69 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
     if (width >= 1200) return 620;
     if (width >= 900) return 560;
     return 520;
+  }
+
+  bool _isKnownEquipmentTerm(String term) {
+    final normalized = term.trim();
+    if (normalized.isEmpty) return false;
+    for (final type in EquipmentType.values) {
+      if (normalized == type.apiValue ||
+          normalized.toLowerCase() == type.name.toLowerCase() ||
+          normalized.toLowerCase() == type.displayName.toLowerCase()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  String _humanizeEquipmentTerm(String term) {
+    final cleaned = term.trim().replaceAll(RegExp(r'[_-]+'), ' ');
+    if (cleaned.isEmpty) return 'Other';
+    return cleaned
+        .split(RegExp(r'\s+'))
+        .map((part) {
+          final lower = part.toLowerCase();
+          if (lower.isEmpty) return '';
+          return lower[0].toUpperCase() + lower.substring(1);
+        })
+        .join(' ');
+  }
+
+  IconData _iconForEquipmentType(EquipmentType type) {
+    switch (type) {
+      case EquipmentType.beamer:
+        return Icons.videocam;
+      case EquipmentType.whiteboard:
+        return Icons.edit;
+      case EquipmentType.display:
+        return Icons.tv;
+      case EquipmentType.videoConference:
+        return Icons.video_call;
+      case EquipmentType.hdmiCable:
+        return Icons.cable;
+      case EquipmentType.other:
+        return Icons.devices;
+    }
+  }
+
+  Widget _buildRankBadge(Color accent, int rank) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: accent.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: accent.withOpacity(0.3)),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        "$rank",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: accent,
+        ),
+      ),
+    );
   }
 
   Widget _sectionHeader(BuildContext context, String title, String? subtitle) {
@@ -435,16 +498,18 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
               ),
               itemBuilder: (ctx, index) {
                 final item = _stats!.mostSearchedItems[index];
-                return _RankedRow(
-                  index: index + 1,
-                  title: item.term,
-                  subtitle: "Searches",
-                  accent: colorScheme.primary,
-                  trailing: _StatPill(
-                    label: "${item.count}",
-                    suffix: "searched",
-                    color: colorScheme.primary,
-                  ),
+                final isKnown = _isKnownEquipmentTerm(item.term);
+                final equipmentType = EquipmentType.fromString(item.term);
+                final displayName = isKnown
+                    ? equipmentType.displayName
+                    : _humanizeEquipmentTerm(item.term);
+                final icon =
+                    isKnown ? _iconForEquipmentType(equipmentType) : Icons.devices;
+                return _EquipmentTrendTile(
+                  leading: _buildRankBadge(colorScheme.primary, index + 1),
+                  icon: icon,
+                  name: displayName,
+                  count: item.count,
                 );
               },
             ),
@@ -483,16 +548,30 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                 } else {
                   timeDisplay = "${minutes}m";
                 }
-                return _RankedRow(
-                  index: index + 1,
-                  title: room.name,
-                  subtitle:
-                      "${room.building?.name ?? 'Unknown Building'} • Room ${room.roomNumber}",
-                  accent: colorScheme.secondary,
-                  trailing: _StatPill(
-                    label: timeDisplay,
-                    suffix: "total",
-                    color: colorScheme.secondary,
+                return RoomListTile(
+                  roomName: room.name,
+                  capacity: room.capacity,
+                  equipmentTypes: room.equipment
+                      .where((e) => e.quantity > 0)
+                      .map((e) => e.type)
+                      .toList(),
+                  leading:
+                      _buildRankBadge(colorScheme.secondary, index + 1),
+                  trailing: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      timeDisplay,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSecondaryContainer,
+                      ),
+                    ),
                   ),
                 );
               },
@@ -584,110 +663,56 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-class _RankedRow extends StatelessWidget {
-  final int index;
-  final String title;
-  final String subtitle;
-  final Color accent;
-  final Widget trailing;
+class _EquipmentTrendTile extends StatelessWidget {
+  final Widget leading;
+  final IconData icon;
+  final String name;
+  final int count;
 
-  const _RankedRow({
-    required this.index,
-    required this.title,
-    required this.subtitle,
-    required this.accent,
-    required this.trailing,
+  const _EquipmentTrendTile({
+    required this.leading,
+    required this.icon,
+    required this.name,
+    required this.count,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: accent.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: accent.withOpacity(0.3)),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            "$index",
-            style: textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: accent,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        trailing,
-      ],
-    );
-  }
-}
 
-class _StatPill extends StatelessWidget {
-  final String label;
-  final String suffix;
-  final Color color;
-
-  const _StatPill({
-    required this.label,
-    required this.suffix,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.35)),
-      ),
-      child: RichText(
-        text: TextSpan(
-          style: textTheme.labelLarge?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
-          children: [
-            TextSpan(text: label),
-            TextSpan(
-              text: " $suffix",
-              style: textTheme.labelMedium?.copyWith(
-                color: color,
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      leading: leading,
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: colorScheme.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              name,
+              style: textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
-          ],
+          ),
+        ],
+      ),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          "$count ${count == 1 ? 'search' : 'searches'}",
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onPrimaryContainer,
+          ),
         ),
       ),
     );
