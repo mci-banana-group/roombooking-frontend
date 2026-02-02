@@ -35,43 +35,37 @@ class _AdminUserManagementState extends ConsumerState<AdminUserManagement> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Search & Filter
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
               child: Row(
                 children: [
-                  Text("User Management", 
-                    style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                  const Spacer(),
-                  // Role Filter
-                  _buildRoleFilter(colorScheme),
-                ],
-              ),
-            ),
-
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: SearchBar(
-                controller: _searchController,
-                hintText: "Search by name or email...",
-                leading: const Icon(Icons.search),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value.toLowerCase();
-                  });
-                },
-                trailing: [
-                  if (_searchQuery.isNotEmpty)
-                    IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
+                  Expanded(
+                    child: SearchBar(
+                      controller: _searchController,
+                      hintText: "Search by name or email...",
+                      leading: const Icon(Icons.search),
+                      onChanged: (value) {
                         setState(() {
-                          _searchQuery = "";
+                          _searchQuery = value.toLowerCase();
                         });
                       },
+                      trailing: [
+                        if (_searchQuery.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = "";
+                              });
+                            },
+                          ),
+                      ],
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildRoleFilter(colorScheme),
                 ],
               ),
             ),
