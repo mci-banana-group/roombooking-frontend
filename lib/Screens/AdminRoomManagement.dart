@@ -224,20 +224,23 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Controls row
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
               child: Row(
                 children: [
-                  Text("Room Management", style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
                   const Spacer(),
                   // Filter
-                  OutlinedButton.icon(
+                  IconButton(
                     onPressed: _openFilterDialog,
-                    icon: const Icon(Icons.filter_list, size: 18),
-                    label: Text(activeFiltersCount > 0 ? "Filters ($activeFiltersCount)" : "Filter"),
+                    icon: Badge(
+                      label: Text(activeFiltersCount.toString()),
+                      isLabelVisible: activeFiltersCount > 0,
+                      child: Icon(Icons.filter_list, color: activeFiltersCount > 0 ? colorScheme.primary : null),
+                    ),
+                    tooltip: "Filter Equipment",
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   // Add Room
                   FilledButton.icon(
                     onPressed: _openCreateRoom,
