@@ -8,9 +8,15 @@ import '../Session.dart';
 import '../Resources/API.dart'; 
 import '../main.dart';
 import '../Models/admin_stats.dart';
+import '../Models/auth_models.dart';
 
 
 final adminRepositoryProvider = Provider((ref) => AdminRepository(ref));
+
+final allUsersProvider = FutureProvider.autoDispose<List<UserResponse>>((ref) async {
+  final repo = ref.watch(adminRepositoryProvider);
+  return repo.getUsers();
+});
 
 class AdminRepository {
   final Ref _ref;
@@ -234,11 +240,32 @@ class AdminRepository {
     }
   }
 
+  // 7. GET ALL USERS
+  Future<List<UserResponse>> getUsers() async {
+    final url = Uri.parse('${API.base_url}${API.adminUsers}');
+    final session = _ref.read(sessionProvider);
+    final token = session.token;
 
+    if (token == null) return [];
 
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-
-
-
-
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((u) => UserResponse.fromJson(u)).toList();
+      }
+      print("Error fetching users: ${response.statusCode} - ${response.body}");
+      return [];
+    } catch (e) {
+      print("CRASH getUsers: $e");
+      return [];
+    }
+  }
 }
