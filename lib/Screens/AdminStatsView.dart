@@ -289,6 +289,7 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                             startDate: _start,
                             endDate: _end,
                             forcedHeight: sharedHeight,
+                            reserveLegendSpace: true,
                           ),
                         ),
                       ],

@@ -12,6 +12,7 @@ class MeetingStatsBarChart extends StatelessWidget {
   final DateTime startDate;
   final DateTime endDate;
   final double? forcedHeight;
+  final bool reserveLegendSpace;
 
   const MeetingStatsBarChart({
     super.key,
@@ -19,6 +20,7 @@ class MeetingStatsBarChart extends StatelessWidget {
     required this.startDate,
     required this.endDate,
     this.forcedHeight,
+    this.reserveLegendSpace = false,
   });
 
   double _scaleFactor(BuildContext context) {
@@ -363,6 +365,52 @@ class MeetingStatsBarChart extends StatelessWidget {
                 );
               },
             ),
+            if (reserveLegendSpace) ...[
+              const SizedBox(height: 16),
+              Opacity(
+                opacity: 0,
+                child: IgnorePointer(
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      _buildLegendItem(context, "Total", AppColors.chartTotal),
+                      _buildLegendItem(
+                        context,
+                        "Reservations",
+                        AppColors.chartReserved,
+                      ),
+                      _buildLegendItem(
+                        context,
+                        "Checked In",
+                        AppColors.chartCheckedIn,
+                      ),
+                      _buildLegendItem(
+                        context,
+                        "Completed",
+                        AppColors.chartCompleted,
+                      ),
+                      _buildLegendItem(
+                        context,
+                        "User Cancelled",
+                        AppColors.chartUserCancelled,
+                      ),
+                      _buildLegendItem(
+                        context,
+                        "Admin Cancelled",
+                        AppColors.chartAdminCancelled,
+                      ),
+                      _buildLegendItem(
+                        context,
+                        "No-Shows",
+                        AppColors.chartNoShowRed,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -390,6 +438,31 @@ class MeetingStatsBarChart extends StatelessWidget {
             show: true,
             toY: y,
             color: Colors.grey.withOpacity(0.1),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(BuildContext context, String title, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: _fontSize(
+              context,
+              13,
+              min: 13,
+            ),
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
