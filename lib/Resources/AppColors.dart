@@ -11,7 +11,19 @@ class AppColors {
   static const Color primaryDark = Color(0xFF2D3436); // Dark charcoal for text
   static const Color backgroundLight = Color(0xFFF0F4F8);
   static const Color accentLight = Color(0xFFE8F8F5);
-  static const Color darkBackground = Color(0xFF121212); // Deep dark for dark mode
+  static const Color darkBackground = Color(
+    0xFF121212,
+  ); // Deep dark for dark mode
+
+  /// Chart Colors
+  static const Color chartTotal = mciBlue;
+  static const Color chartReserved = mciOrange;
+  static const Color chartCompleted = Color(0xFF4CAF50);
+  static const Color chartCheckedIn = Color(0xFF009688);
+  static const Color chartUserCancelled = Color(0xFFFF7043);
+  static const Color chartAdminCancelled = Color(0xFFD84315);
+  static const Color chartNoShow = Color(0xFFB0BEC5);
+  static const Color chartNoShowRed = Color(0xFFE53935);
 
   /// Status Colors for room indicators
   static const Color statusBlue = Color(0xFF2196F3);
@@ -41,8 +53,8 @@ class AppColors {
   static ColorScheme darkColorScheme = ColorScheme(
     brightness: Brightness.dark,
     primary: Color(0xFF90CAF9), // Lighter Blue for Dark Mode accessibility
-    onPrimary: mciBlue,         // Dark Blue text on Light Blue
-    primaryContainer: mciBlue,  // Dark Blue container
+    onPrimary: mciBlue, // Dark Blue text on Light Blue
+    primaryContainer: mciBlue, // Dark Blue container
     onPrimaryContainer: Colors.white,
     secondary: mciOrange,
     onSecondary: Colors.black,
@@ -57,42 +69,44 @@ class AppColors {
   );
 
   /// Light ThemeData
-  static final ThemeData lightTheme = ThemeData.from(
-    colorScheme: lightColorScheme,
-    textTheme: Typography.blackMountainView.apply(fontFamily: 'PPFormula'),
-  ).copyWith(
-    scaffoldBackgroundColor: lightColorScheme.background,
-    appBarTheme: AppBarTheme(
-      backgroundColor: lightColorScheme.primary,
-      foregroundColor: lightColorScheme.onPrimary,
-      elevation: 0,
-      titleTextStyle: TextStyle(
-        fontFamily: 'PPFormula',
-        color: lightColorScheme.onPrimary,
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-      ),
-      iconTheme: IconThemeData(color: lightColorScheme.onPrimary),
-    ),
-  );
+  static final ThemeData lightTheme =
+      ThemeData.from(
+        colorScheme: lightColorScheme,
+        textTheme: Typography.blackMountainView.apply(fontFamily: 'PPFormula'),
+      ).copyWith(
+        scaffoldBackgroundColor: lightColorScheme.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: lightColorScheme.primary,
+          foregroundColor: lightColorScheme.onPrimary,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            fontFamily: 'PPFormula',
+            color: lightColorScheme.onPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+          iconTheme: IconThemeData(color: lightColorScheme.onPrimary),
+        ),
+      );
 
   /// Dark ThemeData
-  static final ThemeData darkTheme = ThemeData.from(
-    colorScheme: darkColorScheme,
-    textTheme: Typography.whiteMountainView.apply(fontFamily: 'PPFormula'),
-  ).copyWith(
-    scaffoldBackgroundColor: darkColorScheme.background,
-    appBarTheme: AppBarTheme(
-      backgroundColor: darkColorScheme.primary,
-      foregroundColor: darkColorScheme.onPrimary,
-      elevation: 0,
-      titleTextStyle: TextStyle(
-        fontFamily: 'PPFormula',
-        color: darkColorScheme.onPrimary,
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-      ),
-      iconTheme: IconThemeData(color: darkColorScheme.onPrimary),
-    ),
-  );
+  static final ThemeData darkTheme =
+      ThemeData.from(
+        colorScheme: darkColorScheme,
+        textTheme: Typography.whiteMountainView.apply(fontFamily: 'PPFormula'),
+      ).copyWith(
+        scaffoldBackgroundColor: darkColorScheme.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: darkColorScheme.primary,
+          foregroundColor: darkColorScheme.onPrimary,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            fontFamily: 'PPFormula',
+            color: darkColorScheme.onPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+          iconTheme: IconThemeData(color: darkColorScheme.onPrimary),
+        ),
+      );
 }

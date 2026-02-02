@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../Models/admin_stats.dart';
 import '../Services/admin_repository.dart';
+import '../Widgets/admin/meeting_stats_bar_chart.dart';
+import '../Widgets/admin/meeting_stats_chart.dart';
 
 class AdminStatsView extends ConsumerStatefulWidget {
   const AdminStatsView({super.key});
@@ -17,6 +20,8 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
   DateTime _start = DateTime.now().subtract(const Duration(days: 30));
   DateTime _end = DateTime.now();
 
+  bool _showLineChart = false;
+
   @override
   void initState() {
     super.initState();
@@ -25,33 +30,15 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
 
   Future<void> _loadStats() async {
     setState(() => _isLoading = true);
-    final data = await ref.read(adminRepositoryProvider).getStats(start: _start, end: _end);
+    final data = await ref
+        .read(adminRepositoryProvider)
+        .getStats(start: _start, end: _end);
     if (mounted) {
       setState(() {
         _stats = data;
         _isLoading = false;
       });
     }
-  }
-
-  void _onCardTap(String category, int count) {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(16),
-        width: double.infinity,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("$category Details", style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 10),
-            Text("Number: $count", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const Divider(),
-            const Padding(padding: EdgeInsets.all(16.0)),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _pickDateRange() async {
@@ -63,9 +50,12 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            datePickerTheme: const DatePickerThemeData(
-              headerHeadlineStyle: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-              headerHelpStyle: TextStyle(fontSize: 12.0),
+            datePickerTheme: DatePickerThemeData(
+              headerHeadlineStyle: TextStyle(
+                fontSize: _fontSize(context, 16),
+                fontWeight: FontWeight.bold,
+              ),
+              headerHelpStyle: TextStyle(fontSize: _fontSize(context, 12)),
             ),
           ),
           child: child!,
@@ -80,6 +70,16 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
       });
       _loadStats();
     }
+  }
+
+  double _scaleFactor(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return (width / 1200).clamp(0.85, 1.15);
+  }
+
+  double _fontSize(BuildContext context, double size) {
+    final scale = _scaleFactor(context);
+    return MediaQuery.textScalerOf(context).scale(size * scale);
   }
 
   @override
@@ -98,7 +98,9 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
             children: [
               Text(
                 "Stats Period",
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               TextButton.icon(
                 icon: const Icon(Icons.calendar_today, size: 18),
@@ -107,8 +109,12 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: TextButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  foregroundColor: Theme.of(
+                    context,
+                  ).colorScheme.onPrimaryContainer,
                 ),
                 onPressed: _pickDateRange,
               ),
@@ -116,61 +122,58 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
           ),
           const SizedBox(height: 20),
 
-          //Statistic Karten
-          _FancyStatRow(
-            title: "Total Bookings",
-            value: _stats!.totalMeetingsCount.toString(),
-            icon: Icons.bar_chart,
-            color1: Colors.blue.shade400,
-            color2: Colors.blue.shade700,
-            onTap: () => _onCardTap("Total Bookings", _stats!.totalMeetingsCount),
-          ),
-          const SizedBox(height: 12),
-
-          _FancyStatRow(
-            title: "Reservations",
-            value: _stats!.reservedMeetingsCount.toString(),
-            icon: Icons.bookmark_added,
-            color1: Colors.green.shade400,
-            color2: Colors.green.shade700,
-            onTap: () => _onCardTap("Reservations", _stats!.reservedMeetingsCount),
-          ),
-          const SizedBox(height: 12),
-
-          _FancyStatRow(
-            title: "Cancelled Meetings",
-            value: _stats!.cancelledMeetingsCount.toString(),
-            icon: Icons.cancel_presentation,
-            color1: Colors.orange.shade400,
-            color2: Colors.orange.shade700,
-            onTap: () => _onCardTap("Cancelled Meetings", _stats!.cancelledMeetingsCount),
-          ),
-          const SizedBox(height: 12),
-
-          _FancyStatRow(
-            title: "No-Shows",
-            value: _stats!.noShowMeetingsCount.toString(),
-            icon: Icons.person_off,
-            color1: Colors.red.shade400,
-            color2: Colors.red.shade700,
-            onTap: () => _onCardTap("No-Shows", _stats!.noShowMeetingsCount),
-          ),
-          const SizedBox(height: 12),
-
-          // New calculated statistics
-          _FancyStatRow(
-            title: "Checked In",
-            value: _stats!.checkedInMeetings.toString(),
-            icon: Icons.check_circle,
-            color1: Colors.teal.shade400,
-            color2: Colors.teal.shade700,
-            onTap: () => _onCardTap("Checked In", _stats!.checkedInMeetings),
-          ),
+          // Chart Toggle & Chart
+          if (_stats != null) ...[
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 16.0, bottom: 8.0),
+                child: ToggleButtons(
+                  borderRadius: BorderRadius.circular(10),
+                  isSelected: [_showLineChart, !_showLineChart],
+                  onPressed: (index) {
+                    setState(() {
+                      _showLineChart = index == 0;
+                    });
+                  },
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Icon(Icons.show_chart), // Line Chart
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Icon(Icons.bar_chart), // Bar Chart
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            AnimatedCrossFade(
+              firstChild: MeetingStatsChart(
+                stats: _stats!,
+                startDate: _start,
+                endDate: _end,
+              ),
+              secondChild: MeetingStatsBarChart(
+                stats: _stats!,
+                startDate: _start,
+                endDate: _end,
+              ),
+              crossFadeState: _showLineChart
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              duration: const Duration(milliseconds: 300),
+            ),
+          ],
 
           const SizedBox(height: 30),
 
           // Performance Metrics Section
-          Text("Performance Metrics", style: Theme.of(context).textTheme.headlineSmall),
+          Text(
+            "Performance Metrics",
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
           const SizedBox(height: 10),
 
           _PercentageStatCard(
@@ -215,7 +218,10 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
           const SizedBox(height: 30),
 
           //Equipment Trends
-          Text("Equipment Trends", style: Theme.of(context).textTheme.headlineSmall),
+          Text(
+            "Equipment Trends",
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
           const SizedBox(height: 10),
 
           if (_stats!.mostSearchedItems.isEmpty)
@@ -230,20 +236,39 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                 return Card(
                   elevation: 2,
                   margin: const EdgeInsets.only(bottom: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.1),
                       child: Text(
                         "${index + 1}",
-                        style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    title: Text(item.term, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text(
+                      item.term,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(20)),
-                      child: Text("${item.count} searched", style: const TextStyle(fontSize: 12)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "${item.count} searched",
+                        style: TextStyle(fontSize: _fontSize(context, 12)),
+                      ),
                     ),
                   ),
                 );
@@ -253,7 +278,10 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
           const SizedBox(height: 30),
 
           // Most Used Rooms Section
-          Text("Most Used Rooms", style: Theme.of(context).textTheme.headlineSmall),
+          Text(
+            "Most Used Rooms",
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
           const SizedBox(height: 10),
 
           if (_stats!.mostUsedRooms.isEmpty)
@@ -279,21 +307,44 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                 return Card(
                   elevation: 2,
                   margin: const EdgeInsets.only(bottom: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.secondary.withOpacity(0.1),
                       child: Text(
                         "${index + 1}",
-                        style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    title: Text(room.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text("${room.building?.name ?? 'Unknown Building'} - Room ${room.roomNumber}"),
+                    title: Text(
+                      room.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      "${room.building?.name ?? 'Unknown Building'} - Room ${room.roomNumber}",
+                    ),
                     trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
-                      child: Text(timeDisplay, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        timeDisplay,
+                        style: TextStyle(
+                          fontSize: _fontSize(context, 12),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -324,80 +375,6 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
   }
 }
 
-//fancy widget for stat row
-class _FancyStatRow extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color1;
-  final Color color2;
-  final VoidCallback onTap;
-
-  const _FancyStatRow({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color1,
-    required this.color2,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: double.infinity,
-          height: 100,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(colors: [color1, color2], begin: Alignment.topLeft, end: Alignment.bottomRight),
-            boxShadow: [BoxShadow(color: color2.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))],
-          ),
-          child: Stack(
-            children: [
-              // Icon im Hintergrund
-              Positioned(right: -20, top: -20, child: Icon(icon, size: 150, color: Colors.white.withOpacity(0.15))),
-              //Inhalt
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                      child: Icon(icon, color: Colors.white, size: 24),
-                    ),
-                    const SizedBox(width: 20),
-                    // Text
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
-                        ),
-                        Text(
-                          value,
-                          style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // Widget for percentage-based statistics
 class _PercentageStatCard extends StatelessWidget {
   final String title;
@@ -411,6 +388,16 @@ class _PercentageStatCard extends StatelessWidget {
     required this.description,
     required this.color,
   });
+
+  double _scaleFactor(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return (width / 1200).clamp(0.85, 1.15);
+  }
+
+  double _fontSize(BuildContext context, double size) {
+    final scale = _scaleFactor(context);
+    return MediaQuery.textScalerOf(context).scale(size * scale);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -428,19 +415,41 @@ class _PercentageStatCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: _fontSize(context, 16),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Text(
                     "$displayPercentage%",
-                    style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: _fontSize(context, 16),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(description, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: _fontSize(context, 12),
+                color: Colors.grey.shade600,
+              ),
+            ),
             const SizedBox(height: 12),
             // Progress bar
             ClipRRect(
