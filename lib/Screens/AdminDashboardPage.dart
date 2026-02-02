@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'AdminStatsView.dart';
 import 'AdminRoomManagement.dart';
+import 'AdminUserManagement.dart';
 import '../Resources/AppColors.dart';
 
 class AdminDashboardPage extends ConsumerWidget {
@@ -10,7 +11,7 @@ class AdminDashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -24,6 +25,7 @@ class AdminDashboardPage extends ConsumerWidget {
                 indicatorColor: Theme.of(context).colorScheme.primary,
                 dividerColor: Colors.transparent,
                 tabs: const [
+                  Tab(icon: Icon(Icons.people), text: 'Users'),
                   Tab(icon: Icon(Icons.meeting_room), text: 'Buildings/Rooms'),
                   Tab(icon: Icon(Icons.bar_chart), text: 'Statistics'),
                 ],
@@ -31,7 +33,15 @@ class AdminDashboardPage extends ConsumerWidget {
             ),
 
             // Tab Content
-            const Expanded(child: TabBarView(children: [AdminRoomManagement(), AdminStatsView()])),
+            const Expanded(
+              child: TabBarView(
+                children: [
+                  AdminUserManagement(), 
+                  AdminRoomManagement(), 
+                  AdminStatsView()
+                ]
+              )
+            ),
           ],
         ),
       ),

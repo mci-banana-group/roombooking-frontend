@@ -8,23 +8,29 @@ import '../Session.dart';
 import '../Resources/API.dart'; 
 import '../main.dart';
 import '../Models/admin_stats.dart';
+import '../Models/auth_models.dart';
+import '../Models/admin_user_booking_response.dart';
 
 
 final adminRepositoryProvider = Provider((ref) => AdminRepository(ref));
+
+final allUsersProvider = FutureProvider.autoDispose<List<UserResponse>>((ref) async {
+  final repo = ref.watch(adminRepositoryProvider);
+  return repo.getUsers();
+});
 
 class AdminRepository {
   final Ref _ref;
 
   AdminRepository(this._ref);
 
-  // 1. CREATE ROOM
+  // CREATE ROOM
   Future<bool> createRoom(Room room, int buildingId) async {
     final url = Uri.parse('${API.base_url}${API.adminRooms}');
     
     final session = _ref.read(sessionProvider);
     final token = session.token ?? "";
 
-    // SICHERHEITS-BODY
     final Map<String, dynamic> requestBody = {
       "name": room.name.isEmpty ? "Test Room" : room.name,
       "roomNumber": int.tryParse(room.roomNumber) ?? 0,
@@ -62,7 +68,7 @@ class AdminRepository {
     }
   }
 
-  //2. DELETE ROOM
+  // DELETE ROOM
   Future<bool> deleteRoom(String roomId) async {
     final url = Uri.parse('${API.base_url}${API.adminRooms}/$roomId');
     
@@ -94,7 +100,7 @@ class AdminRepository {
     }
   }
 
-  //3. UPDATE ROOM
+  // UPDATE ROOM
   Future<bool> updateRoom(String roomId, Room updatedRoom) async {
     final url = Uri.parse('${API.base_url}${API.adminRooms}/$roomId');
     
@@ -148,7 +154,7 @@ class AdminRepository {
     }
   }
 
-  // 4. GET ALL ROOMS
+  // GET ALL ROOMS
   Future<List<Room>> getAllRooms() async {
     final session = _ref.read(sessionProvider);
     
@@ -161,7 +167,7 @@ class AdminRepository {
     }
   }
 
-  // 5. GET ADMIN STATS
+  // GET ADMIN STATS
   Future<AdminStats?> getStats({DateTime? start, DateTime? end}) async {
     String query = "";
     if (start != null && end != null) {
@@ -199,7 +205,7 @@ class AdminRepository {
     }
   }
 
-  // 6. GET ROOM BOOKINGS
+  // GET ROOM BOOKINGS
   Future<List<Booking>> getRoomBookings(String roomId, {DateTime? start, int? limit}) async {
     final startParam = (start ?? DateTime.now()).toUtc().toIso8601String();
     String query = "?from=$startParam";
@@ -234,11 +240,93 @@ class AdminRepository {
     }
   }
 
+  // GET ALL USERS
+  Future<List<UserResponse>> getUsers() async {
+    final url = Uri.parse('${API.base_url}${API.adminUsers}');
+    final session = _ref.read(sessionProvider);
+    final token = session.token;
 
+    if (token == null) return [];
 
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((u) => UserResponse.fromJson(u)).toList();
+      }
+      print("Error fetching users: ${response.statusCode} - ${response.body}");
+      return [];
+    } catch (e) {
+      print("CRASH getUsers: $e");
+      return [];
+    }
+  }
 
+  // GET USER BOOKINGS
+  Future<List<AdminUserBookingResponse>> getUserBookings(String userId, {DateTime? start, DateTime? end}) async {
+    final s = (start ?? DateTime.now()).toUtc().toIso8601String();
+    final e = (end ?? DateTime.now().add(const Duration(days: 31))).toUtc().toIso8601String();
+    
+    final url = Uri.parse('${API.base_url}${API.adminUsers}/$userId/bookings?start=$s&end=$e');
+    final session = _ref.read(sessionProvider);
+    final token = session.token;
 
+    if (token == null) return [];
 
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((b) => AdminUserBookingResponse.fromJson(b)).toList();
+      }
+      
+      if (response.statusCode == 404) {
+        print("Backend Note: getUserBookings endpoint not found yet. See demand document.");
+      } else {
+        print("Error fetching user bookings: ${response.statusCode} - ${response.body}");
+      }
+      return [];
+    } catch (e) {
+      print("CRASH getUserBookings: $e");
+      return [];
+    }
+  }
+
+  // 9. CANCEL ANY BOOKING (Admin)
+  Future<bool> adminCancelBooking(int bookingId) async {
+    final url = Uri.parse('${API.base_url}${API.adminCancelBooking}/$bookingId/cancel');
+    final session = _ref.read(sessionProvider);
+    final token = session.token;
+
+    if (token == null) return false;
+
+    try {
+      final response = await HttpClient.patch(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      print("CRASH adminCancelBooking: $e");
+      return false;
+    }
+  }
 }
