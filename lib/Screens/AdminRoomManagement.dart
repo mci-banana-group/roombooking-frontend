@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../Models/room.dart';
-import '../Models/Enums/room_status.dart';
-import '../Models/building.dart';
-import '../Services/admin_repository.dart';
-import '../Services/building_service.dart';
-import '../Models/room_equipment.dart';
+
 import '../Models/Enums/equipment_type.dart';
+import '../Models/room.dart';
+import '../Services/admin_repository.dart';
+import '../Widgets/admin/room_list_tile.dart';
 import 'AdminRoomDetailScreen.dart';
 
 
@@ -309,41 +307,33 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
     return Column(
       children: [
         Divider(height: 1, color: colorScheme.outlineVariant.withOpacity(0.2)),
-        ListTile(
+        RoomListTile(
           onTap: () => _openRoomDetails(room),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          title: Text("Room: ${room.name}", style: const TextStyle(fontWeight: FontWeight.w600)),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4.0),
-            child: Row(
-              children: [
-                Icon(Icons.people_outline, size: 16, color: colorScheme.secondary),
-                const SizedBox(width: 4),
-                Text("${room.capacity}", style: TextStyle(color: colorScheme.secondary)),
-                const SizedBox(width: 16),
-                if (room.equipment.isNotEmpty)
-                  ...room.equipment.take(5).map((e) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Icon(_getIconForType(e.type), size: 16, color: colorScheme.onSurfaceVariant),
-                  )),
-              ],
+          roomName: room.name,
+          capacity: room.capacity,
+          equipmentTypes: room.equipment
+              .where((e) => e.quantity > 0)
+              .map((e) => e.type)
+              .toList(),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: room.currentStatus.name == 'free'
+                  ? colorScheme.primaryContainer
+                  : colorScheme.tertiaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              room.currentStatus.name.toUpperCase(),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: room.currentStatus.name == 'free'
+                    ? colorScheme.onPrimaryContainer
+                    : colorScheme.onTertiaryContainer,
+              ),
             ),
           ),
-          trailing: Container(
-             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-             decoration: BoxDecoration(
-               color: room.currentStatus.name == 'free' ? colorScheme.primaryContainer : colorScheme.tertiaryContainer,
-               borderRadius: BorderRadius.circular(12)
-             ),
-             child: Text(
-               room.currentStatus.name.toUpperCase(),
-               style: TextStyle(
-                 fontSize: 10, 
-                 fontWeight: FontWeight.bold,
-                 color: room.currentStatus.name == 'free' ? colorScheme.onPrimaryContainer : colorScheme.onTertiaryContainer,
-               ),
-             ),
-           ),
         ),
       ],
     );

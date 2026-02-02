@@ -82,10 +82,12 @@ class AdminStats {
   }
 
   /// Percentage of successful meetings (checked in vs total non-cancelled)
-  double get successRate {
-    final nonCancelled = totalMeetingsCount - cancelledMeetingsCount;
-    if (nonCancelled == 0) return 0.0;
-    return (checkedInMeetings / nonCancelled) * 100;
+  double get completionRate {
+    final eligible = totalMeetingsCount -
+        cancelledMeetingsCount -
+        reservedMeetingsCount;
+    if (eligible <= 0) return 0.0;
+    return (completedBookingsCount / eligible) * 100;
   }
 
   /// Cancellation rate as percentage
@@ -94,17 +96,34 @@ class AdminStats {
     return (cancelledMeetingsCount / totalMeetingsCount) * 100;
   }
 
+  /// User cancellation rate as percentage
+  double get userCancellationRate {
+    if (totalMeetingsCount == 0) return 0.0;
+    return (userCancelledMeetingsCount / totalMeetingsCount) * 100;
+  }
+
+  /// Admin cancellation rate as percentage
+  double get adminCancellationRate {
+    if (totalMeetingsCount == 0) return 0.0;
+    return (adminCancelledMeetingsCount / totalMeetingsCount) * 100;
+  }
+
   /// No-show rate as percentage
   double get noShowRate {
-    final nonCancelled = totalMeetingsCount - cancelledMeetingsCount;
-    if (nonCancelled == 0) return 0.0;
-    return (noShowMeetingsCount / nonCancelled) * 100;
+    final eligible = totalMeetingsCount -
+        cancelledMeetingsCount -
+        reservedMeetingsCount;
+    if (eligible <= 0) return 0.0;
+    return (noShowMeetingsCount / eligible) * 100;
   }
 
   /// Percentage of meetings that were actually attended
   double get attendanceRate {
-    if (totalMeetingsCount == 0) return 0.0;
-    return ((checkedInMeetings) / totalMeetingsCount) * 100;
+    final eligible = totalMeetingsCount -
+        cancelledMeetingsCount -
+        reservedMeetingsCount;
+    if (eligible <= 0) return 0.0;
+    return (checkedInMeetings / eligible) * 100;
   }
 
   /// Total number of "problematic" bookings (cancelled + no-show)
@@ -113,7 +132,7 @@ class AdminStats {
   /// Efficiency rate: successful meetings vs total bookings made
   double get efficiencyRate {
     if (totalMeetingsCount == 0) return 0.0;
-    return (checkedInMeetings / totalMeetingsCount) * 100;
+    return (completedBookingsCount / totalMeetingsCount) * 100;
   }
 }
 

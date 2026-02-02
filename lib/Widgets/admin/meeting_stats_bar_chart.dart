@@ -11,12 +11,16 @@ class MeetingStatsBarChart extends StatelessWidget {
   final AdminStats stats;
   final DateTime startDate;
   final DateTime endDate;
+  final double? forcedHeight;
+  final bool reserveLegendSpace;
 
   const MeetingStatsBarChart({
     super.key,
     required this.stats,
     required this.startDate,
     required this.endDate,
+    this.forcedHeight,
+    this.reserveLegendSpace = false,
   });
 
   double _scaleFactor(BuildContext context) {
@@ -85,7 +89,7 @@ class MeetingStatsBarChart extends StatelessWidget {
     // 5: Admin Cancelled
     // 6: No-Show
     final barSpecs = [
-      _BarSpec(0, totalMeetingsCount.toDouble(), AppColors.chartTotal),
+      _BarSpec(0, totalMeetingsCount.toDouble(), AppColors.chartTotal(context)),
       _BarSpec(1, reservedCount.toDouble(), AppColors.chartReserved),
       _BarSpec(2, checkedInCount.toDouble(), AppColors.chartCheckedIn),
       _BarSpec(3, completedCount.toDouble(), AppColors.chartCompleted),
@@ -127,10 +131,11 @@ class MeetingStatsBarChart extends StatelessWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 final scale = _scaleFactor(context);
-                final chartHeight = _chartHeightForWidth(constraints.maxWidth);
+                final chartHeight =
+                    forcedHeight ?? _chartHeightForWidth(constraints.maxWidth);
                 final isCompact = constraints.maxWidth < 520;
                 final barCount = barSpecs.length;
-                final slotMinWidth = isCompact ? 84.0 : 120.0;
+                final slotMinWidth = isCompact ? 96.0 : 140.0;
                 final minChartWidth = math.max(
                   constraints.maxWidth,
                   barCount * slotMinWidth,
@@ -233,7 +238,12 @@ class MeetingStatsBarChart extends StatelessWidget {
                                         ),
                                       );
                                       Widget label(String text) {
-                                        final child = Text(text, style: style);
+                                        final child = Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 4,
+                                          ),
+                                          child: Text(text, style: style),
+                                        );
                                         if (!isCompact) return child;
                                         return Transform.rotate(
                                           angle: -math.pi / 4,
@@ -360,6 +370,52 @@ class MeetingStatsBarChart extends StatelessWidget {
                 );
               },
             ),
+            if (reserveLegendSpace) ...[
+              const SizedBox(height: 16),
+              Opacity(
+                opacity: 0,
+                child: IgnorePointer(
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                       _buildLegendItem(context, "Total", AppColors.chartTotal(context)),
+                      _buildLegendItem(
+                        context,
+                        "Reservations",
+                        AppColors.chartReserved,
+                      ),
+                      _buildLegendItem(
+                        context,
+                        "Checked In",
+                        AppColors.chartCheckedIn,
+                      ),
+                      _buildLegendItem(
+                        context,
+                        "Completed",
+                        AppColors.chartCompleted,
+                      ),
+                      _buildLegendItem(
+                        context,
+                        "User Cancelled",
+                        AppColors.chartUserCancelled,
+                      ),
+                      _buildLegendItem(
+                        context,
+                        "Admin Cancelled",
+                        AppColors.chartAdminCancelled,
+                      ),
+                      _buildLegendItem(
+                        context,
+                        "No-Shows",
+                        AppColors.chartNoShowRed,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -387,6 +443,31 @@ class MeetingStatsBarChart extends StatelessWidget {
             show: true,
             toY: y,
             color: Colors.grey.withOpacity(0.1),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(BuildContext context, String title, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: _fontSize(
+              context,
+              13,
+              min: 13,
+            ),
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
