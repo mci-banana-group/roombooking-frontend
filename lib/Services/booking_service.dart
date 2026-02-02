@@ -56,7 +56,7 @@ class BookingService {
 
   /// Cancel / delete booking
   Future<bool> cancelBooking(String bookingId) async {
-    final uri = Uri.parse('${API.base_url}/bookings/$bookingId');
+    final uri = Uri.parse('${API.base_url}/bookings/$bookingId/cancel');
 
     print('🗑️ Attempting to cancel booking:');
     print('   URL: $uri');
@@ -64,7 +64,7 @@ class BookingService {
     print('   Token: ${_authService.token?.substring(0, 20)}...');
 
     try {
-      final response = await HttpClient.delete(
+      final response = await HttpClient.patch(
         uri,
         headers: {
           'Authorization': 'Bearer ${_authService.token}',

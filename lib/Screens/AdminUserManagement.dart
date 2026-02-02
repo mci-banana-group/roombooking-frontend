@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../Models/auth_models.dart';
 import '../Services/admin_repository.dart';
 import '../Resources/AppColors.dart';
+import 'AdminUserBookingsScreen.dart';
 
 class AdminUserManagement extends ConsumerStatefulWidget {
   const AdminUserManagement({super.key});
@@ -194,36 +195,46 @@ class _AdminUserManagementState extends ConsumerState<AdminUserManagement> {
       color: colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: colorScheme.primary.withOpacity(0.1),
-          child: Text(
-            user.firstName.isNotEmpty ? user.firstName[0].toUpperCase() : "?",
-            style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AdminUserBookingsScreen(user: user),
+            ),
+          );
+        },
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: CircleAvatar(
+            backgroundColor: colorScheme.primary.withOpacity(0.1),
+            child: Text(
+              user.firstName.isNotEmpty ? user.firstName[0].toUpperCase() : "?",
+              style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
-        title: Text(
-          "${user.firstName} ${user.lastName}",
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          user.email,
-          style: TextStyle(color: colorScheme.onSurfaceVariant),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: _getRoleColor(user.role, colorScheme).withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _getRoleColor(user.role, colorScheme).withOpacity(0.5)),
+          title: Text(
+            "${user.firstName} ${user.lastName}",
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          child: Text(
-            user.role.toUpperCase(),
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: _getRoleColor(user.role, colorScheme),
+          subtitle: Text(
+            user.email,
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: _getRoleColor(user.role, colorScheme).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _getRoleColor(user.role, colorScheme).withOpacity(0.5)),
+            ),
+            child: Text(
+              user.role.toUpperCase(),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: _getRoleColor(user.role, colorScheme),
+              ),
             ),
           ),
         ),
