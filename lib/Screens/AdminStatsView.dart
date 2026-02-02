@@ -276,6 +276,9 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
     if (_stats == null) {
       return const Center(child: Text("No stats available yet."));
     }
+    if (!_hasStatsData(_stats!)) {
+      return _buildNoStatsState(context);
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -736,6 +739,79 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
               style: TextStyle(
                 color: colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _hasStatsData(AdminStats stats) {
+    final hasCounts = [
+          stats.totalMeetings,
+          stats.userCancelledMeetings,
+          stats.adminCancelledMeetings,
+          stats.completedBookings,
+          stats.checkedInBookings,
+          stats.noShowMeetings,
+          stats.reservedMeetings,
+        ].any((map) => map.values.any((value) => value > 0));
+    final hasLists =
+        stats.mostSearchedItems.isNotEmpty || stats.mostUsedRooms.isNotEmpty;
+    return hasCounts || hasLists;
+  }
+
+  Widget _buildNoStatsState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final titleStyle = Theme.of(context)
+        .textTheme
+        .titleMedium
+        ?.copyWith(fontWeight: FontWeight.bold);
+    final bodyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        );
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 520),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceVariant,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.event_busy,
+                size: 36,
+                color: colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text("No statistics for this period", style: titleStyle),
+            const SizedBox(height: 8),
+            Text(
+              "Try adjusting the reporting period. There are no bookings, searches, or room usage between ${_start.day}.${_start.month}.${_start.year} and ${_end.day}.${_end.month}.${_end.year}.",
+              style: bodyStyle,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _pickDateRange,
+              icon: const Icon(Icons.calendar_today, size: 18),
+              label: const Text("Choose another period"),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                minimumSize: const Size(0, 44),
               ),
             ),
           ],
