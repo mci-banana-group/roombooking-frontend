@@ -179,6 +179,46 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
     );
   }
 
+  Widget _buildDateRangeChip(ColorScheme colorScheme) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: _pickDateRange,
+      child: SizedBox(
+        height: 48,
+        child: Align(
+          alignment: Alignment.center,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 14,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  "${_start.day}.${_start.month} - ${_end.day}.${_end.month}",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _sectionHeader(BuildContext context, String title, String? subtitle) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
@@ -204,10 +244,43 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
     );
   }
 
+  Widget _statsPeriodHeader(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              "Reporting period",
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
+            _buildDateRangeChip(colorScheme),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          "Your booking and usage overview.",
+          style: textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
-    if (_stats == null) return const Center(child: Text("No data."));
+    if (_stats == null) {
+      return const Center(child: Text("No stats available yet."));
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -237,28 +310,10 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                       child: Wrap(
                         alignment: WrapAlignment.start,
                         runAlignment: WrapAlignment.center,
-                        spacing: 16,
+                        spacing: 8,
                         runSpacing: 12,
                         children: [
-                          _sectionHeader(
-                            context,
-                            "Stats Period",
-                            "Overview of bookings and usage trends.",
-                          ),
-                          TextButton.icon(
-                            icon: const Icon(Icons.calendar_today, size: 18),
-                            label: Text(
-                              "${_start.day}.${_start.month} - ${_end.day}.${_end.month}",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: TextButton.styleFrom(
-                              backgroundColor: colorScheme.primaryContainer,
-                              foregroundColor: colorScheme.onPrimaryContainer,
-                            ),
-                            onPressed: _pickDateRange,
-                          ),
+                          _statsPeriodHeader(context),
                         ],
                       ),
                     ),
@@ -323,28 +378,10 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                 Wrap(
                   alignment: WrapAlignment.spaceBetween,
                   runAlignment: WrapAlignment.center,
-                  spacing: 16,
+                  spacing: 8,
                   runSpacing: 12,
                   children: [
-                    _sectionHeader(
-                      context,
-                      "Stats Period",
-                      "Overview of bookings and usage trends.",
-                    ),
-                    TextButton.icon(
-                      icon: const Icon(Icons.calendar_today, size: 18),
-                      label: Text(
-                        "${_start.day}.${_start.month} - ${_end.day}.${_end.month}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: TextButton.styleFrom(
-                        backgroundColor: colorScheme.primaryContainer,
-                        foregroundColor: colorScheme.onPrimaryContainer,
-                      ),
-                      onPressed: _pickDateRange,
-                    ),
+                    _statsPeriodHeader(context),
                   ],
                 ),
               const SizedBox(height: 16),
@@ -483,8 +520,8 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
 
               _sectionHeader(
                 context,
-                "Performance Metrics",
-                "Key rates across booking outcomes.",
+                "Key metrics",
+                "Rates across booking outcomes.",
               ),
               const SizedBox(height: 12),
               LayoutBuilder(
@@ -506,31 +543,31 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                     mainAxisSpacing: spacing,
                     children: [
                       _PercentageStatCard(
-                        title: "Success Rate",
+                        title: "Success rate",
                         percentage: _stats!.successRate,
-                        description: "Checked-in vs non-cancelled bookings",
+                        description: "Checked in vs non‑cancelled bookings",
                         color: Colors.green,
                       ),
                       _PercentageStatCard(
-                        title: "Attendance Rate",
+                        title: "Attendance rate",
                         percentage: _stats!.attendanceRate,
-                        description: "Checked-in vs total bookings",
+                        description: "Checked in vs total bookings",
                         color: Colors.blue,
                       ),
                       _PercentageStatCard(
-                        title: "Cancellation Rate",
+                        title: "Cancellation rate",
                         percentage: _stats!.cancellationRate,
                         description: "Cancelled vs total bookings",
                         color: Colors.orange,
                       ),
                       _PercentageStatCard(
-                        title: "No-Show Rate",
+                        title: "No‑show rate",
                         percentage: _stats!.noShowRate,
-                        description: "No-shows vs non-cancelled bookings",
+                        description: "No‑shows vs non‑cancelled bookings",
                         color: Colors.red,
                       ),
                       _PercentageStatCard(
-                        title: "Efficiency Rate",
+                        title: "Efficiency rate",
                         percentage: _stats!.efficiencyRate,
                         description: "Successful meetings vs total bookings",
                         color: Colors.purple,
@@ -583,13 +620,13 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
     final colorScheme = Theme.of(context).colorScheme;
     final isEmpty = _stats!.mostSearchedItems.isEmpty;
     return _SectionCard(
-      title: "Equipment Trends",
-      subtitle: "Most searched equipment in the selected period.",
+      title: "Popular equipment",
+      subtitle: "Top searches for this period.",
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       headerGap: 12,
       scrollBody: true,
       child: isEmpty
-          ? _buildEmptyState("No search data.")
+          ? _buildEmptyState("No equipment searches yet.")
           : ListView.separated(
               padding: EdgeInsets.zero,
               physics: const AlwaysScrollableScrollPhysics(),
@@ -622,13 +659,13 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
     final colorScheme = Theme.of(context).colorScheme;
     final isEmpty = _stats!.mostUsedRooms.isEmpty;
     return _SectionCard(
-      title: "Most Used Rooms",
-      subtitle: "Top rooms by total occupied time.",
+      title: "Room ranking",
+      subtitle: "Rooms with the most booked time.",
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       headerGap: 12,
       scrollBody: true,
       child: isEmpty
-          ? _buildEmptyState("No room usage data.")
+          ? _buildEmptyState("No room usage yet.")
           : ListView.separated(
               padding: EdgeInsets.zero,
               physics: const AlwaysScrollableScrollPhysics(),

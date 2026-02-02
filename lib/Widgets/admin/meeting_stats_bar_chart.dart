@@ -135,7 +135,7 @@ class MeetingStatsBarChart extends StatelessWidget {
                     forcedHeight ?? _chartHeightForWidth(constraints.maxWidth);
                 final isCompact = constraints.maxWidth < 520;
                 final barCount = barSpecs.length;
-                final slotMinWidth = isCompact ? 84.0 : 120.0;
+                final slotMinWidth = isCompact ? 96.0 : 140.0;
                 final minChartWidth = math.max(
                   constraints.maxWidth,
                   barCount * slotMinWidth,
@@ -238,7 +238,12 @@ class MeetingStatsBarChart extends StatelessWidget {
                                         ),
                                       );
                                       Widget label(String text) {
-                                        final child = Text(text, style: style);
+                                        final child = Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 4,
+                                          ),
+                                          child: Text(text, style: style),
+                                        );
                                         if (!isCompact) return child;
                                         return Transform.rotate(
                                           angle: -math.pi / 4,
