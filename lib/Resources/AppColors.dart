@@ -21,7 +21,8 @@ class AppColors {
   static const Color chartCompleted = Color(0xFF43A047);
   static const Color chartCheckedIn = Color(0xFF00ACC1);
   static const Color chartUserCancelled = Color(0xFF8E24AA);
-  static const Color chartAdminCancelled =  Color(0xFF607D8B);
+  static const Color chartAdminCancelled = Color(0xFF607D8B);
+  static const Color chartCancelled = Color(0xFF6D4C41);
   static const Color chartNoShowRed = Color(0xFFE53935);
 
   /// Status Colors for room indicators

@@ -532,6 +532,54 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                       (availableWidth - totalSpacing) / columns;
                   final tileHeight = metricCardHeight;
                   final childAspectRatio = tileWidth / tileHeight;
+                  final metricCards = <Widget>[
+                    _CountStatCard(
+                      title: "Total bookings",
+                      value: _stats!.totalMeetingsCount,
+                      description: "All meetings in the period",
+                      color: AppColors.chartTotal,
+                    ),
+                    _CountStatCard(
+                      title: "Upcoming (reserved)",
+                      value: _stats!.reservedMeetingsCount,
+                      description: "Future or not checked‑in yet",
+                      color: AppColors.chartReserved,
+                    ),
+                    if (columns > 2) const SizedBox.shrink(),
+                    _PercentageStatCard(
+                      title: "Completion rate",
+                      percentage: _stats!.completionRate,
+                      description:
+                          "Completed vs past, non‑cancelled meetings",
+                      color: AppColors.chartCompleted,
+                    ),
+                      _PercentageStatCard(
+                        title: "Cancellation rate",
+                        percentage: _stats!.cancellationRate,
+                        description: "Cancelled vs total bookings",
+                        color: AppColors.chartCancelled,
+                      ),
+                    _PercentageStatCard(
+                      title: "No‑show rate",
+                      percentage: _stats!.noShowRate,
+                      description:
+                          "No‑shows vs past, non‑cancelled meetings",
+                      color: AppColors.chartNoShowRed,
+                    ),
+                    _PercentageStatCard(
+                      title: "User cancel rate",
+                      percentage: _stats!.userCancellationRate,
+                      description: "User‑cancelled vs total bookings",
+                      color: AppColors.chartUserCancelled,
+                    ),
+                    _PercentageStatCard(
+                      title: "Admin cancel rate",
+                      percentage: _stats!.adminCancellationRate,
+                      description: "Admin‑cancelled vs total bookings",
+                      color: AppColors.chartAdminCancelled,
+                    ),
+                  ];
+
                   return GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -539,38 +587,7 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
                     childAspectRatio: childAspectRatio,
                     crossAxisSpacing: spacing,
                     mainAxisSpacing: spacing,
-                    children: [
-                      _PercentageStatCard(
-                        title: "Success rate",
-                        percentage: _stats!.successRate,
-                        description: "Checked in vs non‑cancelled bookings",
-                        color: Colors.green,
-                      ),
-                      _PercentageStatCard(
-                        title: "Attendance rate",
-                        percentage: _stats!.attendanceRate,
-                        description: "Checked in vs total bookings",
-                        color: Colors.blue,
-                      ),
-                      _PercentageStatCard(
-                        title: "Cancellation rate",
-                        percentage: _stats!.cancellationRate,
-                        description: "Cancelled vs total bookings",
-                        color: Colors.orange,
-                      ),
-                      _PercentageStatCard(
-                        title: "No‑show rate",
-                        percentage: _stats!.noShowRate,
-                        description: "No‑shows vs non‑cancelled bookings",
-                        color: Colors.red,
-                      ),
-                      _PercentageStatCard(
-                        title: "Efficiency rate",
-                        percentage: _stats!.efficiencyRate,
-                        description: "Successful meetings vs total bookings",
-                        color: Colors.purple,
-                      ),
-                    ],
+                    children: metricCards,
                   );
                 },
               ),
@@ -1317,14 +1334,14 @@ class _PercentageStatCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     "$displayPercentage%",
                     style: TextStyle(
                       color: color,
                       fontWeight: FontWeight.bold,
-                      fontSize: _fontSize(context, 16),
+                      fontSize: _fontSize(context, 14),
                     ),
                   ),
                 ),
@@ -1347,6 +1364,80 @@ class _PercentageStatCard extends StatelessWidget {
                 backgroundColor: Colors.grey.shade200,
                 valueColor: AlwaysStoppedAnimation<Color>(color),
                 minHeight: 8,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CountStatCard extends StatelessWidget {
+  final String title;
+  final int value;
+  final String description;
+  final Color color;
+
+  const _CountStatCard({
+    required this.title,
+    required this.value,
+    required this.description,
+    required this.color,
+  });
+
+  double _scaleFactor(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return (width / 1200).clamp(0.85, 1.15);
+  }
+
+  double _fontSize(BuildContext context, double size) {
+    final scale = _scaleFactor(context);
+    return MediaQuery.textScalerOf(context).scale(size * scale);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: _fontSize(context, 16),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value.toString(),
+                style: TextStyle(
+                  fontSize: _fontSize(context, 22),
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Flexible(
+              child: Text(
+                description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: _fontSize(context, 12),
+                  color: Colors.grey.shade600,
+                ),
               ),
             ),
           ],
