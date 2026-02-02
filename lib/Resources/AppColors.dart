@@ -18,11 +18,10 @@ class AppColors {
   /// Chart Colors
   static const Color chartTotal = mciBlue;
   static const Color chartReserved = mciOrange;
-  static const Color chartCompleted = Color(0xFF4CAF50);
-  static const Color chartCheckedIn = Color(0xFF009688);
-  static const Color chartUserCancelled = Color(0xFFFF7043);
-  static const Color chartAdminCancelled = Color(0xFFD84315);
-  static const Color chartNoShow = Color(0xFFB0BEC5);
+  static const Color chartCompleted = Color(0xFF43A047);
+  static const Color chartCheckedIn = Color(0xFF00ACC1);
+  static const Color chartUserCancelled = Color(0xFF8E24AA);
+  static const Color chartAdminCancelled =  Color(0xFF607D8B);
   static const Color chartNoShowRed = Color(0xFFE53935);
 
   /// Status Colors for room indicators
