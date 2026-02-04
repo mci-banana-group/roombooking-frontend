@@ -299,21 +299,21 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Available Rooms'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (widget.isFromQuickCalendar) {
-              Navigator.of(context).pop();
-            } else {
-               // When coming from "Find Room", we want to just Pop. 
-               // If we are in the HomeScreen nested navigator, Pop takes us back to current tab home.
-              Navigator.of(context).pop();
-            }
-          },
-        ),
-      ),
+      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
+          ? AppBar(
+              title: const Text('Available Rooms'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (widget.isFromQuickCalendar) {
+                    Navigator.of(context).pop();
+                  } else {
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+            )
+          : null,
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (_isLoading) {
@@ -339,6 +339,26 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Desktop Back Button
+                        if (constraints.maxWidth >= LayoutConstants.kMobileBreakpoint)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_back),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  tooltip: "Back",
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Back to Home",
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+
                         // Row 1: Date Navigation and Pagination
                         Row(
                           children: [

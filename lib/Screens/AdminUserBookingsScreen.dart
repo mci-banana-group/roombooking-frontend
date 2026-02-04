@@ -82,16 +82,33 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
     final dateFormat = DateFormat('dd.MM.yyyy HH:mm');
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Bookings: ${widget.user.firstName} ${widget.user.lastName}"),
-        centerTitle: false,
-      ),
+      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
+          ? AppBar(
+              title: Text("Bookings: ${widget.user.firstName} ${widget.user.lastName}"),
+              centerTitle: false,
+            )
+          : null,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
           child: Column(
             children: [
               // Header Card with User Info and Filter
+              if (MediaQuery.of(context).size.width >= LayoutConstants.kMobileBreakpoint)
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, top: 16),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () => Navigator.of(context).pop(),
+                        tooltip: 'Back',
+                      ),
+                      const SizedBox(width: 8),
+                      Text("Back to Users", style: textTheme.titleMedium),
+                    ],
+                  ),
+                ),
               Card(
                 margin: const EdgeInsets.all(16),
                 elevation: 0,
