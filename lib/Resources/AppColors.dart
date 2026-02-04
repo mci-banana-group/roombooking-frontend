@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import '../Models/Enums/booking_status.dart';
 
 class AppColors {
   /// MCI Brand Colors
@@ -30,6 +31,23 @@ class AppColors {
   static const Color statusYellow = Color(0xFFFFEB3B);
   static const Color statusRed = Color(0xFFF44336);
 
+  static Color getBookingStatusColor(BookingStatus status) {
+    switch (status) {
+      case BookingStatus.confirmed:
+        return const Color(0xFF43A047); // Green (chartCompleted)
+      case BookingStatus.checkedIn:
+        return statusBlue;
+      case BookingStatus.cancelled:
+        return statusRed;
+      case BookingStatus.pending:
+        return mciOrange;
+      case BookingStatus.expired:
+        return Colors.grey; 
+      default:
+        return Colors.grey;
+    }
+  }
+
   /// Light colour scheme
   static ColorScheme lightColorScheme = ColorScheme(
     brightness: Brightness.light,
@@ -47,6 +65,8 @@ class AppColors {
     onSurface: primaryDark,
     error: statusRed,
     onError: Colors.white,
+    errorContainer: Color(0xFFFFEBEE), // Colors.red[50] equivalent
+    onErrorContainer: Color(0xFFB71C1C), // Colors.red[900] equivalent
   );
 
   /// Dark colour scheme
@@ -64,8 +84,10 @@ class AppColors {
     onBackground: Color(0xFFE0E0E0),
     surface: Color(0xFF1E1E1E),
     onSurface: Color(0xFFE0E0E0),
-    error: statusRed,
-    onError: Colors.white,
+    error: Color(0xFFCF6679),
+    onError: Colors.black,
+    errorContainer: Color(0xFF93000A),
+    onErrorContainer: Color(0xFFFFDAD6),
   );
 
   /// Light ThemeData

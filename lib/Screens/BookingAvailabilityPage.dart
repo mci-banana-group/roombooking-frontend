@@ -308,10 +308,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                   if (widget.isFromQuickCalendar) {
                     Navigator.of(context).pop();
                   } else {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                          builder: (context) => const HomeScreen()), // Navigate back to Home
-                    );
+                    Navigator.of(context).pop();
                   }
                 },
               ),
@@ -342,6 +339,26 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Desktop Back Button
+                        if (constraints.maxWidth >= LayoutConstants.kMobileBreakpoint)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_back),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  tooltip: "Back",
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Back to Home",
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+
                         // Row 1: Date Navigation and Pagination
                         Row(
                           children: [
