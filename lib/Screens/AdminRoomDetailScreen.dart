@@ -197,16 +197,18 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
     final isCreating = widget.room == null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isCreating ? "New Room" : (_isEditing ? "Edit Room" : "Room Details")),
-        actions: [
-          if (!isCreating && !_isEditing)
-            IconButton(
-              icon: Icon(Icons.delete, color: colorScheme.error),
-              onPressed: _deleteRoom,
-            ),
-        ],
-      ),
+      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
+          ? AppBar(
+              title: Text(isCreating ? "New Room" : (_isEditing ? "Edit Room" : "Room Details")),
+              actions: [
+                if (!isCreating && !_isEditing)
+                  IconButton(
+                    icon: Icon(Icons.delete, color: colorScheme.error),
+                    onPressed: _deleteRoom,
+                  ),
+              ],
+            )
+          : null,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _isEditing ? _saveRoom : () => setState(() => _isEditing = true),
         icon: _isSaving 
@@ -246,13 +248,34 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Room Name",
-                style: TextStyle(fontSize: 14, color: colorScheme.onPrimaryContainer.withOpacity(0.6)),
-              ),
-              Text(
-                room.name,
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onPrimaryContainer),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Room Name",
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: colorScheme.onPrimaryContainer.withOpacity(0.6)),
+                      ),
+                      Text(
+                        room.name,
+                        style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onPrimaryContainer),
+                      ),
+                    ],
+                  ),
+                  if (MediaQuery.of(context).size.width >= LayoutConstants.kMobileBreakpoint)
+                    IconButton(
+                      icon: Icon(Icons.delete, color: colorScheme.error),
+                      onPressed: _deleteRoom,
+                      tooltip: "Delete Room",
+                    ),
+                ],
               ),
             ],
           ),
