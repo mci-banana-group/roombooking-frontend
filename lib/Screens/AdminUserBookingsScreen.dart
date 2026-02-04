@@ -82,12 +82,10 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
     final dateFormat = DateFormat('dd.MM.yyyy HH:mm');
 
     return Scaffold(
-      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
-          ? AppBar(
-              title: Text("Bookings: ${widget.user.firstName} ${widget.user.lastName}"),
-              centerTitle: false,
-            )
-          : null,
+      appBar: AppBar(
+        title: Text("Bookings: ${widget.user.firstName} ${widget.user.lastName}"),
+        centerTitle: false,
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),

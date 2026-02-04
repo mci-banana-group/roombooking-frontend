@@ -197,18 +197,16 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
     final isCreating = widget.room == null;
 
     return Scaffold(
-      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
-          ? AppBar(
-              title: Text(isCreating ? "New Room" : (_isEditing ? "Edit Room" : "Room Details")),
-              actions: [
-                if (!isCreating && !_isEditing)
-                  IconButton(
-                    icon: Icon(Icons.delete, color: colorScheme.error),
-                    onPressed: _deleteRoom,
-                  ),
-              ],
-            )
-          : null,
+      appBar: AppBar(
+        title: Text(isCreating ? "New Room" : (_isEditing ? "Edit Room" : "Room Details")),
+        actions: [
+          if (!isCreating && !_isEditing)
+            IconButton(
+              icon: Icon(Icons.delete, color: colorScheme.error),
+              onPressed: _deleteRoom,
+            ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _isEditing ? _saveRoom : () => setState(() => _isEditing = true),
         icon: _isSaving 

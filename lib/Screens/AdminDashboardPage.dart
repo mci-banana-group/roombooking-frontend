@@ -17,6 +17,7 @@ class AdminDashboardPage extends ConsumerStatefulWidget {
 class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -76,37 +77,59 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
                             label: 'Users',
                             icon: Icons.people,
                             isSelected: _tabController.index == 0,
-                            onTap: () => setState(() => _tabController.index = 0),
+                            onTap: () {
+                              if (_navigatorKey.currentState != null && _navigatorKey.currentState!.canPop()) {
+                                _navigatorKey.currentState!.popUntil((route) => route.isFirst);
+                              }
+                              setState(() => _tabController.index = 0);
+                            },
                           ),
                           const SizedBox(width: 8),
                           _AdminHeaderItem(
                             label: 'Buildings/Rooms',
                             icon: Icons.meeting_room,
                             isSelected: _tabController.index == 1,
-                            onTap: () => setState(() => _tabController.index = 1),
+                            onTap: () {
+                               if (_navigatorKey.currentState != null && _navigatorKey.currentState!.canPop()) {
+                                _navigatorKey.currentState!.popUntil((route) => route.isFirst);
+                              }
+                              setState(() => _tabController.index = 1);
+                            },
                           ),
                           const SizedBox(width: 8),
                           _AdminHeaderItem(
                             label: 'Statistics',
                             icon: Icons.bar_chart,
                             isSelected: _tabController.index == 2,
-                            onTap: () => setState(() => _tabController.index = 2),
+                            onTap: () {
+                               if (_navigatorKey.currentState != null && _navigatorKey.currentState!.canPop()) {
+                                _navigatorKey.currentState!.popUntil((route) => route.isFirst);
+                              }
+                              setState(() => _tabController.index = 2);
+                            },
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                // Content
+                // Content with Nested Navigator
                 Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: const [
-                      AdminUserManagement(),
-                      AdminRoomManagement(),
-                      AdminStatsView(),
-                    ],
+                  child: Navigator(
+                    key: _navigatorKey,
+                    onGenerateRoute: (settings) {
+                      return MaterialPageRoute(
+                        builder: (context) => TabBarView(
+                          controller: _tabController,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: const [
+                            AdminUserManagement(),
+                            AdminRoomManagement(),
+                            AdminStatsView(),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],

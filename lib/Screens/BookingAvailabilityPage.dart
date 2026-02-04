@@ -299,24 +299,21 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
-          ? AppBar(
-              title: const Text('Available Rooms'),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  if (widget.isFromQuickCalendar) {
-                    Navigator.of(context).pop();
-                  } else {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                          builder: (context) => const HomeScreen()), // Navigate back to Home
-                    );
-                  }
-                },
-              ),
-            )
-          : null,
+      appBar: AppBar(
+        title: const Text('Available Rooms'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (widget.isFromQuickCalendar) {
+              Navigator.of(context).pop();
+            } else {
+               // When coming from "Find Room", we want to just Pop. 
+               // If we are in the HomeScreen nested navigator, Pop takes us back to current tab home.
+              Navigator.of(context).pop();
+            }
+          },
+        ),
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (_isLoading) {
