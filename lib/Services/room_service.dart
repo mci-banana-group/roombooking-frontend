@@ -104,7 +104,8 @@ class RoomService {
 
       if (startTime.isNotEmpty) queryParams['startTime'] = startTime;
       if (endTime.isNotEmpty) queryParams['endTime'] = endTime;
-      if (startTime.isNotEmpty && endTime.isNotEmpty) queryParams['status'] = 'FREE';
+      // Removed status=FREE so we get all rooms including occupied ones
+
 
       if (buildingId != null) {
         queryParams['buildingId'] = buildingId.toString();

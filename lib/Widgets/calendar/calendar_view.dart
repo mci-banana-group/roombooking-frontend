@@ -613,7 +613,7 @@ class _CalendarViewState extends State<CalendarView> {
               booking.isMyBooking ? booking.title : 'Occupied',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w600, color: Colors.white),
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white),
             ),
           ],
         ),
@@ -675,12 +675,12 @@ class _CalendarViewState extends State<CalendarView> {
               children: [
                 Text(
                   '${DateFormat('HH:mm').format(_draftBooking!.startTime)} - ${DateFormat('HH:mm').format(_draftBooking!.endTime)}',
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
                 ),
                 if (hasOverlap)
                   Text(
                     'Overlaps booking!',
-                    style: TextStyle(fontSize: 8, fontStyle: FontStyle.italic, color: Colors.red.shade700),
+                    style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: Colors.red.shade700),
                   ),
               ],
             ),
