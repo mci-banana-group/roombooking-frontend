@@ -187,27 +187,23 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
   Widget _buildBookingCard(AdminUserBookingResponse booking, ColorScheme colorScheme, TextTheme textTheme, DateFormat dateFormat) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
+      elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: colorScheme.secondaryContainer.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(Icons.meeting_room, color: colorScheme.onSecondaryContainer),
+        title: Text(
+          booking.description?.isNotEmpty == true ? booking.description! : "Booking #${booking.id}",
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        title: Text("Room: ${booking.roomName ?? "Unknown Room"}", style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text("Room: ${booking.roomName ?? "Unknown Room"}", style: textTheme.bodyMedium),
+              const SizedBox(height: 4),
               Row(
                 children: [
                   Icon(Icons.access_time, size: 14, color: colorScheme.onSurfaceVariant),
