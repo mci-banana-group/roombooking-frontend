@@ -156,10 +156,7 @@ class BookingCard extends StatelessWidget {
         icon = Icons.cancel_outlined;
         label = "CANCELLED";
         break;
-      case BookingStatus.pending:
-        icon = Icons.hourglass_empty;
-        label = "PENDING";
-        break;
+
       case BookingStatus.expired: // Mapped from NO_SHOW
         icon = Icons.event_busy;
         label = "NO SHOW";

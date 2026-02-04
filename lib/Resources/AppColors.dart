@@ -37,8 +37,7 @@ class AppColors {
         return chartCheckedIn;
       case BookingStatus.cancelled:
         return chartNoShowRed; // Using the red for cancelled
-      case BookingStatus.pending:
-        return mciOrange;
+
       case BookingStatus.expired:
         return Colors.grey;
     }
