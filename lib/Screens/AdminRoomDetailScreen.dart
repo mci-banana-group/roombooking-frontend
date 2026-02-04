@@ -8,6 +8,8 @@ import '../Models/room_equipment.dart';
 import '../Models/booking.dart';
 import '../Services/building_service.dart';
 import '../Services/admin_repository.dart';
+import '../Widgets/BookingCard.dart';
+import '../Constants/layout_constants.dart';
 
 class AdminRoomDetailScreen extends ConsumerStatefulWidget {
   final Room? room; // null implies creating a new room
@@ -199,7 +201,7 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 800),
+                  constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
                   child: _isEditing ? _buildEditForm(colorScheme) : _buildDetailView(colorScheme),
                 ),
               ),
@@ -289,17 +291,12 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
 
               return Column(
                 children: bookings.map((b) {
-                  final dateStr = "${b.startTime.day.toString().padLeft(2, '0')}.${b.startTime.month.toString().padLeft(2, '0')}.${b.startTime.year}";
-                  final timeStr = "${b.startTime.hour.toString().padLeft(2, '0')}:${b.startTime.minute.toString().padLeft(2, '0')} - ${b.endTime.hour.toString().padLeft(2, '0')}:${b.endTime.minute.toString().padLeft(2, '0')}";
-                  return Card( // Fixed elevation to remove shadow if needed or keep default
-                    margin: const EdgeInsets.only(bottom: 8),
-                    elevation: 0,
-                    color: colorScheme.surfaceContainerHighest,
-                    child: ListTile(
-                      leading: Icon(Icons.event, color: colorScheme.primary),
-                      title: Text("$dateStr   $timeStr", style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: b.description.isNotEmpty ? Text(b.description, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
-                    ),
+                  return BookingCard(
+                    title: b.description.isNotEmpty ? b.description : 'Booking',
+                    subtitle: 'User: ${b.userId}',
+                    startTime: b.startTime,
+                    endTime: b.endTime,
+                    status: b.status,
                   );
                 }).toList(),
               );
