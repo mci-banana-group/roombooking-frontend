@@ -10,6 +10,8 @@ import '../Services/building_service.dart';
 import '../Services/admin_repository.dart';
 import '../Widgets/BookingCard.dart';
 import '../Constants/layout_constants.dart';
+import 'AdminUserBookingsScreen.dart';
+import '../Models/auth_models.dart';
 
 class AdminRoomDetailScreen extends ConsumerStatefulWidget {
   final Room? room; // null implies creating a new room
@@ -38,6 +40,10 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
   List<RoomEquipment> _equipmentList = [];
   bool _isSaving = false;
   Future<List<Booking>>? _bookingsFuture;
+  
+  // User cache for displaying names
+  Map<String, UserResponse> _userMap = {};
+  bool _isLoadingUsers = true;
 
   @override
   void initState() {
@@ -66,6 +72,21 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
     }
 
     _loadBuildings();
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    try {
+      final users = await ref.read(adminRepositoryProvider).getUsers();
+      if (mounted) {
+        setState(() {
+          _userMap = {for (var u in users) u.id.toString(): u};
+          _isLoadingUsers = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingUsers = false);
+    }
   }
 
   Future<void> _loadBuildings() async {
@@ -293,10 +314,47 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
                 children: bookings.map((b) {
                   return BookingCard(
                     title: b.description.isNotEmpty ? b.description : 'Booking',
-                    subtitle: 'User: ${b.userId}',
+                    subtitle: _userMap.containsKey(b.userId) 
+                        ? '${_userMap[b.userId]!.firstName} ${_userMap[b.userId]!.lastName}' 
+                        : b.userId,
                     startTime: b.startTime,
                     endTime: b.endTime,
                     status: b.status,
+                    onSubtitleTap: () async {
+                      if (b.userId.isNotEmpty) {
+                        final user = _userMap[b.userId];
+                        
+                        if (user != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AdminUserBookingsScreen(user: user)),
+                          );
+                        } else {
+                           // Fallback if not mapped for some reason (e.g. reload needed)
+                           // Show loading indicator or snackbar
+                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Loading user details..."), duration: Duration(seconds: 1)));
+                           
+                           try {
+                              final users = await ref.read(adminRepositoryProvider).getUsers();
+                              final fetchedUser = users.firstWhere(
+                                (u) => u.id.toString() == b.userId, 
+                                orElse: () => UserResponse(id: -1, firstName: "Unknown", lastName: "User", email: "", role: "", isAdmin: false),
+                              );
+
+                              if (fetchedUser.id != -1 && mounted) {
+                                 Navigator.push(
+                                   context,
+                                   MaterialPageRoute(builder: (context) => AdminUserBookingsScreen(user: fetchedUser)),
+                                 );
+                              } else if (mounted) {
+                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("User not found.")));
+                              }
+                           } catch (e) {
+                             if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+                           }
+                        }
+                      }
+                    },
                   );
                 }).toList(),
               );

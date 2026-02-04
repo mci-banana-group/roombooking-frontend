@@ -7,6 +7,7 @@ import '../Models/Enums/booking_status.dart';
 import '../Services/admin_repository.dart';
 import '../Widgets/BookingCard.dart';
 import '../Constants/layout_constants.dart';
+import 'AdminRoomDetailScreen.dart';
 
 class AdminUserBookingsScreen extends ConsumerStatefulWidget {
   final UserResponse user;
@@ -193,6 +194,41 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
       startTime: booking.startTime,
       endTime: booking.endTime,
       status: booking.status,
+      onSubtitleTap: () async {
+        if (booking.roomId != null && booking.roomId != 0) {
+           // Helper to find building by name (since response usually has room name not ID, but we have roomId in response model)
+           // ideally we fetch the full room object
+           
+           setState(() => _isLoading = true);
+           try {
+              // We need a way to get a single room. 
+              // AdminRepository.getAllRooms() gets all.
+              // Let's filter from all rooms for now as a fallback or add getRoomById.
+              // Efficiency: getAllRooms is heavy. 
+              // Better: Check if roomName contains building info or assume we need to fetch.
+              
+              // Let's rely on getAllRooms for now as it's available, optimization later.
+              final allRooms = await ref.read(adminRepositoryProvider).getAllRooms();
+              final roomIdx = allRooms.indexWhere((r) => r.id == booking.roomId.toString());
+              
+              if (mounted) setState(() => _isLoading = false);
+              
+              if (roomIdx != -1 && mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminRoomDetailScreen(room: allRooms[roomIdx])),
+                );
+              } else if (mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Room details not found.")));
+              }
+           } catch (e) {
+              if (mounted) {
+                setState(() => _isLoading = false);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+              }
+           }
+        }
+      },
       actions: [
         TextButton.icon(
           onPressed: () => _confirmCancel(booking),

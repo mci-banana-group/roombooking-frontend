@@ -10,6 +10,7 @@ class BookingCard extends StatelessWidget {
   final BookingStatus status;
   final List<Widget>? actions;
   final VoidCallback? onTap;
+  final VoidCallback? onSubtitleTap;
 
   const BookingCard({
     super.key,
@@ -20,6 +21,7 @@ class BookingCard extends StatelessWidget {
     required this.status,
     this.actions,
     this.onTap,
+    this.onSubtitleTap,
   });
 
   @override
@@ -70,12 +72,30 @@ class BookingCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                  const SizedBox(height: 4),
+                  if (onSubtitleTap != null)
+                    InkWell(
+                      onTap: onSubtitleTap,
+                      borderRadius: BorderRadius.circular(4),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 1.0),
+                        child: Text(
+                          subtitle,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.primary,
+                            decoration: TextDecoration.underline,
+                            decorationColor: colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Text(
+                      subtitle,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
