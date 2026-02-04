@@ -12,6 +12,7 @@ import '../Widgets/BookingCard.dart';
 import '../Constants/layout_constants.dart';
 import 'AdminUserBookingsScreen.dart';
 import '../Models/auth_models.dart';
+import '../Widgets/layout/DesktopLayoutWrapper.dart';
 
 class AdminRoomDetailScreen extends ConsumerStatefulWidget {
   final Room? room; // null implies creating a new room
@@ -196,39 +197,42 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final isCreating = widget.room == null;
 
-    return Scaffold(
-      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
-          ? AppBar(
-              title: Text(isCreating ? "New Room" : (_isEditing ? "Edit Room" : "Room Details")),
-              actions: [
-                if (!isCreating && !_isEditing)
-                  IconButton(
-                    icon: Icon(Icons.delete, color: colorScheme.error),
-                    onPressed: _deleteRoom,
+    return DesktopLayoutWrapper(
+      selectedIndex: 3, // Admin tab
+      child: Scaffold(
+        appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
+            ? AppBar(
+                title: Text(isCreating ? "New Room" : (_isEditing ? "Edit Room" : "Room Details")),
+                actions: [
+                  if (!isCreating && !_isEditing)
+                    IconButton(
+                      icon: Icon(Icons.delete, color: colorScheme.error),
+                      onPressed: _deleteRoom,
+                    ),
+                ],
+              )
+            : null,
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _isEditing ? _saveRoom : () => setState(() => _isEditing = true),
+          icon: _isSaving 
+            ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: colorScheme.onPrimary, strokeWidth: 2)) 
+            : Icon(_isEditing ? Icons.save : Icons.edit),
+          label: Text(_isEditing ? "Save" : "Edit"),
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+        ),
+        body: _isLoadingBuildings 
+            ? const Center(child: CircularProgressIndicator()) 
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
+                    child: _isEditing ? _buildEditForm(colorScheme) : _buildDetailView(colorScheme),
                   ),
-              ],
-            )
-          : null,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isEditing ? _saveRoom : () => setState(() => _isEditing = true),
-        icon: _isSaving 
-          ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: colorScheme.onPrimary, strokeWidth: 2)) 
-          : Icon(_isEditing ? Icons.save : Icons.edit),
-        label: Text(_isEditing ? "Save" : "Edit"),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
-      body: _isLoadingBuildings 
-          ? const Center(child: CircularProgressIndicator()) 
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
-                  child: _isEditing ? _buildEditForm(colorScheme) : _buildDetailView(colorScheme),
                 ),
               ),
-            ),
+      ),
     );
   }
 

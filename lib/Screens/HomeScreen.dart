@@ -6,6 +6,8 @@ import 'package:mci_booking_app/Screens/BookingsPage.dart';
 import 'package:mci_booking_app/Screens/ProfilePage.dart';
 import 'package:mci_booking_app/Screens/AdminDashboardPage.dart';
 import 'package:mci_booking_app/main.dart';
+import 'package:mci_booking_app/Constants/layout_constants.dart';
+import '../Widgets/navigation/MainNavigationRail.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   final int initialIndex;
@@ -91,7 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          if (constraints.maxWidth < 640) {
+          if (constraints.maxWidth < LayoutConstants.kMobileBreakpoint) {
             // Mobile View
             return Scaffold(
               body: pages[_selectedIndex],
@@ -135,25 +137,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               backgroundColor: Theme.of(context).colorScheme.surface, // Rail background color
               body: Row(
                 children: [
-                  NavigationRail(
-                    backgroundColor: Colors.transparent, // Let surface color show through
+                   MainNavigationRail(
                     selectedIndex: _selectedIndex,
                     onDestinationSelected: _onItemTapped,
-                    labelType: NavigationRailLabelType.all,
-                    destinations: railDestinations,
-                    indicatorShape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    indicatorColor: Theme.of(context).colorScheme.primaryContainer,
-                    selectedIconTheme: IconThemeData(color: Theme.of(context).colorScheme.onPrimaryContainer),
-                    unselectedIconTheme: IconThemeData(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                    selectedLabelTextStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.primary, 
-                      fontWeight: FontWeight.bold
-                    ),
-                    unselectedLabelTextStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)
-                    ),
                   ),
                   Expanded(
                     child: Container(

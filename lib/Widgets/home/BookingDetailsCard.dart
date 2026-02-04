@@ -5,6 +5,7 @@ import '../common/FormLabel.dart';
 import '../common/TimeDropdown.dart';
 import '../common/DurationChip.dart';
 import '../../Screens/BookingAvailabilityPage.dart';
+import '../../Utils/navigation_helper.dart';
 import '../../Services/building_service.dart';
 import '../../Services/room_service.dart';
 import '../../Models/building.dart';
@@ -226,8 +227,9 @@ class BookingDetailsCardState extends State<BookingDetailsCard> with SingleTicke
 
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => BookingAvailabilityPage(
+      NavigationHelper.getRoute(
+        context, 
+        BookingAvailabilityPage(
           date: widget.selectedDate,
           startTime: _selectedStartTime ?? '',
           endTime: _selectedEndTime ?? '',

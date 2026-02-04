@@ -39,10 +39,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           (route) => false,
         );
       }
-    } else {
-      if (!kDebugMode) return;
-      _emailController.text = "tom.student@mci.edu";
-      _passwordController.text = "password";
     }
   }
 
