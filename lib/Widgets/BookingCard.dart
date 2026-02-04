@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../Models/Enums/booking_status.dart';
+import '../Resources/AppColors.dart';
 
 class BookingCard extends StatelessWidget {
   final String title;
@@ -139,34 +140,31 @@ class BookingCard extends StatelessWidget {
     IconData icon;
     String label;
 
+    // Use centralized color definition
+    color = AppColors.getBookingStatusColor(status);
+
     switch (status) {
       case BookingStatus.confirmed: // Mapped from RESERVED
-        color = Colors.green;
         icon = Icons.check_circle_outline;
         label = "RESERVED";
         break;
       case BookingStatus.checkedIn:
-        color = colorScheme.primary;
         icon = Icons.login;
         label = "CHECKED IN";
         break;
       case BookingStatus.cancelled:
-        color = colorScheme.error;
         icon = Icons.cancel_outlined;
         label = "CANCELLED";
         break;
       case BookingStatus.pending:
-        color = Colors.orange;
         icon = Icons.hourglass_empty;
         label = "PENDING";
         break;
       case BookingStatus.expired: // Mapped from NO_SHOW
-        color = colorScheme.outline;
         icon = Icons.event_busy;
         label = "NO SHOW";
         break;
       default:
-        color = colorScheme.outline;
         icon = Icons.help_outline;
         label = s;
     }

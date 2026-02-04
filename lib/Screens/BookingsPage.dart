@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import '../Resources/AppColors.dart';
 import '../Models/booking.dart';
 import '../Models/room.dart';
 import '../Models/Enums/booking_status.dart';
@@ -67,7 +68,7 @@ class _BookingsPageState extends State<BookingsPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Please enter a code'),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.mciOrange,
               duration: Duration(seconds: 2),
             ),
           );
@@ -102,10 +103,10 @@ class _BookingsPageState extends State<BookingsPage> {
           await _loadBookings();
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Checked in successfully'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
+              SnackBar(
+                content: const Text('Checked in successfully'),
+                backgroundColor: AppColors.chartCompleted,
+                duration: const Duration(seconds: 2),
               ),
             );
           }
@@ -113,10 +114,10 @@ class _BookingsPageState extends State<BookingsPage> {
           print('âŒ Check-in failed');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Invalid code or check-in failed'),
-                backgroundColor: Colors.red,
-                duration: Duration(seconds: 3),
+              SnackBar(
+                content: const Text('Invalid code or check-in failed'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+                duration: const Duration(seconds: 3),
               ),
             );
           }
@@ -128,7 +129,7 @@ class _BookingsPageState extends State<BookingsPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
+              backgroundColor: Theme.of(context).colorScheme.error,
               duration: const Duration(seconds: 4),
             ),
           );
@@ -202,7 +203,7 @@ class _BookingsPageState extends State<BookingsPage> {
             child: const Text('No'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Yes, cancel'),
           ),
@@ -230,20 +231,20 @@ class _BookingsPageState extends State<BookingsPage> {
           _loadBookings();
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Booking cancelled successfully'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
+              SnackBar(
+                content: const Text('Booking cancelled successfully'),
+                backgroundColor: AppColors.chartCompleted,
+                duration: const Duration(seconds: 2),
               ),
             );
           }
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Failed to cancel booking'),
-                backgroundColor: Colors.red,
-                duration: Duration(seconds: 3),
+              SnackBar(
+                content: const Text('Failed to cancel booking'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+                duration: const Duration(seconds: 3),
               ),
             );
           }
@@ -254,7 +255,7 @@ class _BookingsPageState extends State<BookingsPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
+              backgroundColor: Theme.of(context).colorScheme.error,
               duration: const Duration(seconds: 4),
             ),
           );
@@ -441,7 +442,7 @@ class _BookingsPageState extends State<BookingsPage> {
                               icon: const Icon(Icons.login),
                               label: const Text('Check In'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
+                                backgroundColor: AppColors.chartCompleted,
                                 foregroundColor: Colors.white,
                               ),
                             ),
@@ -450,7 +451,7 @@ class _BookingsPageState extends State<BookingsPage> {
                               onPressed: () => _confirmDelete(booking),
                               icon: const Icon(Icons.close),
                               label: const Text('Cancel'),
-                              style: TextButton.styleFrom(foregroundColor: Colors.red),
+                              style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
                             ),
                         ],
 
