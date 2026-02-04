@@ -115,8 +115,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+                    topLeft: Radius.circular(LayoutConstants.kDesktopPageRadius),
+                    topRight: Radius.circular(LayoutConstants.kDesktopPageRadius),
                   ),
                   child: BottomNavigationBar(
                     backgroundColor: Colors.transparent, // Use container color
@@ -146,12 +146,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.background, // Page content color
                         borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(30),
-                          bottomLeft: Radius.circular(30),
+                          topLeft: Radius.circular(LayoutConstants.kDesktopPageRadius),
+                          bottomLeft: Radius.circular(LayoutConstants.kDesktopPageRadius),
                         ),
                         border: Border.all(
                           color: Theme.of(context).colorScheme.surface, // Subtle border
-                          width: 6,
+                          width: LayoutConstants.kDesktopPageBorderWidth,
                         ),
                       ),
                       clipBehavior: Clip.hardEdge,

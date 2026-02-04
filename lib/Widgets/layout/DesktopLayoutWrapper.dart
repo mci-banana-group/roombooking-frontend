@@ -46,12 +46,12 @@ class DesktopLayoutWrapper extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.background,
                       borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(30),
-                        bottomLeft: Radius.circular(30),
+                        topLeft: Radius.circular(LayoutConstants.kDesktopPageRadius),
+                        bottomLeft: Radius.circular(LayoutConstants.kDesktopPageRadius),
                       ),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.surface,
-                        width: 6,
+                        width: LayoutConstants.kDesktopPageBorderWidth,
                       ),
                     ),
                     clipBehavior: Clip.hardEdge,
