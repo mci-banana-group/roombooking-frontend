@@ -32,6 +32,8 @@ class AppColors {
   static Color getBookingStatusColor(BookingStatus status) {
     switch (status) {
       case BookingStatus.confirmed:
+        return chartReserved;
+      case BookingStatus.completed:
         return chartCompleted;
       case BookingStatus.checkedIn:
         return chartCheckedIn;

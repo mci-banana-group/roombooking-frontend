@@ -50,8 +50,13 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
     super.dispose();
   }
 
+  Color _onColor(Color background) {
+    return background.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final duration = widget.endTime.difference(widget.startTime);
     final durationHours = duration.inHours;
     final durationMinutes = duration.inMinutes % 60;
@@ -73,7 +78,10 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                       radius: 24,
                       child: Text(
                         widget.room.avatar,
-                        style: const TextStyle(fontSize: 20),
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: _onColor(widget.room.color),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -93,7 +101,7 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                             '${widget.room.building} - ${widget.room.floor}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -101,7 +109,7 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                             'Capacity: ${widget.room.capacity} persons',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.grey[600],
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -217,7 +225,7 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                           ? null
                           : () => Navigator.pop(context),
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
+                        foregroundColor: colorScheme.primary,
                       ),
                       child: const Text('Cancel'),
                     ),
@@ -237,7 +245,7 @@ class _BookingConfirmationDialogState extends State<BookingConfirmationDialog> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.room.color,
-                        foregroundColor: Colors.white,
+                        foregroundColor: _onColor(widget.room.color),
                       ),
                       child: _isSubmitting
                           ? const SizedBox(
