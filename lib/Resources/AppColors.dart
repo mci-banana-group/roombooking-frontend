@@ -19,7 +19,12 @@ class AppColors {
   static const Color mciRed = Color(0xFF821131);
 
   // --- Chart Colors (Legacy support) ---
-  static Color chartTotal(BuildContext context) => Theme.of(context).colorScheme.primary;
+  static Color chartTotal(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return colorScheme.brightness == Brightness.dark
+        ? colorScheme.secondary
+        : colorScheme.primary;
+  }
   static const Color chartReserved = RoomStatusColors.reserved;
   static const Color chartCompleted = Color(0xFF43A047);
   static const Color chartCheckedIn = Color(0xFF00ACC1);
