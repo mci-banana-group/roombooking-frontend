@@ -9,6 +9,7 @@ import 'package:mci_booking_app/Screens/HomeScreen.dart';
 import '../Widgets/calendar/calendar_models.dart';
 import '../Widgets/calendar/calendar_view.dart';
 import '../Widgets/calendar/booking_confirmation_dialog.dart';
+import '../Constants/layout_constants.dart';
 
 // ============================================================================
 // BOOKING AVAILABILITY PAGE
@@ -298,21 +299,24 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Available Rooms'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (widget.isFromQuickCalendar) {
-              Navigator.of(context).pop();
-            } else {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const HomeScreen()), // Navigate back to Home
-              );
-            }
-          },
-        ),
-      ),
+      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
+          ? AppBar(
+              title: const Text('Available Rooms'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (widget.isFromQuickCalendar) {
+                    Navigator.of(context).pop();
+                  } else {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                          builder: (context) => const HomeScreen()), // Navigate back to Home
+                    );
+                  }
+                },
+              ),
+            )
+          : null,
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (_isLoading) {
