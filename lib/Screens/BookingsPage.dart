@@ -2,7 +2,7 @@
 import '../Models/booking.dart';
 import '../Models/room.dart';
 import '../Models/Enums/booking_status.dart';
-import '../Widgets/mybookings/BookingCard.dart';
+import '../Widgets/BookingCard.dart';
 import '../Widgets/mybookings/BookingStats.dart';
 import '../Services/auth_service.dart';
 
@@ -428,11 +428,31 @@ class _BookingsPageState extends State<BookingsPage> {
                       final isPast = _isBookingPast(booking);
 
                       return BookingCard(
-                        booking: booking,
-                        roomName: _getRoomName(booking),
-                        buildingName: _getBuildingName(booking),
-                        onCheckIn: isCheckInAvailable && !isPast ? () => _showCheckInDialog(booking) : null,
-                        onDelete: !isPast ? () => _confirmDelete(booking) : null,
+                        title: booking.description.isNotEmpty ? booking.description : 'No title',
+                        subtitle: '${_getRoomName(booking)} • ${_getBuildingName(booking)}',
+                        startTime: booking.startTime,
+                        endTime: booking.endTime,
+                        status: booking.status,
+                        actions: [
+                          if (isCheckInAvailable && !isPast)
+                            ElevatedButton.icon(
+                              onPressed: () => _showCheckInDialog(booking),
+                              icon: const Icon(Icons.login),
+                              label: const Text('Check In'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          if (!isPast)
+                            TextButton.icon(
+                              onPressed: () => _confirmDelete(booking),
+                              icon: const Icon(Icons.close),
+                              label: const Text('Cancel'),
+                              style: TextButton.styleFrom(foregroundColor: Colors.red),
+                            ),
+                        ],
+
                       );
                     },
                   ),

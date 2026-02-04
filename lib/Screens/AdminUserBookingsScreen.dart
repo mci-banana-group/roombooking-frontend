@@ -5,6 +5,7 @@ import '../Models/auth_models.dart';
 import '../Models/admin_user_booking_response.dart';
 import '../Models/Enums/booking_status.dart';
 import '../Services/admin_repository.dart';
+import '../Widgets/BookingCard.dart';
 
 class AdminUserBookingsScreen extends ConsumerStatefulWidget {
   final UserResponse user;
@@ -185,51 +186,20 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
   }
 
   Widget _buildBookingCard(AdminUserBookingResponse booking, ColorScheme colorScheme, TextTheme textTheme, DateFormat dateFormat) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        title: Text(
-          booking.description?.isNotEmpty == true ? booking.description! : "Booking #${booking.id}",
-          style: const TextStyle(fontWeight: FontWeight.bold),
+    return BookingCard(
+      title: booking.description?.isNotEmpty == true ? booking.description! : "Booking #${booking.id}",
+      subtitle: "Room: ${booking.roomName ?? "Unknown Room"}",
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      status: booking.status,
+      actions: [
+        TextButton.icon(
+          onPressed: () => _confirmCancel(booking),
+          icon: const Icon(Icons.close),
+          label: const Text('Cancel'),
+          style: TextButton.styleFrom(foregroundColor: colorScheme.error),
         ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Room: ${booking.roomName ?? "Unknown Room"}", style: textTheme.bodyMedium),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(Icons.access_time, size: 14, color: colorScheme.onSurfaceVariant),
-                  const SizedBox(width: 6),
-                  Text(
-                    "${dateFormat.format(booking.startTime)} - ${DateFormat('HH:mm').format(booking.endTime)}",
-                    style: textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildStatusChip(booking.status, colorScheme),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: Icon(Icons.cancel_outlined, color: colorScheme.error),
-              onPressed: () => _confirmCancel(booking),
-              tooltip: "Cancel Booking",
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 
@@ -270,46 +240,7 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
     }
   }
 
-  Widget _buildStatusChip(BookingStatus status, ColorScheme colorScheme) {
-    final s = status.toApiString();
-    Color color;
-    switch (s) {
-      case "RESERVED":
-        color = Colors.green;
-        break;
-      case "CHECKED_IN":
-        color = colorScheme.primary;
-        break;
-      case "CANCELLED":
-        color = colorScheme.error;
-        break;
-      case "PENDING":
-        color = Colors.orange;
-        break;
-      case "NO_SHOW":
-        color = colorScheme.outline;
-        break;
-      default:
-        color = colorScheme.outline;
-    }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: Text(
-        s,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
-      ),
-    );
-  }
 
   Widget _buildRoleBadge(String role, ColorScheme colorScheme) {
     Color color;
