@@ -6,6 +6,7 @@ import '../Models/admin_user_booking_response.dart';
 import '../Models/Enums/booking_status.dart';
 import '../Services/admin_repository.dart';
 import '../Widgets/BookingCard.dart';
+import '../Constants/layout_constants.dart';
 
 class AdminUserBookingsScreen extends ConsumerStatefulWidget {
   final UserResponse user;
@@ -86,7 +87,7 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
+          constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
           child: Column(
             children: [
               // Header Card with User Info and Filter

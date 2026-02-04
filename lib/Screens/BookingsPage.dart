@@ -7,6 +7,7 @@ import '../Widgets/mybookings/BookingStats.dart';
 import '../Services/auth_service.dart';
 
 import '../Services/booking_service.dart';
+import '../Constants/layout_constants.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -381,7 +382,7 @@ class _BookingsPageState extends State<BookingsPage> {
         SliverToBoxAdapter(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
+              constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: BookingStats(
@@ -400,7 +401,7 @@ class _BookingsPageState extends State<BookingsPage> {
         SliverToBoxAdapter(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
+              constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
               child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _buildTabBar(context)),
             ),
           ),
@@ -415,7 +416,7 @@ class _BookingsPageState extends State<BookingsPage> {
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1200),
+                constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: ListView.builder(

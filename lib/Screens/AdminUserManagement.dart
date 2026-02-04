@@ -4,6 +4,7 @@ import '../Models/auth_models.dart';
 import '../Services/admin_repository.dart';
 import '../Resources/AppColors.dart';
 import 'AdminUserBookingsScreen.dart';
+import '../Constants/layout_constants.dart';
 
 class AdminUserManagement extends ConsumerStatefulWidget {
   const AdminUserManagement({super.key});
@@ -31,7 +32,7 @@ class _AdminUserManagementState extends ConsumerState<AdminUserManagement> {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1000),
+        constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

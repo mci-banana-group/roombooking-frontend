@@ -6,6 +6,7 @@ import '../Models/room.dart';
 import '../Services/admin_repository.dart';
 import '../Widgets/admin/room_list_tile.dart';
 import 'AdminRoomDetailScreen.dart';
+import '../Constants/layout_constants.dart';
 
 
 class AdminRoomManagement extends ConsumerStatefulWidget {
@@ -218,7 +219,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1000),
+        constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

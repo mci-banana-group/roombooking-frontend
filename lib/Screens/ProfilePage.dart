@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mci_booking_app/main.dart';
+import '../Constants/layout_constants.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -13,7 +14,7 @@ class ProfilePage extends StatelessWidget {
           return SingleChildScrollView(
             child: Center(
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 600),
+                constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
                 padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
                 child: Consumer(
                   builder: (context, ref, _) {
