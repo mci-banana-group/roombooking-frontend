@@ -1,14 +1,13 @@
 ﻿import 'package:flutter/material.dart';
-import '../Resources/AppColors.dart';
-import '../Models/booking.dart';
-import '../Models/room.dart';
+
+import '../Constants/layout_constants.dart';
 import '../Models/Enums/booking_status.dart';
+import '../Models/booking.dart';
+import '../Resources/AppColors.dart';
+import '../Services/auth_service.dart';
+import '../Services/booking_service.dart';
 import '../Widgets/BookingCard.dart';
 import '../Widgets/mybookings/BookingStats.dart';
-import '../Services/auth_service.dart';
-
-import '../Services/booking_service.dart';
-import '../Constants/layout_constants.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -156,9 +155,10 @@ class _BookingsPageState extends State<BookingsPage> {
 
   // âœ… Check if booking is in the past (based on status)
   bool _isBookingPast(Booking booking) {
-    // A booking is past if its status is CANCELLED, CHECKED_IN, or NO_SHOW
+    // A booking is past if its status is CANCELLED, CHECKED_IN, COMPLETED, or NO_SHOW
     return booking.status == BookingStatus.cancelled ||
         booking.status == BookingStatus.checkedIn ||
+        booking.status == BookingStatus.completed ||
         booking.status == BookingStatus.expired;
   }
 
@@ -280,12 +280,13 @@ class _BookingsPageState extends State<BookingsPage> {
         return bookings;
 
       case BookingFilterTab.past:
-        // Past = CANCELLED, CHECKED_IN, or NO_SHOW status
+        // Past = CANCELLED, CHECKED_IN, COMPLETED, or NO_SHOW status
         final bookings = _bookings
             .where(
               (booking) =>
                   booking.status == BookingStatus.cancelled ||
                   booking.status == BookingStatus.checkedIn ||
+                  booking.status == BookingStatus.completed ||
                   booking.status == BookingStatus.expired,
             )
             .toList();
@@ -327,6 +328,7 @@ class _BookingsPageState extends State<BookingsPage> {
           (b) =>
               b.status == BookingStatus.cancelled ||
               b.status == BookingStatus.checkedIn ||
+              b.status == BookingStatus.completed ||
               b.status == BookingStatus.expired,
         )
         .length;

@@ -2,6 +2,9 @@ enum BookingStatus {
   /// Backend: `RESERVED`
   confirmed,
 
+  /// Backend: `COMPLETED`
+  completed,
+
   cancelled,
 
   /// Backend: `CHECKED_IN`
@@ -14,6 +17,7 @@ enum BookingStatus {
   String toApiString() {
     return switch (this) {
       BookingStatus.confirmed => 'RESERVED',
+      BookingStatus.completed => 'COMPLETED',
       BookingStatus.cancelled => 'CANCELLED',
       BookingStatus.checkedIn => 'CHECKED_IN',
       BookingStatus.expired => 'NO_SHOW',
@@ -32,6 +36,9 @@ enum BookingStatus {
       case 'RESERVED':
       case 'CONFIRMED':
         return BookingStatus.confirmed;
+      case 'COMPLETED':
+      case 'DONE':
+        return BookingStatus.completed;
       case 'CANCELLED':
       case 'CANCELED':
         return BookingStatus.cancelled;

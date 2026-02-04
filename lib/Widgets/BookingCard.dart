@@ -148,6 +148,10 @@ class BookingCard extends StatelessWidget {
         icon = Icons.check_circle_outline;
         label = "RESERVED";
         break;
+      case BookingStatus.completed:
+        icon = Icons.check_circle;
+        label = "COMPLETED";
+        break;
       case BookingStatus.checkedIn:
         icon = Icons.login;
         label = "CHECKED IN";
