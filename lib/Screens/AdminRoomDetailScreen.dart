@@ -8,6 +8,10 @@ import '../Models/room_equipment.dart';
 import '../Models/booking.dart';
 import '../Services/building_service.dart';
 import '../Services/admin_repository.dart';
+import '../Widgets/BookingCard.dart';
+import '../Constants/layout_constants.dart';
+import 'AdminUserBookingsScreen.dart';
+import '../Models/auth_models.dart';
 
 class AdminRoomDetailScreen extends ConsumerStatefulWidget {
   final Room? room; // null implies creating a new room
@@ -36,6 +40,10 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
   List<RoomEquipment> _equipmentList = [];
   bool _isSaving = false;
   Future<List<Booking>>? _bookingsFuture;
+  
+  // User cache for displaying names
+  Map<String, UserResponse> _userMap = {};
+  bool _isLoadingUsers = true;
 
   @override
   void initState() {
@@ -64,6 +72,21 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
     }
 
     _loadBuildings();
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    try {
+      final users = await ref.read(adminRepositoryProvider).getUsers();
+      if (mounted) {
+        setState(() {
+          _userMap = {for (var u in users) u.id.toString(): u};
+          _isLoadingUsers = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingUsers = false);
+    }
   }
 
   Future<void> _loadBuildings() async {
@@ -199,7 +222,7 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 800),
+                  constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
                   child: _isEditing ? _buildEditForm(colorScheme) : _buildDetailView(colorScheme),
                 ),
               ),
@@ -289,17 +312,49 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
 
               return Column(
                 children: bookings.map((b) {
-                  final dateStr = "${b.startTime.day.toString().padLeft(2, '0')}.${b.startTime.month.toString().padLeft(2, '0')}.${b.startTime.year}";
-                  final timeStr = "${b.startTime.hour.toString().padLeft(2, '0')}:${b.startTime.minute.toString().padLeft(2, '0')} - ${b.endTime.hour.toString().padLeft(2, '0')}:${b.endTime.minute.toString().padLeft(2, '0')}";
-                  return Card( // Fixed elevation to remove shadow if needed or keep default
-                    margin: const EdgeInsets.only(bottom: 8),
-                    elevation: 0,
-                    color: colorScheme.surfaceContainerHighest,
-                    child: ListTile(
-                      leading: Icon(Icons.event, color: colorScheme.primary),
-                      title: Text("$dateStr   $timeStr", style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: b.description.isNotEmpty ? Text(b.description, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
-                    ),
+                  return BookingCard(
+                    title: b.description.isNotEmpty ? b.description : 'Booking',
+                    subtitle: _userMap.containsKey(b.userId) 
+                        ? '${_userMap[b.userId]!.firstName} ${_userMap[b.userId]!.lastName}' 
+                        : b.userId,
+                    startTime: b.startTime,
+                    endTime: b.endTime,
+                    status: b.status,
+                    onSubtitleTap: () async {
+                      if (b.userId.isNotEmpty) {
+                        final user = _userMap[b.userId];
+                        
+                        if (user != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AdminUserBookingsScreen(user: user)),
+                          );
+                        } else {
+                           // Fallback if not mapped for some reason (e.g. reload needed)
+                           // Show loading indicator or snackbar
+                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Loading user details..."), duration: Duration(seconds: 1)));
+                           
+                           try {
+                              final users = await ref.read(adminRepositoryProvider).getUsers();
+                              final fetchedUser = users.firstWhere(
+                                (u) => u.id.toString() == b.userId, 
+                                orElse: () => UserResponse(id: -1, firstName: "Unknown", lastName: "User", email: "", role: "", isAdmin: false),
+                              );
+
+                              if (fetchedUser.id != -1 && mounted) {
+                                 Navigator.push(
+                                   context,
+                                   MaterialPageRoute(builder: (context) => AdminUserBookingsScreen(user: fetchedUser)),
+                                 );
+                              } else if (mounted) {
+                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("User not found.")));
+                              }
+                           } catch (e) {
+                             if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+                           }
+                        }
+                      }
+                    },
                   );
                 }).toList(),
               );

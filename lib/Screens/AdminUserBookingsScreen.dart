@@ -5,6 +5,9 @@ import '../Models/auth_models.dart';
 import '../Models/admin_user_booking_response.dart';
 import '../Models/Enums/booking_status.dart';
 import '../Services/admin_repository.dart';
+import '../Widgets/BookingCard.dart';
+import '../Constants/layout_constants.dart';
+import 'AdminRoomDetailScreen.dart';
 
 class AdminUserBookingsScreen extends ConsumerStatefulWidget {
   final UserResponse user;
@@ -85,7 +88,7 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
+          constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
           child: Column(
             children: [
               // Header Card with User Info and Filter
@@ -185,55 +188,55 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
   }
 
   Widget _buildBookingCard(AdminUserBookingResponse booking, ColorScheme colorScheme, TextTheme textTheme, DateFormat dateFormat) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: colorScheme.secondaryContainer.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(Icons.meeting_room, color: colorScheme.onSecondaryContainer),
+    return BookingCard(
+      title: booking.description?.isNotEmpty == true ? booking.description! : "Booking #${booking.id}",
+      subtitle: "Room: ${booking.roomName ?? "Unknown Room"}",
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      status: booking.status,
+      onSubtitleTap: () async {
+        if (booking.roomId != null && booking.roomId != 0) {
+           // Helper to find building by name (since response usually has room name not ID, but we have roomId in response model)
+           // ideally we fetch the full room object
+           
+           setState(() => _isLoading = true);
+           try {
+              // We need a way to get a single room. 
+              // AdminRepository.getAllRooms() gets all.
+              // Let's filter from all rooms for now as a fallback or add getRoomById.
+              // Efficiency: getAllRooms is heavy. 
+              // Better: Check if roomName contains building info or assume we need to fetch.
+              
+              // Let's rely on getAllRooms for now as it's available, optimization later.
+              final allRooms = await ref.read(adminRepositoryProvider).getAllRooms();
+              final roomIdx = allRooms.indexWhere((r) => r.id == booking.roomId.toString());
+              
+              if (mounted) setState(() => _isLoading = false);
+              
+              if (roomIdx != -1 && mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminRoomDetailScreen(room: allRooms[roomIdx])),
+                );
+              } else if (mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Room details not found.")));
+              }
+           } catch (e) {
+              if (mounted) {
+                setState(() => _isLoading = false);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+              }
+           }
+        }
+      },
+      actions: [
+        TextButton.icon(
+          onPressed: () => _confirmCancel(booking),
+          icon: const Icon(Icons.close),
+          label: const Text('Cancel'),
+          style: TextButton.styleFrom(foregroundColor: colorScheme.error),
         ),
-        title: Text("Room: ${booking.roomName ?? "Unknown Room"}", style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.access_time, size: 14, color: colorScheme.onSurfaceVariant),
-                  const SizedBox(width: 6),
-                  Text(
-                    "${dateFormat.format(booking.startTime)} - ${DateFormat('HH:mm').format(booking.endTime)}",
-                    style: textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildStatusChip(booking.status, colorScheme),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: Icon(Icons.cancel_outlined, color: colorScheme.error),
-              onPressed: () => _confirmCancel(booking),
-              tooltip: "Cancel Booking",
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 
@@ -274,46 +277,7 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
     }
   }
 
-  Widget _buildStatusChip(BookingStatus status, ColorScheme colorScheme) {
-    final s = status.toApiString();
-    Color color;
-    switch (s) {
-      case "RESERVED":
-        color = Colors.green;
-        break;
-      case "CHECKED_IN":
-        color = colorScheme.primary;
-        break;
-      case "CANCELLED":
-        color = colorScheme.error;
-        break;
-      case "PENDING":
-        color = Colors.orange;
-        break;
-      case "NO_SHOW":
-        color = colorScheme.outline;
-        break;
-      default:
-        color = colorScheme.outline;
-    }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: Text(
-        s,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
-      ),
-    );
-  }
 
   Widget _buildRoleBadge(String role, ColorScheme colorScheme) {
     Color color;

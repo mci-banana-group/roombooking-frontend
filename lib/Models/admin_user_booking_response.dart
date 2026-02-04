@@ -5,6 +5,7 @@ class AdminUserBookingResponse {
   final int? roomId;
   final String? roomName;
   final int? userId;
+  final String? description;
   final DateTime startTime;
   final DateTime endTime;
   final BookingStatus status;
@@ -14,6 +15,7 @@ class AdminUserBookingResponse {
     this.roomId,
     this.roomName,
     this.userId,
+    this.description,
     required this.startTime,
     required this.endTime,
     required this.status,
@@ -25,6 +27,7 @@ class AdminUserBookingResponse {
       roomId: json['roomId'] as int?,
       roomName: json['roomName'] as String?,
       userId: json['userId'] as int?,
+      description: json['description'] as String?,
       startTime: DateTime.parse(json['startTime'] as String).toLocal(),
       endTime: DateTime.parse(json['endTime'] as String).toLocal(),
       status: BookingStatus.fromString(json['status'] as String?),
@@ -37,6 +40,7 @@ class AdminUserBookingResponse {
       'roomId': roomId,
       'roomName': roomName,
       'userId': userId,
+      'description': description,
       'startTime': startTime.toIso8601String(),
       'endTime': endTime.toIso8601String(),
       'status': status.toApiString(),
