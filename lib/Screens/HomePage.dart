@@ -39,30 +39,28 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadActiveBooking() async {
     if (!mounted) return;
-    
+
     // Only fetch if authenticated
     if (!_authService.isAuthenticated) return;
 
     try {
       final bookingsData = await _authService.getMyBookings();
-      final bookings = bookingsData
-          .map((json) => Booking.fromJson(json as Map<String, dynamic>))
-          .toList();
+      final bookings = bookingsData.map((json) => Booking.fromJson(json as Map<String, dynamic>)).toList();
 
       final now = DateTime.now();
-      
+
       // Find a booking that is:
       // 1. Confirmed (RESERVED)
       // 2. Start time is within next 15 mins OR currently running
       // 3. Not yet ended
-      
+
       Booking? targetBooking;
-      
+
       for (final booking in bookings) {
         if (booking.status != BookingStatus.confirmed) continue;
 
         final fifteenMinutesBefore = booking.startTime.subtract(const Duration(minutes: 15));
-        
+
         // Active if: now >= start-15min AND now < end
         if (now.isAfter(fifteenMinutesBefore) && now.isBefore(booking.endTime)) {
           targetBooking = booking;
@@ -94,7 +92,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showCheckInDialog() async {
     if (_checkInBooking == null) return;
-    
+
     final controller = TextEditingController();
 
     final result = await showDialog<bool>(
@@ -107,14 +105,8 @@ class _HomePageState extends State<HomePage> {
           keyboardType: TextInputType.number,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Check In'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Check In')),
         ],
       ),
     );
@@ -127,19 +119,16 @@ class _HomePageState extends State<HomePage> {
 
       try {
         final bookingIdInt = int.tryParse(_checkInBooking!.id) ?? 0;
-        final success = await _bookingService.checkInBooking(
-            bookingId: bookingIdInt, 
-            code: code
-        );
+        final success = await _bookingService.checkInBooking(bookingId: bookingIdInt, code: code);
 
         if (success) {
-           if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text('Checked in successfully!'), backgroundColor: Colors.green),
-             );
-           }
-           // Reload to remove the card
-           await _loadActiveBooking();
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Checked in successfully!'), backgroundColor: Colors.green));
+          }
+          // Reload to remove the card
+          await _loadActiveBooking();
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -148,11 +137,9 @@ class _HomePageState extends State<HomePage> {
           }
         }
       } catch (e) {
-         if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-            );
-          }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+        }
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
@@ -179,10 +166,7 @@ class _HomePageState extends State<HomePage> {
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                            width: 1,
-                          ),
+                          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), width: 1),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.05),
@@ -198,10 +182,7 @@ class _HomePageState extends State<HomePage> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 // Left accent strip
-                                Container(
-                                  width: 6,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
+                                Container(width: 6, color: Theme.of(context).colorScheme.primary),
                                 Expanded(
                                   child: Padding(
                                     padding: const EdgeInsets.all(20),
@@ -220,6 +201,7 @@ class _HomePageState extends State<HomePage> {
                                                 Icons.login_rounded,
                                                 color: Theme.of(context).colorScheme.primary,
                                                 size: 20,
+                                                semanticLabel: 'Check in',
                                               ),
                                             ),
                                             const SizedBox(width: 12),
@@ -261,23 +243,21 @@ class _HomePageState extends State<HomePage> {
                                               foregroundColor: Theme.of(context).colorScheme.onPrimary,
                                               padding: const EdgeInsets.symmetric(vertical: 16),
                                               elevation: 0,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                             ),
-                                            child: _isLoading 
-                                              ? const SizedBox(
-                                                  height: 20, 
-                                                  width: 20, 
-                                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
-                                                )
-                                              : const Text(
-                                                  'Check In Now',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
+                                            child: _isLoading
+                                                ? const SizedBox(
+                                                    height: 20,
+                                                    width: 20,
+                                                    child: CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: Colors.white,
+                                                    ),
+                                                  )
+                                                : const Text(
+                                                    'Check In Now',
+                                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                                   ),
-                                                ),
                                           ),
                                         ),
                                       ],
@@ -335,9 +315,7 @@ class _HomePageState extends State<HomePage> {
                               const SizedBox(height: 24),
                               FindRoomButton(
                                 roomCount: _matchingRoomCount,
-                                onPressed: _canSearch
-                                    ? () => _cardKey.currentState?.findRooms()
-                                    : null,
+                                onPressed: _canSearch ? () => _cardKey.currentState?.findRooms() : null,
                               ),
                             ],
                           );
@@ -381,9 +359,7 @@ class _HomePageState extends State<HomePage> {
                                     const SizedBox(height: 24),
                                     FindRoomButton(
                                       roomCount: _matchingRoomCount,
-                                      onPressed: _canSearch
-                                          ? () => _cardKey.currentState?.findRooms()
-                                          : null,
+                                      onPressed: _canSearch ? () => _cardKey.currentState?.findRooms() : null,
                                     ),
                                   ],
                                 ),
@@ -397,7 +373,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 32),
-
             ],
           ),
         ),

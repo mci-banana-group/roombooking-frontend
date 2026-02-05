@@ -66,12 +66,7 @@ class BookingCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(title, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   const SizedBox(height: 4),
                   if (onSubtitleTap != null)
@@ -91,12 +86,7 @@ class BookingCard extends StatelessWidget {
                       ),
                     )
                   else
-                    Text(
-                      subtitle,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+                    Text(subtitle, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
                 ],
               ),
             ),
@@ -109,25 +99,18 @@ class BookingCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Date and Time
-            Icon(Icons.calendar_today, size: 16, color: colorScheme.primary),
+            Icon(Icons.calendar_today, size: 16, color: colorScheme.primary, semanticLabel: 'Date'),
             const SizedBox(width: 8),
-            Text(
-              dateFormat.format(startTime),
-              style: textTheme.bodyMedium,
-            ),
+            Text(dateFormat.format(startTime), style: textTheme.bodyMedium),
             const SizedBox(width: 16),
-            Icon(Icons.access_time, size: 16, color: colorScheme.primary),
+            Icon(Icons.access_time, size: 16, color: colorScheme.primary, semanticLabel: 'Time'),
             const SizedBox(width: 8),
-            Text(
-              "${timeFormat.format(startTime)} - ${timeFormat.format(endTime)}",
-              style: textTheme.bodyMedium,
-            ),
-            
+            Text("${timeFormat.format(startTime)} - ${timeFormat.format(endTime)}", style: textTheme.bodyMedium),
+
             const Spacer(),
-            
+
             // Actions
-            if (actions != null && actions!.isNotEmpty)
-              ...actions!,
+            if (actions != null && actions!.isNotEmpty) ...actions!,
           ],
         ),
       ],
@@ -137,11 +120,20 @@ class BookingCard extends StatelessWidget {
   Widget _buildStatusChip(BookingStatus status, ColorScheme colorScheme) {
     final s = status.toApiString(); // Assuming toApiString exists or using toString
     Color color;
+    Color textColor;
     IconData icon;
     String label;
 
     // Use centralized color definition
     color = AppColors.getBookingStatusColor(status);
+
+    // Ensure sufficient contrast for text on light backgrounds
+    // For yellow/orange colors, use a darker text color
+    if (status == BookingStatus.confirmed) {
+      textColor = Colors.orange.shade900; // Darker for contrast on yellow background
+    } else {
+      textColor = color;
+    }
 
     switch (status) {
       case BookingStatus.confirmed: // Mapped from RESERVED
@@ -180,15 +172,11 @@ class BookingCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 12, color: textColor, semanticLabel: label),
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: textColor),
           ),
         ],
       ),

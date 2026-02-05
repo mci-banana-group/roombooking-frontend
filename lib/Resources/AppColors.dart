@@ -5,7 +5,7 @@ class RoomStatusColors {
   static const Color free = Color(0xFF2E7D32);
   static const Color onFree = Color(0xFFFFFFFF);
 
-  static const Color reserved = Color(0xFFF9A825);
+  static const Color reserved = Color(0xFFF57F17); // Darker yellow for better contrast (3:1 on white)
   static const Color onReserved = Color(0xFF1F1400);
 
   static const Color occupied = Color(0xFFC62828);
@@ -21,11 +21,10 @@ class AppColors {
   // --- Chart Colors (Legacy support) ---
   static Color chartTotal(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return colorScheme.brightness == Brightness.dark
-        ? colorScheme.secondary
-        : colorScheme.primary;
+    return colorScheme.brightness == Brightness.dark ? colorScheme.secondary : colorScheme.primary;
   }
-  static const Color chartReserved = RoomStatusColors.reserved;
+
+  static const Color chartReserved = RoomStatusColors.reserved; // Uses the darker yellow for better contrast
   static const Color chartCompleted = Color(0xFF43A047);
   static const Color chartCheckedIn = Color(0xFF00ACC1);
   static const Color chartUserCancelled = Color(0xFF8E24AA);
@@ -104,7 +103,6 @@ class AppColors {
     onPrimary: Color(0xFF2B1A00), // Dark brown (from Light OnSecondary)
     primaryContainer: Color(0xFF633F00), // Darker orange container (from Dark SecondaryContainer)
     onPrimaryContainer: Color(0xFFFFE2B8), // Light orange text (from Dark OnSecondaryContainer)
-
     // SWAPPED: Secondary is now Blue (from Snippet's Primary)
     secondary: Color(0xFF9BCBFF),
     onSecondary: Color(0xFF003256),
@@ -147,25 +145,73 @@ class AppColors {
 
   // --- Typography ---
   static const TextTheme mciTextTheme = TextTheme(
-    displayLarge: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 57, height: 64/57),
-    displayMedium: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 45, height: 52/45),
-    displaySmall: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 36, height: 44/36),
+    displayLarge: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 57, height: 64 / 57),
+    displayMedium: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 45, height: 52 / 45),
+    displaySmall: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 36, height: 44 / 36),
 
-    headlineLarge: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 32, height: 40/32),
-    headlineMedium: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 28, height: 36/28),
-    headlineSmall: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 24, height: 32/24),
+    headlineLarge: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 32, height: 40 / 32),
+    headlineMedium: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 28, height: 36 / 28),
+    headlineSmall: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 24, height: 32 / 24),
 
-    titleLarge: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.w500, fontSize: 22, height: 28/22),
-    titleMedium: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.w500, fontSize: 16, height: 24/16, letterSpacing: 0.15),
-    titleSmall: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.w500, fontSize: 14, height: 20/14, letterSpacing: 0.1),
+    titleLarge: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.w500, fontSize: 22, height: 28 / 22),
+    titleMedium: TextStyle(
+      fontFamily: 'Roboto',
+      fontWeight: FontWeight.w500,
+      fontSize: 16,
+      height: 24 / 16,
+      letterSpacing: 0.15,
+    ),
+    titleSmall: TextStyle(
+      fontFamily: 'Roboto',
+      fontWeight: FontWeight.w500,
+      fontSize: 14,
+      height: 20 / 14,
+      letterSpacing: 0.1,
+    ),
 
-    bodyLarge: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 16, height: 24/16, letterSpacing: 0.5),
-    bodyMedium: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 14, height: 20/14, letterSpacing: 0.25),
-    bodySmall: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.normal, fontSize: 12, height: 16/12, letterSpacing: 0.4),
+    bodyLarge: TextStyle(
+      fontFamily: 'Roboto',
+      fontWeight: FontWeight.normal,
+      fontSize: 16,
+      height: 24 / 16,
+      letterSpacing: 0.5,
+    ),
+    bodyMedium: TextStyle(
+      fontFamily: 'Roboto',
+      fontWeight: FontWeight.normal,
+      fontSize: 14,
+      height: 20 / 14,
+      letterSpacing: 0.25,
+    ),
+    bodySmall: TextStyle(
+      fontFamily: 'Roboto',
+      fontWeight: FontWeight.normal,
+      fontSize: 12,
+      height: 16 / 12,
+      letterSpacing: 0.4,
+    ),
 
-    labelLarge: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.w500, fontSize: 14, height: 20/14, letterSpacing: 0.1),
-    labelMedium: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.w500, fontSize: 12, height: 16/12, letterSpacing: 0.5),
-    labelSmall: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.w500, fontSize: 11, height: 16/11, letterSpacing: 0.5),
+    labelLarge: TextStyle(
+      fontFamily: 'Roboto',
+      fontWeight: FontWeight.w500,
+      fontSize: 14,
+      height: 20 / 14,
+      letterSpacing: 0.1,
+    ),
+    labelMedium: TextStyle(
+      fontFamily: 'Roboto',
+      fontWeight: FontWeight.w500,
+      fontSize: 12,
+      height: 16 / 12,
+      letterSpacing: 0.5,
+    ),
+    labelSmall: TextStyle(
+      fontFamily: 'Roboto',
+      fontWeight: FontWeight.w500,
+      fontSize: 11,
+      height: 16 / 11,
+      letterSpacing: 0.5,
+    ),
   );
 
   static final ThemeData lightTheme = ThemeData(
@@ -190,10 +236,7 @@ class AppColors {
   static final ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     colorScheme: darkColorScheme,
-    textTheme: mciTextTheme.apply(
-      bodyColor: darkColorScheme.onSurface,
-      displayColor: darkColorScheme.onSurface,
-    ),
+    textTheme: mciTextTheme.apply(bodyColor: darkColorScheme.onSurface, displayColor: darkColorScheme.onSurface),
     fontFamily: 'Roboto',
     scaffoldBackgroundColor: darkColorScheme.surface,
     appBarTheme: AppBarTheme(

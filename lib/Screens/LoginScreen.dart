@@ -34,10 +34,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final session = ref.read(sessionProvider);
     if (session.isAuthenticated) {
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/home',
-          (route) => false,
-        );
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
       }
     } else {
       if (!kDebugMode) return;
@@ -60,10 +57,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (mounted) {
         if (success) {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/home',
-            (route) => false,
-          );
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
         } else {
           setState(() {
             _errorMessage = 'Invalid email or password. Please try again.';
@@ -88,14 +82,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: Scaffold(
         body: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 16.0 : 24.0,
-              vertical: 24.0,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16.0 : 24.0, vertical: 24.0),
             child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: isSmallScreen ? double.infinity : 500,
-              ),
+              constraints: BoxConstraints(maxWidth: isSmallScreen ? double.infinity : 500),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -109,17 +98,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 24),
-                    const Text(
-                      'Welcome Back',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                    ),
+                    const Text('Welcome Back', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Text(
                       'Sign in to your account',
                       style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 32),
-                      if (_errorMessage != null)
+                    if (_errorMessage != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: Container(
@@ -131,7 +117,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 20),
+                              Icon(
+                                Icons.error_outline,
+                                color: Theme.of(context).colorScheme.error,
+                                size: 20,
+                                semanticLabel: 'Error',
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -140,7 +131,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                               IconButton(
-                                icon: Icon(Icons.close, color: Theme.of(context).colorScheme.error, size: 20),
+                                icon: Icon(
+                                  Icons.close,
+                                  color: Theme.of(context).colorScheme.error,
+                                  size: 20,
+                                  semanticLabel: 'Close',
+                                ),
+                                tooltip: 'Close error message',
                                 onPressed: () => setState(() => _errorMessage = null),
                               ),
                             ],
@@ -163,13 +160,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         child: _isLoading
                             ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
                             : const Text('Sign In', style: TextStyle(fontSize: 18)),
                       ),
                     ),
@@ -179,7 +173,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         TextButton(
                           onPressed: () {},
-                          child: Text('Forgot password?', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+                          child: Text(
+                            'Forgot password?',
+                            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                          ),
                         ),
                       ],
                     ),
@@ -199,7 +196,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       keyboardType: TextInputType.emailAddress,
       decoration: InputDecoration(
         labelText: 'Email',
-        prefixIcon: Icon(Icons.email, color: Theme.of(context).colorScheme.primary),
+        prefixIcon: Icon(Icons.email, color: Theme.of(context).colorScheme.primary, semanticLabel: 'Email'),
         border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
         hintText: 'Enter your email',
       ),
@@ -221,9 +218,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       obscureText: _obscurePassword,
       decoration: InputDecoration(
         labelText: 'Password',
-        prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
+        prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary, semanticLabel: 'Password'),
         suffixIcon: IconButton(
-          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Theme.of(context).colorScheme.primary),
+          icon: Icon(
+            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: Theme.of(context).colorScheme.primary,
+            semanticLabel: _obscurePassword ? 'Hide password' : 'Show password',
+          ),
+          tooltip: _obscurePassword ? 'Hide password' : 'Show password',
           onPressed: () {
             setState(() {
               _obscurePassword = !_obscurePassword;

@@ -8,7 +8,6 @@ import '../Widgets/admin/room_list_tile.dart';
 import 'AdminRoomDetailScreen.dart';
 import '../Constants/layout_constants.dart';
 
-
 class AdminRoomManagement extends ConsumerStatefulWidget {
   const AdminRoomManagement({super.key});
 
@@ -20,9 +19,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
   List<Room> rooms = [];
   bool _isLoading = true;
   // null = ignore, true = must have, false = must not have
-  final Map<EquipmentType, bool?> _filterState = {
-    for (var type in EquipmentType.values) type: null,
-  };
+  final Map<EquipmentType, bool?> _filterState = {for (var type in EquipmentType.values) type: null};
 
   @override
   void initState() {
@@ -96,10 +93,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
           title: const Text("Delete Room?"),
           content: Text("Are you sure you want to delete ${room.name}?"),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel"),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
@@ -111,24 +105,50 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
     );
 
     if (confirmed == true) {
-       final success = await ref.read(adminRepositoryProvider).deleteRoom(room.id);
-       if (success) {
-         _loadRooms();
-         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Room deleted!")));
-       } else {
-         if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text("Error deleting room"), backgroundColor: Theme.of(context).colorScheme.error));
-       }
+      final success = await ref.read(adminRepositoryProvider).deleteRoom(room.id);
+      if (success) {
+        _loadRooms();
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Room deleted!")));
+      } else {
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: const Text("Error deleting room"), backgroundColor: Theme.of(context).colorScheme.error),
+          );
+      }
     }
   }
 
   IconData _getIconForType(EquipmentType type) {
     switch (type) {
-      case EquipmentType.beamer: return Icons.videocam;
-      case EquipmentType.whiteboard: return Icons.edit;
-      case EquipmentType.display: return Icons.tv;
-      case EquipmentType.videoConference: return Icons.video_call;
-      case EquipmentType.hdmiCable: return Icons.cable;
-      case EquipmentType.other: return Icons.devices;
+      case EquipmentType.beamer:
+        return Icons.videocam;
+      case EquipmentType.whiteboard:
+        return Icons.edit;
+      case EquipmentType.display:
+        return Icons.tv;
+      case EquipmentType.videoConference:
+        return Icons.video_call;
+      case EquipmentType.hdmiCable:
+        return Icons.cable;
+      case EquipmentType.other:
+        return Icons.devices;
+    }
+  }
+
+  String _getSemanticLabelForType(EquipmentType type) {
+    switch (type) {
+      case EquipmentType.beamer:
+        return 'Beamer';
+      case EquipmentType.whiteboard:
+        return 'Whiteboard';
+      case EquipmentType.display:
+        return 'Display';
+      case EquipmentType.videoConference:
+        return 'Video conference';
+      case EquipmentType.hdmiCable:
+        return 'HDMI cable';
+      case EquipmentType.other:
+        return 'Other equipment';
     }
   }
 
@@ -169,30 +189,27 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                       leading: Icon(
                         _getIconForType(type),
                         color: colorScheme.secondary,
+                        semanticLabel: _getSemanticLabelForType(type),
                       ),
                       title: Text(type.displayName),
                       subtitle: Text(statusText, style: TextStyle(color: color, fontSize: 12)),
                       trailing: IconButton(
-                        icon: Icon(icon, color: color),
+                        icon: Icon(icon, color: color, semanticLabel: statusText),
+                        tooltip: statusText,
                         onPressed: () {
                           _cycleFilter(type);
                           setStateDialog(() {});
                         },
                       ),
                       onTap: () {
-                         _cycleFilter(type);
-                         setStateDialog(() {});
+                        _cycleFilter(type);
+                        setStateDialog(() {});
                       },
                     );
                   }).toList(),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Close"),
-                ),
-              ],
+              actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))],
             );
           },
         );
@@ -235,7 +252,11 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                     icon: Badge(
                       label: Text(activeFiltersCount.toString()),
                       isLabelVisible: activeFiltersCount > 0,
-                      child: Icon(Icons.filter_list, color: activeFiltersCount > 0 ? colorScheme.primary : null),
+                      child: Icon(
+                        Icons.filter_list,
+                        color: activeFiltersCount > 0 ? colorScheme.primary : null,
+                        semanticLabel: 'Filter equipment',
+                      ),
                     ),
                     tooltip: "Filter Equipment",
                   ),
@@ -243,61 +264,70 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
                   // Add Room
                   FilledButton.icon(
                     onPressed: _openCreateRoom,
-                    icon: const Icon(Icons.add, size: 18),
+                    icon: const Icon(Icons.add, size: 18, semanticLabel: 'Add'),
                     label: const Text("Add Room"),
                   ),
                 ],
               ),
             ),
-            
+
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : filteredRooms.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.meeting_room_outlined, size: 48, color: colorScheme.outline.withOpacity(0.5)),
-                              const SizedBox(height: 16),
-                              Text("No rooms found", style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
-                            ],
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.meeting_room_outlined,
+                            size: 48,
+                            color: colorScheme.outline.withOpacity(0.5),
+                            semanticLabel: 'Meeting room',
                           ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), 
-                          itemCount: groupedRooms.keys.length,
-                          itemBuilder: (context, index) {
-                            String buildingName = groupedRooms.keys.elementAt(index);
-                            List<Room> buildingRooms = groupedRooms[buildingName]!;
-                            
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              elevation: 0,
-                              color: colorScheme.surfaceContainerHighest,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              clipBehavior: Clip.antiAlias,
-                              child: Theme(
-                                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                                child: ExpansionTile(
-                                  backgroundColor: Colors.transparent,
-                                  collapsedBackgroundColor: Colors.transparent,
-                                  tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  leading: Icon(Icons.business_rounded, color: colorScheme.primary),
-                                  title: Text(
-                                    buildingName,
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  subtitle: Text(
-                                    "${buildingRooms.length} Rooms",
-                                    style: TextStyle(color: colorScheme.onSurfaceVariant),
-                                  ),
-                                  children: buildingRooms.map((room) => _buildRoomItem(room)).toList(),
-                                ),
+                          const SizedBox(height: 16),
+                          Text(
+                            "No rooms found",
+                            style: textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      itemCount: groupedRooms.keys.length,
+                      itemBuilder: (context, index) {
+                        String buildingName = groupedRooms.keys.elementAt(index);
+                        List<Room> buildingRooms = groupedRooms[buildingName]!;
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          elevation: 0,
+                          color: colorScheme.surfaceContainerHighest,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          clipBehavior: Clip.antiAlias,
+                          child: Theme(
+                            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                            child: ExpansionTile(
+                              backgroundColor: Colors.transparent,
+                              collapsedBackgroundColor: Colors.transparent,
+                              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              leading: Icon(
+                                Icons.business_rounded,
+                                color: colorScheme.primary,
+                                semanticLabel: 'Building',
                               ),
-                            );
-                          },
-                        ),
+                              title: Text(buildingName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              subtitle: Text(
+                                "${buildingRooms.length} Rooms",
+                                style: TextStyle(color: colorScheme.onSurfaceVariant),
+                              ),
+                              children: buildingRooms.map((room) => _buildRoomItem(room)).toList(),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -307,7 +337,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
 
   Widget _buildRoomItem(Room room) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Column(
       children: [
         Divider(height: 1, color: colorScheme.outlineVariant.withOpacity(0.2)),
@@ -315,16 +345,11 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
           onTap: () => _openRoomDetails(room),
           roomName: room.name,
           capacity: room.capacity,
-          equipmentTypes: room.equipment
-              .where((e) => e.quantity > 0)
-              .map((e) => e.type)
-              .toList(),
+          equipmentTypes: room.equipment.where((e) => e.quantity > 0).map((e) => e.type).toList(),
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: room.currentStatus.name == 'free'
-                  ? colorScheme.primaryContainer
-                  : colorScheme.tertiaryContainer,
+              color: room.currentStatus.name == 'free' ? colorScheme.primaryContainer : colorScheme.tertiaryContainer,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(

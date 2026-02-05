@@ -34,7 +34,10 @@ class _InvalidGroupScreenState extends ConsumerState<ErrorScreen> {
             SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(widget.errorMessage ?? "Ouuups...! That shouldn't have happened", textAlign: TextAlign.center),
+              child: Text(
+                widget.errorMessage ?? "Ouuups...! That shouldn't have happened",
+                textAlign: TextAlign.center,
+              ),
             ),
             SizedBox(height: 64),
             SizedBox(
@@ -42,14 +45,17 @@ class _InvalidGroupScreenState extends ConsumerState<ErrorScreen> {
               height: 48,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.statusRed,
+                  backgroundColor: AppColors.mciRed,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                   textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
                   Phoenix.rebirth(context);
                 },
-                child: Text("Back to Start", style: TextStyle(color: Colors.white, fontFamily: 'PPFormula')),
+                child: Text(
+                  "Back to Start",
+                  style: TextStyle(color: Colors.white, fontFamily: 'PPFormula'),
+                ),
               ),
             ),
           ],
