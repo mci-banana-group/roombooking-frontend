@@ -8,6 +8,7 @@ import '../Widgets/SignInCard.dart';
 import '../Resources/AppColors.dart';
 import '../Session.dart';
 import '../main.dart';
+import '../Helper/accessibility_utils.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -57,8 +58,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (mounted) {
         if (success) {
+          AccessibilityAnnouncer.announce('Login successful, navigating to home');
           Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
         } else {
+          AccessibilityAnnouncer.announce('Login failed, please check your credentials');
           setState(() {
             _errorMessage = 'Invalid email or password. Please try again.';
           });
@@ -90,15 +93,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      Theme.of(context).brightness == Brightness.dark
-                          ? 'assets/images/MCI-negative-white-Web.png'
-                          : 'assets/images/MCI-positive-Web.png',
-                      height: 80,
-                      fit: BoxFit.contain,
+                    Semantics(
+                      image: true,
+                      label: 'MCI Logo',
+                      child: Image.asset(
+                        Theme.of(context).brightness == Brightness.dark
+                            ? 'assets/images/MCI-negative-white-Web.png'
+                            : 'assets/images/MCI-positive-Web.png',
+                        height: 80,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                     const SizedBox(height: 24),
-                    const Text('Welcome Back', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                    Semantics(
+                      header: true,
+                      label: 'Welcome Back',
+                      child: const Text('Welcome Back', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Sign in to your account',
@@ -106,41 +117,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 32),
                     if (_errorMessage != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.errorContainer,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Theme.of(context).colorScheme.error),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                color: Theme.of(context).colorScheme.error,
-                                size: 20,
-                                semanticLabel: 'Error',
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _errorMessage!,
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer, fontSize: 14),
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.close,
+                      Semantics(
+                        liveRegion: true,
+                        label: 'Error message',
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.errorContainer,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Theme.of(context).colorScheme.error),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
                                   color: Theme.of(context).colorScheme.error,
                                   size: 20,
-                                  semanticLabel: 'Close',
+                                  semanticLabel: 'Error',
                                 ),
-                                tooltip: 'Close error message',
-                                onPressed: () => setState(() => _errorMessage = null),
-                              ),
-                            ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onErrorContainer,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.close,
+                                    color: Theme.of(context).colorScheme.error,
+                                    size: 20,
+                                    semanticLabel: 'Close',
+                                  ),
+                                  tooltip: 'Close error message',
+                                  onPressed: () => setState(() => _errorMessage = null),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -191,59 +209,70 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildEmailInput() {
-    return TextFormField(
-      controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
-      decoration: InputDecoration(
-        labelText: 'Email',
-        prefixIcon: Icon(Icons.email, color: Theme.of(context).colorScheme.primary, semanticLabel: 'Email'),
-        border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-        hintText: 'Enter your email',
+    return Semantics(
+      textField: true,
+      label: 'Email address',
+      hint: 'Enter your email address',
+      child: TextFormField(
+        controller: _emailController,
+        keyboardType: TextInputType.emailAddress,
+        decoration: InputDecoration(
+          labelText: 'Email',
+          prefixIcon: Icon(Icons.email, color: Theme.of(context).colorScheme.primary, semanticLabel: 'Email'),
+          border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+          hintText: 'Enter your email',
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your email';
+          }
+          if (!value.contains('@')) {
+            return 'Please enter a valid email';
+          }
+          return null;
+        },
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter your email';
-        }
-        if (!value.contains('@')) {
-          return 'Please enter a valid email';
-        }
-        return null;
-      },
     );
   }
 
   Widget _buildPasswordInput() {
-    return TextFormField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      decoration: InputDecoration(
-        labelText: 'Password',
-        prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary, semanticLabel: 'Password'),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: Theme.of(context).colorScheme.primary,
-            semanticLabel: _obscurePassword ? 'Hide password' : 'Show password',
+    return Semantics(
+      textField: true,
+      label: 'Password',
+      hint: 'Enter your password',
+      child: TextFormField(
+        controller: _passwordController,
+        obscureText: _obscurePassword,
+        decoration: InputDecoration(
+          labelText: 'Password',
+          prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary, semanticLabel: 'Password'),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              color: Theme.of(context).colorScheme.primary,
+              semanticLabel: _obscurePassword ? 'Hide password' : 'Show password',
+            ),
+            tooltip: _obscurePassword ? 'Hide password' : 'Show password',
+            onPressed: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+              AccessibilityAnnouncer.announce(_obscurePassword ? 'Password hidden' : 'Password visible');
+            },
           ),
-          tooltip: _obscurePassword ? 'Hide password' : 'Show password',
-          onPressed: () {
-            setState(() {
-              _obscurePassword = !_obscurePassword;
-            });
-          },
+          border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+          hintText: 'Enter your password',
         ),
-        border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-        hintText: 'Enter your password',
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your password';
+          }
+          if (value.length < 6) {
+            return 'Password must be at least 6 characters';
+          }
+          return null;
+        },
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter your password';
-        }
-        if (value.length < 6) {
-          return 'Password must be at least 6 characters';
-        }
-        return null;
-      },
     );
   }
 

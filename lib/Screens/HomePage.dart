@@ -10,6 +10,7 @@ import '../Services/room_service.dart';
 import '../Models/booking.dart';
 import '../Models/Enums/booking_status.dart';
 import '../Constants/layout_constants.dart';
+import '../Helper/accessibility_utils.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -122,6 +123,7 @@ class _HomePageState extends State<HomePage> {
         final success = await _bookingService.checkInBooking(bookingId: bookingIdInt, code: code);
 
         if (success) {
+          AccessibilityAnnouncer.announce('Checked in successfully');
           if (mounted) {
             ScaffoldMessenger.of(
               context,
@@ -130,6 +132,7 @@ class _HomePageState extends State<HomePage> {
           // Reload to remove the card
           await _loadActiveBooking();
         } else {
+          AccessibilityAnnouncer.announce('Check-in failed. Invalid code');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Check-in failed. Invalid code?'), backgroundColor: Colors.red),
@@ -137,6 +140,7 @@ class _HomePageState extends State<HomePage> {
           }
         }
       } catch (e) {
+        AccessibilityAnnouncer.announce('Check-in error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
         }
@@ -162,109 +166,126 @@ class _HomePageState extends State<HomePage> {
                     constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), width: 1),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Left accent strip
-                                Container(width: 6, color: Theme.of(context).colorScheme.primary),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(8),
-                                              decoration: BoxDecoration(
-                                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                                                shape: BoxShape.circle,
+                      child: Semantics(
+                        container: true,
+                        label: 'Check-in card for $_checkInRoomName',
+                        value:
+                            'Booking from ${DateFormat('HH:mm').format(_checkInBooking!.startTime)} to ${DateFormat('HH:mm').format(_checkInBooking!.endTime)}',
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), width: 1),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // Left accent strip
+                                  Container(width: 6, color: Theme.of(context).colorScheme.primary),
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(8),
+                                                decoration: BoxDecoration(
+                                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  Icons.login_rounded,
+                                                  color: Theme.of(context).colorScheme.primary,
+                                                  size: 20,
+                                                  semanticLabel: 'Check in',
+                                                ),
                                               ),
-                                              child: Icon(
-                                                Icons.login_rounded,
-                                                color: Theme.of(context).colorScheme.primary,
-                                                size: 20,
-                                                semanticLabel: 'Check in',
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Text(
-                                              'Ready for Check-in',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Theme.of(context).colorScheme.primary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          _checkInRoomName ?? 'Loading room...',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(context).colorScheme.onSurface,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '${DateFormat('HH:mm').format(_checkInBooking!.startTime)} - ${DateFormat('HH:mm').format(_checkInBooking!.endTime)}',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 20),
-                                        SizedBox(
-                                          width: double.infinity,
-                                          child: ElevatedButton(
-                                            onPressed: _isLoading ? null : _showCheckInDialog,
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Theme.of(context).colorScheme.primary,
-                                              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                                              padding: const EdgeInsets.symmetric(vertical: 16),
-                                              elevation: 0,
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                            ),
-                                            child: _isLoading
-                                                ? const SizedBox(
-                                                    height: 20,
-                                                    width: 20,
-                                                    child: CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color: Colors.white,
-                                                    ),
-                                                  )
-                                                : const Text(
-                                                    'Check In Now',
-                                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                              const SizedBox(width: 12),
+                                              Semantics(
+                                                header: true,
+                                                label: 'Ready for Check-in',
+                                                child: Text(
+                                                  'Ready for Check-in',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Theme.of(context).colorScheme.primary,
                                                   ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            _checkInRoomName ?? 'Loading room...',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context).colorScheme.onSurface,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '${DateFormat('HH:mm').format(_checkInBooking!.startTime)} - ${DateFormat('HH:mm').format(_checkInBooking!.endTime)}',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: Semantics(
+                                              button: true,
+                                              label: 'Check in to $_checkInRoomName',
+                                              hint: 'Opens check-in code dialog',
+                                              child: ElevatedButton(
+                                                onPressed: _isLoading ? null : _showCheckInDialog,
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                                  elevation: 0,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                  ),
+                                                ),
+                                                child: _isLoading
+                                                    ? const SizedBox(
+                                                        height: 20,
+                                                        width: 20,
+                                                        child: CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          color: Colors.white,
+                                                        ),
+                                                      )
+                                                    : const Text(
+                                                        'Check In Now',
+                                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                                      ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),

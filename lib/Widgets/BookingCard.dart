@@ -32,26 +32,32 @@ class BookingCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        // No border as requested
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: onTap != null
-          ? InkWell(
-              onTap: onTap,
-              child: Padding(
+    return Semantics(
+      container: true,
+      label: 'Booking for $title',
+      value:
+          '$subtitle, ${dateFormat.format(startTime)}, ${timeFormat.format(startTime)} to ${timeFormat.format(endTime)}, Status: ${status.name}',
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          // No border as requested
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: onTap != null
+            ? InkWell(
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: _buildCardContent(textTheme, colorScheme, dateFormat, timeFormat),
+                ),
+              )
+            : Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: _buildCardContent(textTheme, colorScheme, dateFormat, timeFormat),
               ),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: _buildCardContent(textTheme, colorScheme, dateFormat, timeFormat),
-            ),
+      ),
     );
   }
 

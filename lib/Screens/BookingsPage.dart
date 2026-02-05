@@ -8,6 +8,7 @@ import '../Services/auth_service.dart';
 import '../Services/booking_service.dart';
 import '../Widgets/BookingCard.dart';
 import '../Widgets/mybookings/BookingStats.dart';
+import '../Helper/accessibility_utils.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -207,6 +208,7 @@ class _BookingsPageState extends State<BookingsPage> {
         if (mounted) Navigator.pop(context); // Close loading dialog
 
         if (success) {
+          AccessibilityAnnouncer.announce('Booking cancelled successfully');
           _loadBookings();
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -218,6 +220,7 @@ class _BookingsPageState extends State<BookingsPage> {
             );
           }
         } else {
+          AccessibilityAnnouncer.announce('Failed to cancel booking');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
