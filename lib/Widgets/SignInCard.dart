@@ -97,11 +97,11 @@ class _SignInCardState extends ConsumerState<SignInCard> {
                     shape: BoxShape.circle,
                     color: primaryColor,
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'MCI',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),
@@ -118,7 +118,7 @@ class _SignInCardState extends ConsumerState<SignInCard> {
                 const SizedBox(height: 8),
                 const Text(
                   'Sign in with your university credentials',
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(color: Colors.grey), // We keep Colors.grey here as per request "const Text", but we can change it to use theme if we remove const.
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -209,15 +209,15 @@ class _SignInCardState extends ConsumerState<SignInCard> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red[50],
+                        color: Theme.of(context).colorScheme.errorContainer,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red[200]!),
+                        border: Border.all(color: Theme.of(context).colorScheme.error),
                       ),
                       child: Row(
                         children: [
                           Icon(
                             Icons.error_outline,
-                            color: Colors.red[600],
+                            color: Theme.of(context).colorScheme.error,
                             size: 20,
                           ),
                           const SizedBox(width: 12),
@@ -225,13 +225,13 @@ class _SignInCardState extends ConsumerState<SignInCard> {
                             child: Text(
                               _errorMessage!,
                               style: TextStyle(
-                                color: Colors.red[800],
+                                color: Theme.of(context).colorScheme.onErrorContainer,
                                 fontSize: 14,
                               ),
                             ),
                           ),
                           IconButton(
-                            icon: Icon(Icons.close, color: Colors.red[600], size: 20),
+                            icon: Icon(Icons.close, color: Theme.of(context).colorScheme.error, size: 20),
                             onPressed: () => setState(() => _errorMessage = null),
                           ),
                         ],
@@ -247,19 +247,19 @@ class _SignInCardState extends ConsumerState<SignInCard> {
                     onPressed: _isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: Dimen.inputElementRadius,
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: _isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     )
                         : const Text(

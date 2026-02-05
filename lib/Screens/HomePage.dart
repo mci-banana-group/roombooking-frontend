@@ -9,6 +9,7 @@ import '../Services/booking_service.dart';
 import '../Services/room_service.dart';
 import '../Models/booking.dart';
 import '../Models/Enums/booking_status.dart';
+import '../Constants/layout_constants.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -171,7 +172,7 @@ class _HomePageState extends State<HomePage> {
               if (_checkInBooking != null) ...[
                 Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1200),
+                    constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Container(
@@ -296,7 +297,7 @@ class _HomePageState extends State<HomePage> {
 
               Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
+                  constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: LayoutBuilder(

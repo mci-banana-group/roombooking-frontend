@@ -9,6 +9,7 @@ import 'package:mci_booking_app/Screens/HomeScreen.dart';
 import '../Widgets/calendar/calendar_models.dart';
 import '../Widgets/calendar/calendar_view.dart';
 import '../Widgets/calendar/booking_confirmation_dialog.dart';
+import '../Constants/layout_constants.dart';
 
 // ============================================================================
 // BOOKING AVAILABILITY PAGE
@@ -47,8 +48,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   List<RoomGridItem> _rooms = [];
   List<CalendarBooking> _bookings = [];
 
-  List<RoomGridItem> _visibleRooms = [];
-  int _visibleRoomStart = 0;
   bool _isLoading = true;
   String? _loadError;
   int _activeRequests = 0;
@@ -171,21 +170,9 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       }
 
       setState(() {
-        // Only show rooms available at wanted time
-        final wantedStart = _calendarStartTime;
-        final wantedEnd = _calendarEndTime;
-        final availableRoomIds = <int>{};
-        for (final room in mappedRooms) {
-          final roomBookings = allBookings.where((b) => b.roomId == room.id);
-          final hasOverlap = roomBookings.any((b) => b.endTime.isAfter(wantedStart) && b.startTime.isBefore(wantedEnd));
-          if (!hasOverlap) {
-            availableRoomIds.add(room.id);
-          }
-        }
-        _rooms = mappedRooms.where((room) => availableRoomIds.contains(room.id)).toList();
+        // Show all rooms (even if they have bookings)
+        _rooms = mappedRooms;
         _bookings = allBookings;
-        _visibleRoomStart = 0;
-        _updateVisibleRooms();
         _isLoading = false;
       });
     } catch (e) {
@@ -193,38 +180,6 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
       setState(() {
         _loadError = e.toString();
         _isLoading = false;
-      });
-    }
-  }
-
-  void _updateVisibleRooms() {
-    final count = _getColumnsCount();
-    final end = (_visibleRoomStart + count).clamp(0, _rooms.length);
-    _visibleRooms = _rooms.sublist(_visibleRoomStart, end);
-  }
-
-  int _getColumnsCount() {
-    final width = MediaQuery.of(context).size.width;
-    if (width > 1200) return 5;
-    if (width > 900) return 4;
-    if (width > 600) return 3;
-    return 2;
-  }
-
-  void _nextRooms() {
-    if (_visibleRoomStart + _getColumnsCount() < _rooms.length) {
-      setState(() {
-        _visibleRoomStart += 1;
-        _updateVisibleRooms();
-      });
-    }
-  }
-
-  void _previousRooms() {
-    if (_visibleRoomStart > 0) {
-      setState(() {
-        _visibleRoomStart -= 1;
-        _updateVisibleRooms();
       });
     }
   }
@@ -334,27 +289,23 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Available Rooms'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (widget.isFromQuickCalendar) {
-              Navigator.of(context).pop();
-            } else {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const HomeScreen()), // Navigate back to Home
-              );
-            }
-          },
-        ),
-      ),
+      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
+          ? AppBar(
+              title: const Text('Available Rooms'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (widget.isFromQuickCalendar) {
+                    Navigator.of(context).pop();
+                  } else {
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+            )
+          : null,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _updateVisibleRooms();
-          });
-
           if (_isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -378,6 +329,26 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Desktop Back Button
+                        if (constraints.maxWidth >= LayoutConstants.kMobileBreakpoint)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_back),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  tooltip: "Back",
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "Back to Home",
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+
                         // Row 1: Date Navigation and Pagination
                         Row(
                           children: [
@@ -423,44 +394,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
                               ),
                             ),
 
-                            // Pagination controls (if needed)
-                            if (_rooms.length > _getColumnsCount()) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      onPressed: _previousRooms,
-                                      icon: const Icon(Icons.chevron_left, size: 20),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                                      child: Text(
-                                        '${_visibleRoomStart + 1}-${(_visibleRoomStart + _visibleRooms.length).clamp(0, _rooms.length)} of ${_rooms.length}',
-                                        style: const TextStyle(fontSize: 11),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed: _nextRooms,
-                                      icon: const Icon(Icons.chevron_right, size: 20),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+
                           ],
                         ),
 
@@ -533,7 +467,7 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
               Expanded(
                 child: CalendarView(
                   selectedDate: _selectedDate,
-                  visibleRooms: _visibleRooms,
+                  visibleRooms: _rooms,
                   bookings: _bookings,
                   initialStartTime: _calendarStartTime,
                   initialEndTime: _calendarEndTime,

@@ -101,7 +101,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.meeting_room, size: 80, color: Theme.of(context).colorScheme.primary),
+                    Image.asset(
+                      Theme.of(context).brightness == Brightness.dark
+                          ? 'assets/images/MCI-negative-white-Web.png'
+                          : 'assets/images/MCI-positive-Web.png',
+                      height: 80,
+                      fit: BoxFit.contain,
+                    ),
                     const SizedBox(height: 24),
                     const Text(
                       'Welcome Back',
@@ -110,37 +116,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Sign in to your account',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 32),
-                    if (_errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red[50],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red[200]!),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.error_outline, color: Colors.red[600], size: 20),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _errorMessage!,
-                                style: TextStyle(color: Colors.red[800], fontSize: 14),
+                      if (_errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Theme.of(context).colorScheme.error),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _errorMessage!,
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer, fontSize: 14),
+                                ),
                               ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.close, color: Colors.red[600], size: 20),
-                              onPressed: () => setState(() => _errorMessage = null),
-                            ),
-                          ],
+                              IconButton(
+                                icon: Icon(Icons.close, color: Theme.of(context).colorScheme.error, size: 20),
+                                onPressed: () => setState(() => _errorMessage = null),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
                     _buildEmailInput(),
                     const SizedBox(height: 16),
                     _buildPasswordInput(),

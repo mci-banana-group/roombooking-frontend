@@ -82,4 +82,19 @@ class HttpClient {
       headers: finalHeaders,
     );
   }
+
+  static Future<http.Response> patch(
+    Uri uri, {
+    Map<String, String>? headers,
+    Object? body,
+  }) async {
+    final url = _getUrl(uri.toString());
+    final finalHeaders = _getHeaders(headers);
+    
+    return await http.patch(
+      Uri.parse(url),
+      headers: finalHeaders,
+      body: body,
+    );
+  }
 }
