@@ -1,5 +1,5 @@
 class API {
-  static const String base_url = 'https://roombooking-backend-l7kv.onrender.com';
+  static const String base_url = 'http://localhost:8080';
   static const String loginUser = '/auth/login';
   static const String registerUser = '/auth/register';
   static const String getBookings = '/bookings/me';

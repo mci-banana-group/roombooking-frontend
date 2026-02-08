@@ -7,6 +7,7 @@ import '../Services/admin_repository.dart';
 import '../Widgets/admin/room_list_tile.dart';
 import 'AdminRoomDetailScreen.dart';
 import '../Constants/layout_constants.dart';
+import '../Utils/navigation_helper.dart';
 
 
 class AdminRoomManagement extends ConsumerStatefulWidget {
@@ -71,7 +72,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
   void _openCreateRoom() async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (context) => const AdminRoomDetailScreen()),
+      NavigationHelper.getRoute(context, const AdminRoomDetailScreen()),
     );
     if (result == true) {
       _loadRooms();
@@ -81,7 +82,7 @@ class _AdminRoomManagementState extends ConsumerState<AdminRoomManagement> {
   void _openRoomDetails(Room room) async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (context) => AdminRoomDetailScreen(room: room)),
+      NavigationHelper.getRoute(context, AdminRoomDetailScreen(room: room)),
     );
     if (result == true) {
       _loadRooms();

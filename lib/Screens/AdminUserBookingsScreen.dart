@@ -8,6 +8,8 @@ import '../Services/admin_repository.dart';
 import '../Widgets/BookingCard.dart';
 import '../Constants/layout_constants.dart';
 import 'AdminRoomDetailScreen.dart';
+import '../Widgets/layout/DesktopLayoutWrapper.dart';
+import '../Utils/navigation_helper.dart';
 
 class AdminUserBookingsScreen extends ConsumerStatefulWidget {
   final UserResponse user;
@@ -81,123 +83,111 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
     final textTheme = Theme.of(context).textTheme;
     final dateFormat = DateFormat('dd.MM.yyyy HH:mm');
 
-    return Scaffold(
-      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
-          ? AppBar(
-              title: Text("Bookings: ${widget.user.firstName} ${widget.user.lastName}"),
-              centerTitle: false,
-            )
-          : null,
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
-          child: Column(
-            children: [
-              // Header Card with User Info and Filter
-              if (MediaQuery.of(context).size.width >= LayoutConstants.kMobileBreakpoint)
-                Padding(
-                  padding: const EdgeInsets.only(left: 16, top: 16),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.of(context).pop(),
-                        tooltip: 'Back',
-                      ),
-                      const SizedBox(width: 8),
-                      Text("Back to Users", style: textTheme.titleMedium),
-                    ],
-                  ),
-                ),
-              Card(
-                margin: const EdgeInsets.all(16),
-                elevation: 0,
-                color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: colorScheme.primary.withOpacity(0.1),
-                            child: Icon(Icons.person, color: colorScheme.primary, size: 28),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
+    return DesktopLayoutWrapper(
+      selectedIndex: 3, // Admin tab
+      child: Scaffold(
+        appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
+            ? AppBar(
+                title: Text("Bookings: ${widget.user.firstName} ${widget.user.lastName}"),
+                centerTitle: false,
+              )
+            : null,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
+            child: Column(
+              children: [
+                // Header Card with User Info and Filter
+                Card(
+                  margin: const EdgeInsets.all(16),
+                  elevation: 0,
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: colorScheme.primary.withOpacity(0.1),
+                              child: Icon(Icons.person, color: colorScheme.primary, size: 28),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("${widget.user.firstName} ${widget.user.lastName}",
+                                    style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                                  Text(widget.user.email, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                                ],
+                              ),
+                            ),
+                            _buildRoleBadge(widget.user.role, colorScheme),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("${widget.user.firstName} ${widget.user.lastName}", 
-                                  style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                                Text(widget.user.email, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
-                              ],
-                            ),
-                          ),
-                          _buildRoleBadge(widget.user.role, colorScheme),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const Divider(),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("Time Range", style: textTheme.labelLarge?.copyWith(color: colorScheme.primary)),
-                              const SizedBox(height: 4),
-                              Text(
-                                "${DateFormat('dd.MM.yy').format(_startDate)} - ${DateFormat('dd.MM.yy').format(_endDate)}",
-                                style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                          FilledButton.icon(
-                            onPressed: _selectDateRange,
-                            icon: const Icon(Icons.calendar_today, size: 18),
-                            label: const Text("Edit Range"),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Bookings List
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _bookings.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.event_note_outlined, size: 64, color: colorScheme.outline.withOpacity(0.3)),
-                                const SizedBox(height: 16),
-                                Text("No bookings found for this range", 
-                                  style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
-                                const SizedBox(height: 8),
-                                Text("The current backend status is documented in `backend_demand.md`.",
-                                  style: textTheme.bodySmall?.copyWith(color: colorScheme.outline),
+                                Text("Time Range", style: textTheme.labelLarge?.copyWith(color: colorScheme.primary)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "${DateFormat('dd.MM.yy').format(_startDate)} - ${DateFormat('dd.MM.yy').format(_endDate)}",
+                                  style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            itemCount: _bookings.length,
-                            itemBuilder: (context, index) {
-                              final booking = _bookings[index];
-                              return _buildBookingCard(booking, colorScheme, textTheme, dateFormat);
-                            },
-                          ),
-              ),
-            ],
+                            FilledButton.icon(
+                              onPressed: _selectDateRange,
+                              icon: const Icon(Icons.calendar_today, size: 18),
+                              label: const Text("Edit Range"),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Bookings List
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _bookings.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.event_note_outlined, size: 64, color: colorScheme.outline.withOpacity(0.3)),
+                                  const SizedBox(height: 16),
+                                  Text("No bookings found for this range",
+                                    style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                                  const SizedBox(height: 8),
+                                  Text("The current backend status is documented in `backend_demand.md`.",
+                                    style: textTheme.bodySmall?.copyWith(color: colorScheme.outline),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              itemCount: _bookings.length,
+                              itemBuilder: (context, index) {
+                                final booking = _bookings[index];
+                                return _buildBookingCard(booking, colorScheme, textTheme, dateFormat);
+                              },
+                            ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -233,7 +223,7 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
               if (roomIdx != -1 && mounted) {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AdminRoomDetailScreen(room: allRooms[roomIdx])),
+                  NavigationHelper.getRoute(context, AdminRoomDetailScreen(room: allRooms[roomIdx])),
                 );
               } else if (mounted) {
                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Room details not found.")));

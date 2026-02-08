@@ -448,7 +448,7 @@ class _BookingsPageState extends State<BookingsPage> {
                                 foregroundColor: Colors.white,
                               ),
                             ),
-                          if (!isPast)
+                          if (!isPast && !isCheckInAvailable)
                             TextButton.icon(
                               onPressed: () => _confirmDelete(booking),
                               icon: const Icon(Icons.close),

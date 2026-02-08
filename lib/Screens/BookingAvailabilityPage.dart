@@ -10,6 +10,7 @@ import '../Widgets/calendar/calendar_models.dart';
 import '../Widgets/calendar/calendar_view.dart';
 import '../Widgets/calendar/booking_confirmation_dialog.dart';
 import '../Constants/layout_constants.dart';
+import '../Widgets/layout/DesktopLayoutWrapper.dart';
 
 // ============================================================================
 // BOOKING AVAILABILITY PAGE
@@ -288,196 +289,182 @@ class _BookingAvailabilityPageState extends State<BookingAvailabilityPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
-          ? AppBar(
-              title: const Text('Available Rooms'),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  if (widget.isFromQuickCalendar) {
-                    Navigator.of(context).pop();
-                  } else {
-                    Navigator.of(context).pop();
-                  }
-                },
-              ),
-            )
-          : null,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          if (_isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return DesktopLayoutWrapper(
+      selectedIndex: 1, // Bookings tab
+      child: Scaffold(
+        appBar: MediaQuery.of(context).size.width < LayoutConstants.kMobileBreakpoint
+            ? AppBar(
+                title: const Text('Available Rooms'),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    if (widget.isFromQuickCalendar) {
+                      Navigator.of(context).pop();
+                    } else {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                            builder: (context) => const HomeScreen()), // Navigate back to Home
+                      );
+                    }
+                  },
+                ),
+              )
+            : null,
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            if (_isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (_loadError != null) {
-            return Center(child: Text('Error: $_loadError'));
-          }
+            if (_loadError != null) {
+              return Center(child: Text('Error: $_loadError'));
+            }
 
-          if (_rooms.isEmpty) {
-            return const Center(child: Text('No rooms found.'));
-          }
+            if (_rooms.isEmpty) {
+              return const Center(child: Text('No rooms found.'));
+            }
 
-          return Column(
-            children: [
-              // Compact Header with Date Navigation, Info Badge, and Pagination
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Desktop Back Button
-                        if (constraints.maxWidth >= LayoutConstants.kMobileBreakpoint)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.arrow_back),
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  tooltip: "Back",
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  "Back to Home",
-                                  style: Theme.of(context).textTheme.titleMedium,
-                                ),
-                              ],
-                            ),
-                          ),
-
-                        // Row 1: Date Navigation and Pagination
-                        Row(
-                          children: [
-                            // Date Navigation
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      onPressed: _canGoPreviousDay() ? _goToPreviousDay : null,
-                                      icon: const Icon(Icons.arrow_back_ios, size: 18),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            return Column(
+              children: [
+                // Compact Header with Date Navigation, Info Badge, and Pagination
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Row 1: Date Navigation and Pagination
+                          Row(
+                            children: [
+                              // Date Navigation
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
                                     ),
-                                    InkWell(
-                                      onTap: _selectDate,
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                        child: Text(
-                                          DateFormat('EEE, d. MMM yyyy').format(_selectedDate),
-                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      IconButton(
+                                        onPressed: _canGoPreviousDay() ? _goToPreviousDay : null,
+                                        icon: const Icon(Icons.arrow_back_ios, size: 18),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                      ),
+                                      InkWell(
+                                        onTap: _selectDate,
+                                        borderRadius: BorderRadius.circular(6),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                          child: Text(
+                                            DateFormat('EEE, d. MMM yyyy').format(_selectedDate),
+                                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    IconButton(
-                                      onPressed: _goToNextDay,
-                                      icon: const Icon(Icons.arrow_forward_ios, size: 18),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-
-                          ],
-                        ),
-
-                        // Row 2: Compact Info Badge (if needed)
-                        if (!widget.isFromQuickCalendar &&
-                            (widget.startTime.isNotEmpty || widget.capacity > 1 || widget.equipment.isNotEmpty)) ...[
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary, size: 14),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Wrap(
-                                    spacing: 12,
-                                    runSpacing: 2,
-                                    alignment: WrapAlignment.center,
-                                    children: [
-                                      if (widget.startTime.isNotEmpty)
-                                        Text(
-                                          '${widget.startTime}–${widget.endTime}',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Theme.of(context).colorScheme.onSurface,
-                                          ),
-                                        ),
-                                      if (widget.capacity > 1)
-                                        Text(
-                                          '${widget.capacity} people',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Theme.of(context).colorScheme.onSurface,
-                                          ),
-                                        ),
-                                      if (widget.equipment.isNotEmpty)
-                                        Builder(
-                                          builder: (context) {
-                                            final displayNames = _getEquipmentDisplayNames(widget.equipment);
-                                            return Text(
-                                              displayNames.join(", "),
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: Theme.of(context).colorScheme.onSurface,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            );
-                                          },
-                                        ),
+                                      IconButton(
+                                        onPressed: _goToNextDay,
+                                        icon: const Icon(Icons.arrow_forward_ios, size: 18),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                      ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+
+
+                            ],
                           ),
+
+                          // Row 2: Compact Info Badge (if needed)
+                          if (!widget.isFromQuickCalendar &&
+                              (widget.startTime.isNotEmpty || widget.capacity > 1 || widget.equipment.isNotEmpty)) ...[
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary, size: 14),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Wrap(
+                                      spacing: 12,
+                                      runSpacing: 2,
+                                      alignment: WrapAlignment.center,
+                                      children: [
+                                        if (widget.startTime.isNotEmpty)
+                                          Text(
+                                            '${widget.startTime}–${widget.endTime}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Theme.of(context).colorScheme.onSurface,
+                                            ),
+                                          ),
+                                        if (widget.capacity > 1)
+                                          Text(
+                                            '${widget.capacity} people',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Theme.of(context).colorScheme.onSurface,
+                                            ),
+                                          ),
+                                        if (widget.equipment.isNotEmpty)
+                                          Builder(
+                                            builder: (context) {
+                                              final displayNames = _getEquipmentDisplayNames(widget.equipment);
+                                              return Text(
+                                                displayNames.join(", "),
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Theme.of(context).colorScheme.onSurface,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              );
+                                            },
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              // Calendar takes remaining space
-              Expanded(
-                child: CalendarView(
-                  selectedDate: _selectedDate,
-                  visibleRooms: _rooms,
-                  bookings: _bookings,
-                  initialStartTime: _calendarStartTime,
-                  initialEndTime: _calendarEndTime,
-                  showInitialSuggestion: widget.startTime.isNotEmpty,
-                  onBookingSelected: _showBookingConfirmation,
+                // Calendar takes remaining space
+                Expanded(
+                  child: CalendarView(
+                    selectedDate: _selectedDate,
+                    visibleRooms: _rooms,
+                    bookings: _bookings,
+                    initialStartTime: _calendarStartTime,
+                    initialEndTime: _calendarEndTime,
+                    showInitialSuggestion: widget.startTime.isNotEmpty,
+                    onBookingSelected: _showBookingConfirmation,
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }

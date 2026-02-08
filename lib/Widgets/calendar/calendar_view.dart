@@ -31,6 +31,8 @@ class _CalendarViewState extends State<CalendarView> {
   static const int startHour = 6;
   static const int endHour = 24;
   static const int snapMinutes = 15;
+  static const Color reservedSlotColor = Color(0xFFFF9800);
+  static const Color draftSlotColor = Color(0xFF2F80ED);
 
   Duration _preferredDuration = const Duration(hours: 1);
 
@@ -374,7 +376,7 @@ class _CalendarViewState extends State<CalendarView> {
                       onPressed: hasOverlap ? null : _confirmDraftBooking,
                       label: const Text('Book'),
                       icon: const Icon(Icons.check),
-                      backgroundColor: hasOverlap ? Colors.grey.withOpacity(0.3) : _draftBooking!.roomInfo.color,
+                      backgroundColor: hasOverlap ? Colors.grey.withOpacity(0.3) : draftSlotColor,
                       foregroundColor: hasOverlap ? Colors.black.withOpacity(0.3) : Colors.white,
                       elevation: hasOverlap ? 0 : null,
                       disabledElevation: 0,
@@ -559,7 +561,7 @@ class _CalendarViewState extends State<CalendarView> {
                       top: startPixel,
                       left: 2,
                       right: 2,
-                      child: _buildBookingBlock(booking, room, height),
+                      child: _buildBookingBlock(booking, height),
                     );
                   }),
                   // SUGGESTION BLOCK
@@ -596,11 +598,11 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  Widget _buildBookingBlock(CalendarBooking booking, RoomGridItem room, double height) {
+  Widget _buildBookingBlock(CalendarBooking booking, double height) {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondary.withOpacity(0.8),
+        color: reservedSlotColor.withOpacity(0.85),
         borderRadius: BorderRadius.circular(4),
       ),
       padding: const EdgeInsets.all(4),
@@ -657,8 +659,8 @@ class _CalendarViewState extends State<CalendarView> {
     );
     final hasOverlap = overlappingBookings.isNotEmpty;
 
-    final borderColor = hasOverlap ? Colors.red : room.color;
-    final bgColor = hasOverlap ? Colors.red.withOpacity(0.1) : room.color.withOpacity(0.5);
+    final borderColor = hasOverlap ? Colors.red : draftSlotColor;
+    final bgColor = hasOverlap ? Colors.red.withOpacity(0.1) : draftSlotColor.withOpacity(0.45);
 
     return Container(
       height: height,
@@ -740,7 +742,7 @@ class _CalendarViewState extends State<CalendarView> {
           },
           child: Container(
             height: 24, // Increased height for better touch target
-            decoration: BoxDecoration(color: _draftBooking!.roomInfo.color, borderRadius: BorderRadius.circular(4)),
+            decoration: BoxDecoration(color: draftSlotColor, borderRadius: BorderRadius.circular(4)),
             child: Center(
               child: Container(
                 width: 24,

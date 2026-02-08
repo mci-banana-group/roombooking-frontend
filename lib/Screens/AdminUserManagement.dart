@@ -4,7 +4,9 @@ import '../Models/auth_models.dart';
 import '../Services/admin_repository.dart';
 import '../Resources/AppColors.dart';
 import 'AdminUserBookingsScreen.dart';
+import 'AdminUserBookingsScreen.dart';
 import '../Constants/layout_constants.dart';
+import '../Utils/navigation_helper.dart';
 
 class AdminUserManagement extends ConsumerStatefulWidget {
   const AdminUserManagement({super.key});
@@ -205,8 +207,9 @@ class _AdminUserManagementState extends ConsumerState<AdminUserManagement> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => AdminUserBookingsScreen(user: user),
+            NavigationHelper.getRoute(
+              context,
+              AdminUserBookingsScreen(user: user),
             ),
           );
         },

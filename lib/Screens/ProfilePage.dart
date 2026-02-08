@@ -14,7 +14,7 @@ class ProfilePage extends StatelessWidget {
           return SingleChildScrollView(
             child: Center(
               child: Container(
-                constraints: const BoxConstraints(maxWidth: LayoutConstants.kMaxContentWidth),
+                constraints: const BoxConstraints(maxWidth: LayoutConstants.kSmallContentWidth),
                 padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
                 child: Consumer(
                   builder: (context, ref, _) {
@@ -29,20 +29,12 @@ class ProfilePage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // Avatar Section
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.5),
-                              width: 2,
-                            ),
-                          ),
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                           child: Icon(
-                            Icons.person_outline,
-                            size: 60,
+                            Icons.person,
+                            size: 72,
                             color: Theme.of(context).colorScheme.onPrimaryContainer,
                           ),
                         ),
