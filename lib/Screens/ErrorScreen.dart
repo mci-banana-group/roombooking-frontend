@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../Resources/AppColors.dart';
-
 class ErrorScreen extends ConsumerStatefulWidget {
   final Widget? errorWidget;
   final String? errorTitle;
@@ -42,7 +40,7 @@ class _InvalidGroupScreenState extends ConsumerState<ErrorScreen> {
               height: 48,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.statusRed,
+                  backgroundColor: Theme.of(context).colorScheme.error,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                   textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),

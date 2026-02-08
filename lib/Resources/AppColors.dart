@@ -43,10 +43,10 @@ class AppColors {
       case BookingStatus.checkedIn:
         return chartCheckedIn;
       case BookingStatus.cancelled:
-        return chartNoShowRed; // Using the red for cancelled
+        return Colors.grey;
 
       case BookingStatus.expired:
-        return Colors.grey;
+        return chartNoShowRed;
     }
   }
 
