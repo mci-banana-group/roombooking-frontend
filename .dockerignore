@@ -1,0 +1,10 @@
+.dart_tool
+.idea
+.metadata
+.git
+.gitignore
+build
+android
+ios
+test
+devtools_options.yaml
