@@ -203,7 +203,10 @@ class _BookingsPageState extends State<BookingsPage> {
             child: const Text('No'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Yes, cancel'),
           ),
@@ -265,39 +268,44 @@ class _BookingsPageState extends State<BookingsPage> {
   }
 
   List<Booking> _getFilteredBookings() {
+    final now = DateTime.now();
     switch (_selectedTab) {
       case BookingFilterTab.upcoming:
-        // Upcoming = RESERVED status and start time in the future
+        // Upcoming = booking that hasn't ended yet and isn't cancelled/no-show.
         final bookings = _bookings
             .where(
               (booking) =>
-                  booking.status == BookingStatus.confirmed &&
-                  booking.startTime.isAfter(DateTime.now()),
+                  now.isBefore(booking.endTime) &&
+                  booking.status != BookingStatus.cancelled &&
+                  booking.status != BookingStatus.expired,
             )
             .toList();
-        // Sort earliest first
         bookings.sort((a, b) => a.startTime.compareTo(b.startTime));
         return bookings;
 
       case BookingFilterTab.past:
-        // Past = CANCELLED, CHECKED_IN, COMPLETED, or NO_SHOW status
+        // Past = everything else (including cancelled/no-show).
         final bookings = _bookings
             .where(
               (booking) =>
+                  !now.isBefore(booking.endTime) ||
                   booking.status == BookingStatus.cancelled ||
-                  booking.status == BookingStatus.checkedIn ||
-                  booking.status == BookingStatus.completed ||
                   booking.status == BookingStatus.expired,
             )
             .toList();
-        // Sort most recent first
         bookings.sort((a, b) => b.startTime.compareTo(a.startTime));
         return bookings;
 
       case BookingFilterTab.all:
         final bookings = List<Booking>.from(_bookings);
-        // Sort most recent first
-        bookings.sort((a, b) => b.startTime.compareTo(a.startTime));
+        // Closest to now first.
+        bookings.sort((a, b) {
+          final aDiff = a.startTime.difference(now).abs();
+          final bDiff = b.startTime.difference(now).abs();
+          final diffCompare = aDiff.compareTo(bDiff);
+          if (diffCompare != 0) return diffCompare;
+          return a.startTime.compareTo(b.startTime);
+        });
         return bookings;
     }
   }
@@ -320,15 +328,16 @@ class _BookingsPageState extends State<BookingsPage> {
     final upcomingBookings = _bookings
         .where(
           (b) =>
-              b.status == BookingStatus.confirmed && b.startTime.isAfter(now),
+              now.isBefore(b.endTime) &&
+              b.status != BookingStatus.cancelled &&
+              b.status != BookingStatus.expired,
         )
         .length;
     final pastBookings = _bookings
         .where(
           (b) =>
+              !now.isBefore(b.endTime) ||
               b.status == BookingStatus.cancelled ||
-              b.status == BookingStatus.checkedIn ||
-              b.status == BookingStatus.completed ||
               b.status == BookingStatus.expired,
         )
         .length;
