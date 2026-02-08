@@ -24,8 +24,8 @@ class _AdminStatsViewState extends ConsumerState<AdminStatsView> {
   AdminStats? _stats;
   bool _isLoading = true;
 
-  DateTime _start = DateTime.now().subtract(const Duration(days: 30));
-  DateTime _end = DateTime.now();
+  DateTime _start = DateTime.now().subtract(const Duration(days: 20));
+  DateTime _end = DateTime.now().add(const Duration(days: 10));
 
   int _chartMode = 1; // 0: line, 1: bar, 2: both
   bool _chartModeInitialized = false;

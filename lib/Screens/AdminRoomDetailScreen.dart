@@ -242,6 +242,21 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
+        if (MediaQuery.of(context).size.width >= LayoutConstants.kMobileBreakpoint)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.of(context).pop(),
+                  tooltip: 'Back',
+                ),
+                 const SizedBox(width: 8),
+                 Text("Back to Rooms", style: Theme.of(context).textTheme.titleMedium),
+              ],
+            ),
+          ),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
@@ -399,6 +414,20 @@ class _AdminRoomDetailScreenState extends ConsumerState<AdminRoomDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (MediaQuery.of(context).size.width >= LayoutConstants.kMobileBreakpoint)
+             Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(width: 8),
+                  Text("Back", style: Theme.of(context).textTheme.titleMedium),
+                ],
+              ),
+            ),
           Text("Basic Info", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.primary)),
           const SizedBox(height: 16),
           Row(

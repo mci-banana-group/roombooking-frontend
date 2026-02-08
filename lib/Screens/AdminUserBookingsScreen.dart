@@ -119,7 +119,7 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("${widget.user.firstName} ${widget.user.lastName}", 
+                                  Text("${widget.user.firstName} ${widget.user.lastName}",
                                     style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
                                   Text(widget.user.email, style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
                                 ],
@@ -168,7 +168,7 @@ class _AdminUserBookingsScreenState extends ConsumerState<AdminUserBookingsScree
                                 children: [
                                   Icon(Icons.event_note_outlined, size: 64, color: colorScheme.outline.withOpacity(0.3)),
                                   const SizedBox(height: 16),
-                                  Text("No bookings found for this range", 
+                                  Text("No bookings found for this range",
                                     style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
                                   const SizedBox(height: 8),
                                   Text("The current backend status is documented in `backend_demand.md`.",

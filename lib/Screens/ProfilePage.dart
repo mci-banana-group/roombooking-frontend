@@ -78,13 +78,13 @@ class ProfilePage extends StatelessWidget {
                         const SizedBox(height: 48),
 
                         // Actions
-                        SizedBox(
-                          width: double.infinity,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(minWidth: 200),
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Theme.of(context).colorScheme.error,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              foregroundColor: Theme.of(context).colorScheme.onError,
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -128,12 +128,12 @@ class ProfilePage extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           icon,
-          color: Theme.of(context).primaryColor,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
           size: 24,
         ),
       ),

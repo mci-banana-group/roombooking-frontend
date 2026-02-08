@@ -33,10 +33,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ProfilePage(),
   ];
 
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    // On desktop, handle navigation via nested Navigator
+    final isDesktop = MediaQuery.of(context).size.width >= 640;
+    if (isDesktop && _navigatorKey.currentState != null) {
+      _navigatorKey.currentState!.popUntil((route) => route.isFirst);
+      final List<Widget> pages = [
+        const HomePage(),
+        const BookingsPage(),
+        const ProfilePage(),
+        if (ref.read(sessionProvider).isAdmin) const AdminDashboardPage(),
+      ];
+      if (index < pages.length) {
+         _navigatorKey.currentState!.pushReplacement(
+           PageRouteBuilder(
+             pageBuilder: (_, __, ___) => pages[index],
+             transitionDuration: Duration.zero,
+           ),
+         );
+      }
+    }
   }
 
   @override
