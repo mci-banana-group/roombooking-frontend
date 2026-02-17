@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mci_booking_app/Screens/SplashScreen.dart';
 import 'package:mci_booking_app/Screens/LoginScreen.dart';
+import 'package:mci_booking_app/Screens/HomeScreen.dart';
 
 import 'Resources/AppColors.dart';
 import 'Session.dart';
+
+import 'package:mci_booking_app/Screens/AdminDashboardPage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,17 +21,17 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return Phoenix(
-      child: ProviderScope(
-        child: MaterialApp(
-          title: 'Room Booking',
-          theme: AppColors.lightTheme,
-          darkTheme: AppColors.darkTheme,
-          home: const SplashScreen(),
-          routes: {
-            '/login': (context) => const LoginScreen(),
-          },
-        ),
+    return ProviderScope(
+      child: MaterialApp(
+        title: 'Room Booking',
+        theme: AppColors.lightTheme,
+        darkTheme: AppColors.darkTheme,
+        home: const SplashScreen(),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/home': (context) => const HomeScreen(),
+          '/admin': (context) => const AdminDashboardPage(),
+        },
       ),
     );
   }

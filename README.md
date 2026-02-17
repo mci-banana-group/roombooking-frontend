@@ -1,16 +1,105 @@
-# mci_booking_app
+# MCI Booking App
 
-A booking App for MCI rooms
+> ⚠️ **Development Build** - This project is currently under active development and not yet finished.
 
-## Getting Started
+A Flutter-based room booking application for MCI (Management Center Innsbruck) that allows students and staff to book rooms efficiently.
 
-This project is a starting point for a Flutter application.
+## 📱 Features
 
-A few resources to get you started if this is your first Flutter project:
+- User authentication and authorization
+- Room availability checking
+- Room booking management
+- View and manage personal bookings
+- Real-time booking status updates
+- Equipment filtering for rooms
+- User profile management
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 🚀 Getting Started
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Prerequisites
+
+- Flutter SDK (latest stable version)
+- Dart SDK
+- Android Studio / Xcode (for mobile development)
+- A code editor (VS Code, Android Studio, etc.)
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd MCIBookingApp
+```
+
+2. Install dependencies:
+```bash
+flutter pub get
+```
+
+3. Run the app:
+```bash
+flutter run
+```
+
+## 🔧 Development Setup
+
+### Backend API
+
+The app connects to the backend API hosted at:
+```
+https://roombooking-backend-l7kv.onrender.com
+```
+
+**Note:** The backend may take a moment to boot up on first access.
+
+### User Registration
+
+To register a new user for development/testing, use the Swagger UI at:
+https://roombooking-backend-l7kv.onrender.com/swagger
+
+**Example registration payload:**
+```json
+{
+  "email": "test@test.com",
+  "password": "abcdefgh",
+  "firstName": "John",
+  "lastName": "Marx",
+  "role": "STUDENT",
+  "permissionLevel": "USER"
+}
+```
+
+### CORS Proxy
+
+If you encounter CORS issues during development, you can activate the CORS proxy by visiting:
+https://cors-anywhere.herokuapp.com/corsdemo
+
+## 📁 Project Structure
+
+```
+lib/
+├── Helper/           # Helper utilities and HTTP client
+├── Models/           # Data models and enums
+├── Resources/        # App constants (colors, strings, dimensions, API)
+├── Screens/          # UI screens
+├── Services/         # Business logic and API services
+└── Widgets/          # Reusable UI components
+```
+
+## 🛠️ Built With
+
+- [Flutter](https://flutter.dev/) - UI framework
+- [Dart](https://dart.dev/) - Programming language
+- HTTP package for API communication
+
+## 📄 License
+
+This project is part of an academic project at MCI.
+
+## 👥 Authors
+
+MCI Students - Integratives Gesamtprojekt
+
+## 🤝 Contributing
+
+This is an academic project. For any questions or contributions, please contact the project maintainers.

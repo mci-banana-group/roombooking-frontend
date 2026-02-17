@@ -21,40 +21,32 @@ class EquipmentCheckbox extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => onChanged(!isSelected),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
-          border: Border.all(
-            color: isSelected ? primaryColor : Colors.grey.withOpacity(0.2),
-            width: 2,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
+            border: Border.all(color: isSelected ? primaryColor : Colors.grey.withOpacity(0.2), width: 2),
+            borderRadius: BorderRadius.circular(8),
           ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: Checkbox(
-                value: isSelected,
-                onChanged: onChanged,
-                activeColor: primaryColor,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: Checkbox(value: isSelected, onChanged: onChanged, activeColor: primaryColor),
               ),
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: textColor,
-                  fontWeight: FontWeight.w500,
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: textColor, fontWeight: FontWeight.w500),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

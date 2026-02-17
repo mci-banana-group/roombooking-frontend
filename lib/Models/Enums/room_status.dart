@@ -6,5 +6,10 @@ enum RoomStatus {
   @override
   String toString() => name;
 
-  static RoomStatus fromString(String string) => RoomStatus.values.byName(string.toLowerCase());
+  static RoomStatus fromString(String string) {
+    if (string == null || string.isEmpty) {
+      return RoomStatus.free;
+    }
+    return RoomStatus.values.byName(string.toLowerCase());
+  }
 }
